@@ -9,7 +9,7 @@
       "name": "mreq",
       "source": "./",
       "description": "Track one piece of work in a .mreq/ task document: interview, pressure-test, implement, and audit it, plus offline HTML walkthroughs of the code.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "Sean Mars"
       },
