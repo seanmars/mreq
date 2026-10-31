@@ -19,11 +19,11 @@ import math
 import os
 import re
 import sys
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
-OUTPUT_DIR = Path(tempfile.gettempdir()) / "mreq-how"
+# The agent runs every command from the session root (no cd), so the cwd is that root.
+OUTPUT_DIR = Path.cwd() / ".mreq" / "how"
 SKELETON = Path(__file__).resolve().parent / "skeleton.html"
 CONTENT_SUFFIX = ".content.html"
 
@@ -296,7 +296,7 @@ def strings(value):
 
 
 def is_inside(file: Path, directory: Path) -> bool:
-    # realpath expands Windows 8.3 names, which the temp directory can come back as.
+    # realpath expands Windows 8.3 names and links, so both sides compare as real locations.
     f = os.path.normcase(os.path.realpath(file))
     d = os.path.normcase(os.path.realpath(directory))
     try:
@@ -392,8 +392,8 @@ def assemble(skeleton: str, header: dict, body: str) -> str:
 
 def check_page(file: Path, html: str) -> tuple[list, int]:
     problems = []
-    if not is_inside(file, Path(tempfile.gettempdir())):
-        problems.append(f"the page is not under the temp directory {tempfile.gettempdir()}; write it to {OUTPUT_DIR}")
+    if not is_inside(file, OUTPUT_DIR):
+        problems.append(f"the page is not under {OUTPUT_DIR}; write it there")
     if "Content-Security-Policy" not in html:
         problems.append("the skeleton's Content-Security-Policy meta tag is missing")
     if EXTERNAL_TAG.search(html) or EXTERNAL_CSS.search(html):
@@ -447,8 +447,8 @@ def build(content_file: str) -> int:
     if not source.name.endswith(CONTENT_SUFFIX):
         print(f"FAIL name the content file <topic>{CONTENT_SUFFIX}")
         return 1
-    if not is_inside(source, Path(tempfile.gettempdir())):
-        print(f"FAIL the content file is not under the temp directory {tempfile.gettempdir()}; write it to {OUTPUT_DIR}")
+    if not is_inside(source, OUTPUT_DIR):
+        print(f"FAIL the content file is not under {OUTPUT_DIR}; write it there")
         return 1
     page = source.with_name(source.name[: -len(CONTENT_SUFFIX)] + ".html")
     try:
@@ -478,11 +478,19 @@ def build(content_file: str) -> int:
     return 0
 
 
+def make_output_dir() -> None:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    # The pages are not project files: keep them out of git status, which mreq-apply compares with its Handoff.
+    ignore = OUTPUT_DIR / ".gitignore"
+    if not ignore.exists():
+        ignore.write_text("*\n", encoding="utf-8")
+
+
 def new(slug: str) -> int:
     if not SLUG_RE.fullmatch(slug):
         print(f"invalid slug {slug!r}: use kebab-case, e.g. top-words", file=sys.stderr)
         return 2
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    make_output_dir()
     print(OUTPUT_DIR / f"{slug}-{datetime.now().strftime('%Y%m%d-%H%M%S')}{CONTENT_SUFFIX}")
     return 0
 
@@ -490,7 +498,7 @@ def new(slug: str) -> int:
 def main(argv: list) -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     if argv[:1] == ["dir"]:
-        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        make_output_dir()
         print(OUTPUT_DIR)
         return 0
     if len(argv) == 2 and argv[0] == "new":

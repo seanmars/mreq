@@ -1,6 +1,6 @@
 ---
 name: mreq-how
-description: Explain how part of the codebase works as an offline HTML page with architecture, sequence, state, and flow diagrams, written to the system temp directory. Covers "how does X work", walkthroughs before changing something, and placement questions ("where should this live", "which layer owns this"). Use for /mreq-how.
+description: Explain how part of the codebase works as an offline HTML page with architecture, sequence, state, and flow diagrams, written to .mreq/how/ under the session root. Covers "how does X work", walkthroughs before changing something, and placement questions ("where should this live", "which layer owns this"). Use for /mreq-how.
 disable-model-invocation: true
 ---
 
@@ -12,7 +12,7 @@ Explain how part of this codebase works (a subsystem, a flow, a module) at the d
 
 **Input**: The question: "how does X work", a code path to walk through before a change, or a placement question. When the scope is ambiguous, pick an interpretation and go; the user can redirect. State it in the first sentence of the report and of the Overview, for example: "I read X as Y; ask again if you meant Z."
 
-**This is read-only on the project.** Write no code and no files in the project. The one write is the page, and it goes to the system temp directory.
+**This is read-only on the project.** Write no code and no files in the project. The one write is the page, and it goes to `.mreq/how/` under the session root (the directory the agent was started in).
 
 ## Language
 
@@ -24,7 +24,7 @@ Write and reply in the language the agent instruction files (`AGENTS.md`, `CLAUD
 
 Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Run `uv run ${CLAUDE_SKILL_DIR}/page.py <command>`, with the path written exactly as here; when the path contains a space, wrap it in double quotes: `uv run "${CLAUDE_SKILL_DIR}/page.py" <command>`. Only when that fails because `uv` is not found, run `python` in place of `uv run`. The allow rule for a denied script command is the project rule `Bash(uv run *page.py*)` or `PowerShell(uv run *page.py*)` (`python` in place of `uv run` when you ran `python`), not one with the path written out.
 
-The allow rule for a denied Write or Edit of the content file is `Edit(//<folder>/**)`. `<folder>` is the path `page.py dir` printed (the folder of the path `page.py new` printed), with `/` in place of `\` and a Windows drive written as its lower-case letter without the colon: `C:\Users\me\AppData\Local\Temp\mreq-how` gives `Edit(//c/Users/me/AppData/Local/Temp/mreq-how/**)`.
+The allow rule for a denied Write or Edit of the content file is `Edit(./.mreq/how/**)`.
 
 ## When a tool call is denied
 
@@ -59,7 +59,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 ## Guardrails
 
-- Never write inside the project: the page lives only in the temp directory.
+- Never write inside the project outside `.mreq/how/`: the page lives only there.
 - Run no command other than `page.py`, and the one that opens the page when the user asks.
 - Do not run or import the project's code: read it. When behavior is unclear, say so under Open Questions.
 - Explain the code that runs, not what a doc describes; report the difference.
