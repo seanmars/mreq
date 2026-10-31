@@ -1,0 +1,28 @@
+{
+  "name": "mreq",
+  "description": "The mreq skills, installed together as one plugin.",
+  "owner": {
+    "name": "Sean Mars"
+  },
+  "plugins": [
+    {
+      "name": "mreq",
+      "source": "./",
+      "description": "Track one piece of work in a .mreq/ task document: interview, pressure-test, implement, and audit it, plus offline HTML walkthroughs of the code.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Sean Mars"
+      },
+      "homepage": "https://github.com/seanmars/mreq",
+      "repository": "https://github.com/seanmars/mreq",
+      "license": "MIT",
+      "keywords": [
+        "mreq",
+        "workflow",
+        "principles",
+        "agent-style",
+        "subagents"
+      ]
+    }
+  ]
+}

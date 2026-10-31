@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "mreq",
+  "version": "0.1.0",
+  "description": "",
+  "author": {
+    "name": "Sean Mars"
+  },
+  "homepage": "https://github.com/seanmars/mreq",
+  "repository": "https://github.com/seanmars/mreq",
+  "license": "MIT",
+  "keywords": [
+    "mreq",
+    "workflow",
+    "principles",
+    "agent-style",
+    "subagents"
+  ]
+}
