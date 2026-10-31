@@ -16,7 +16,7 @@ Explain how part of this codebase works (a subsystem, a flow, a module) at the d
 
 ## Language
 
-Write and reply in the language the agent instruction files (`AGENTS.md`, `CLAUDE.md`, ...) set. When they set none, use the language the user writes in. A reply that only picks an option (`1`, `Accept the code`) or gives a path does not change it. The page uses the same language.
+Write and reply in the language the agent instruction files (`AGENTS.md`, `CLAUDE.md`, ...) set. When they set none, use the language the user writes in. A reply that only picks an option (`1`, `Accept the code`) or gives a path does not change it. Use that language in every message, from the first line to the report, including the short notes between tool calls, and on the page.
 
 ## Asking the user
 
@@ -26,7 +26,7 @@ When the `AskUserQuestion` tool is available, ask with it: up to 4 independent q
 
 `${CLAUDE_SKILL_DIR}/page.py` builds and checks the page. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place.
 
-Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Run `uv run ${CLAUDE_SKILL_DIR}/page.py <command>`, with the path written exactly as here; when the path contains a space, wrap it in double quotes: `uv run "${CLAUDE_SKILL_DIR}/page.py" <command>`. Only when that fails because `uv` is not found, run `python` in place of `uv run`. The allow rule for a denied script command is the project rule `Bash(uv run *page.py*)` or `PowerShell(uv run *page.py*)` (`python` in place of `uv run` when you ran `python`), not one with the path written out.
+Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Run `uv run ${CLAUDE_SKILL_DIR}/page.py <command>`, with the path written exactly as here; when the path contains a space, wrap it in double quotes: `uv run "${CLAUDE_SKILL_DIR}/page.py" <command>`. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is the project rule `Bash(uv run *page.py*)` or `PowerShell(uv run *page.py*)` (`python` or `python3` in place of `uv run` when you ran it), not one with the path written out.
 
 The allow rule for a denied Write or Edit of the content file is `Edit(./.mreq/how/**)`.
 
@@ -69,7 +69,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    3. Build the page: `page.py build <content file>`. It checks the page and writes `<same name>.html` beside the content file only when it prints `ok`. Fix every FAIL line in the content file with Edit (or Write for a rewrite) and build again. Between builds, change the content only with Edit or Write; never run `python`, a heredoc, `cd`, or any other script to generate or patch it. Never edit the built page: the next build overwrites it.
 
 7. **Report.**
-   Reply with exactly this shape, nothing else: the answer in at most 4 sentences (the gist of the Overview), with no lists or headings, starting with your interpretation when the user skipped the confirmation (see step 1); the page's absolute path; one question offering to open it in the default browser. The page is the explanation, so do not repeat it in the chat. When a build limit or anything else kept you from doing part of the request, say so in one of the 4 sentences. Never go past 4 sentences: any other caveat, such as a layout you could not check, goes on the page under Open Questions. Open the page only when the user says so.
+   Reply with exactly this shape, nothing else: the answer in at most 4 sentences (the gist of the Overview), with no lists or headings, starting with your interpretation when the user skipped the confirmation (see step 1); the page's absolute path; one question offering to open it in the default browser. The page is the explanation, so do not repeat it in the chat: give each sentence one point, never join clauses with a semicolon to fit more in, and list no inputs, cases or files (the page has them). When a build limit or anything else kept you from doing part of the request, say so in one of the 4 sentences. Never go past 4 sentences: any other caveat, such as a layout you could not check, goes on the page under Open Questions. Open the page only when the user says so.
 
    A follow-up that asks a new question starts again at step 1. A follow-up that changes the page goes through step 6 again. Both end with this same reply. After a change to the page, the 4 sentences say what changed on the page, not what the new part explains; never list the added content. When a Write, Edit or command is denied before the page is built, reply with only the denied path or command and its allow rule (see "When a tool call is denied"), then stop. Do not answer the question in the chat.
 

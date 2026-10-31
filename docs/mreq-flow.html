@@ -377,11 +377,12 @@ flowchart TD
     NEW["new"]:::script
     LIST["list [--open]"]:::script
     UPD["update [--status]"]:::script
+    PROG["progress"]:::script
     DELC["delete"]:::script
   end
   DO --> NEW & LIST & UPD
   GRILL --> LIST & UPD
-  APPLY --> LIST & UPD
+  APPLY --> LIST & UPD & PROG
   CLOSE --> LIST & DELC
   NEW -- "讀取" --> TPL[("templates/<br>feature, issue,<br>refactor, task")]:::doc
   NEW & UPD & DELC --> MREQ[(".mreq/*.md<br>位於 git root")]:::doc
@@ -398,6 +399,7 @@ flowchart TD
     <tr><td><code>new --schema --slug --title --desc</code></td><td>在 git root 建立 <code>.mreq/&lt;yyyyMMdd-HHmmss&gt;-&lt;slug&gt;.md</code>. 內容來自對應的 template. status 是 <code>draft</code>. slug 必須是 kebab-case, 最多 60 字元.</td><td>mreq-do</td></tr>
     <tr><td><code>list [--open]</code></td><td>列出每份文件的 front matter 與 <code>## Tasks</code> 的勾選進度. 最近更新的排前面. <code>--open</code> 排除 <code>done</code>. 有 <code>warning</code> 或 <code>error</code> 的項目要告知使用者.</td><td>do, grill, apply, close</td></tr>
     <tr><td><code>update &lt;path&gt; [--status]</code></td><td>把 <code>updated</code> 設為現在. 可以同時改 status. 不改其他行.</td><td>do, grill, apply</td></tr>
+    <tr><td><code>progress &lt;path&gt;</code></td><td>印出兩行純文字 (不是 JSON): <code>Using: 絕對路徑</code> 與 <code>schema: N/M tasks done. Next: 第一個未勾選的 task</code>. 全部勾選時 Next 是 <code>none</code>.</td><td>mreq-apply</td></tr>
     <tr><td><code>delete &lt;path&gt;</code></td><td>刪除文件. 拒絕 <code>.mreq/</code> 以外的檔案.</td><td>mreq-close</td></tr>
   </table>
 
@@ -614,7 +616,7 @@ flowchart TD
   FD -- 是 --> FA["每個 finding 加成<br>新的未勾選 task"]:::doc
   FA --> FB["update --status active"]:::script
   FB --> SP
-  FD -- 否 --> SP["顯示進度兩行:<br>Using: 絕對路徑<br>schema: N/M tasks done.<br>Next: task"]
+  FD -- 否 --> SP["mreq.py progress<br>原樣顯示兩行:<br>Using: 絕對路徑<br>schema: N/M tasks done.<br>Next: task"]:::script
   SP --> T1{"只有 template 的<br>提示, 沒有內容?"}
   T1 -- 是 --> X1(["建議 /mreq-grill<br>或詢問目標, 停止"]):::stop
   T1 -- 否 --> T2{"Handoff 有<br>Unconfirmed: ?"}

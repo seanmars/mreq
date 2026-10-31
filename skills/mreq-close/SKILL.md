@@ -27,7 +27,7 @@ The script is `<mreq-do directory>/scripts/mreq.py`, where `<mreq-do directory>`
 - `list`: every document, most recently updated first. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
 - `delete <path>`: deletes the document. It refuses any file outside `.mreq/`.
 
-Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Use the script's absolute path. Run `uv run <script> <command>` first; only when that fails because `uv` is not found, run `python <script> <command>`. The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` in place of `uv run` when you ran `python`).
+Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Use the script's absolute path. Run `uv run <script> <command>` first. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python <script> <command>`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 
 ## When a tool call is denied
 

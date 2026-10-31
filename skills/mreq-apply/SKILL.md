@@ -21,10 +21,11 @@ When the `AskUserQuestion` tool is available, ask with it: up to 4 independent q
 
 The script is `<mreq-do directory>/scripts/mreq.py`, where `<mreq-do directory>` is `../mreq-do` from this skill's directory. Every document path you show the user is the absolute path the script printed.
 
-Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Use the script's absolute path. Run `uv run <script> <command>` first; only when that fails because `uv` is not found, run `python <script> <command>`. The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` in place of `uv run` when you ran `python`).
+Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Use the script's absolute path. Run `uv run <script> <command>` first. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python <script> <command>`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 
 - `list [--open]`: every document with its status, most recently updated first; `--open` leaves out the `done` ones. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
 - `update <path> [--status <draft|active|done>]`: sets `updated` to now. Never write the dates yourself. `update` rewrites the file: read the document again before your next Edit of it.
+- `progress <path>`: prints two lines of plain text, not JSON: `Using: <absolute path>` and `<schema>: N/M tasks done. Next: <first unchecked task>`.
 
 ## When a tool call is denied
 
@@ -36,7 +37,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Use the path the user gave, or the one document this conversation is about. Otherwise run `list --open` and let the user pick, even when only one exists. Never guess.
 
 2. **Read it in full.**
-   First learn the status from the `list` output. When step 1 did not run `list`, run it without `--open`: the document may be `done`. Then read the document, before any `update`. Read `## Handoff` first: it says where the last agent stopped. Right after this Read, show progress (step 3).
+   First learn the status from the `list` output. When step 1 did not run `list`, run it without `--open`: the document may be `done`. Then read the document, before any `update`. Read `## Handoff` first: it says where the last agent stopped. Then run `progress <path>` and show its output (step 3) before any other tool call.
    - When the document still holds only the template's hints (no real goal or tasks), stop before any `update`: say so, and suggest `/mreq-grill <path>` or ask for the goal.
    - When `## Handoff` has an `Unconfirmed:` line, the user never confirmed the document: show `## Assumptions` and ask once: **Go on** (drop the line when you next rewrite `## Handoff`) or **Grill first** (give `/mreq-grill <path>` and stop).
    - When it is `draft`, run `update <path> --status active`, then read it again before your first Edit.
@@ -45,7 +46,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Run `git status` and `git diff`, each on its own and without `-C`, and compare them with `## Handoff`. A change the Handoff does not mention means the last session stopped mid-task: continue from the code, not from the Handoff alone.
 
 3. **Show progress.**
-   Your first message starts with these two lines, said right after you read the document and before you read the code, also when you stop in step 2: `Using: <absolute path>`, then `<schema>: N/M tasks done. Next: <task>`, with the task in the document's words. A later turn that goes on with the work (the user answered a question or agreed to a change) starts with them too, before its first tool call. Every message from here on is in the language from Language, also the short notes between tool calls. `<schema>` is the `schema` value in the document's front matter (`feature`, `issue`, `refactor` or `task`), not the project's name.
+   As soon as `progress` prints, write a message, before your next tool call, also when you stop in step 2. It starts with the two lines `progress` printed, copied unchanged, then one short sentence on what you do next, in the language from Language. Your final reply does not replace this message. A later turn that goes on with the work (the user answered a question or agreed to a change) does the same: run `progress <path>` first and show its two lines before any other tool call. Every message from here on is in the language from Language, also the short notes between tool calls.
 
 4. **Work the tasks one at a time.**
    Take the next unchecked task. When it has a `Resume:` line, check what that line says is done against the code, then continue from it.

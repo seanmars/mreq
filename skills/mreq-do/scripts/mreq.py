@@ -2,7 +2,7 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""Create, list, touch, and delete mreq task documents under <project>/.mreq/."""
+"""Create, list, touch, show progress of, and delete mreq task documents under <project>/.mreq/."""
 
 import argparse
 import json
@@ -21,6 +21,8 @@ SLUG_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 MAX_SLUG = 60
 FIELD_RE = re.compile(r"^([A-Za-z_][\w-]*):(.*)$")
 CHECKBOX_RE = re.compile(r"^\s*- \[([ xX])\] ", re.MULTILINE)
+OPEN_TASK_RE = re.compile(r"^\s*- \[ \] (.*)$")
+COMMENT_RE = re.compile(r"<!--.*?-->")
 FENCE_RE = re.compile(r"(`{3,}|~{3,})")
 
 
@@ -172,6 +174,15 @@ def task_progress(body: str) -> dict:
     return {"done": sum(1 for m in marks if m != " "), "total": len(marks)}
 
 
+def next_task(body: str) -> str:
+    """The first unchecked task in the document's words, without HTML comments; "none" when all are done."""
+    for line in tasks_section(body).split("\n"):
+        match = OPEN_TASK_RE.match(line)
+        if match:
+            return COMMENT_RE.sub("", match.group(1)).strip()
+    return "none"
+
+
 def warnings(meta: dict, lines: list | None) -> list:
     found = []
     if lines is None:
@@ -272,6 +283,17 @@ def cmd_update(args: argparse.Namespace) -> dict:
     return {"path": show(path), **meta, **values, "tasks": task_progress(body)}
 
 
+def cmd_progress(args: argparse.Namespace) -> str:
+    # Plain text, not JSON: the agent shows these two lines to the user as they are.
+    path = document_path("progress", args.path)
+    _, body, meta = read_document("progress", path)
+    tasks = task_progress(body)
+    return (
+        f"Using: {show(path)}\n"
+        f"{meta['schema']}: {tasks['done']}/{tasks['total']} tasks done. Next: {next_task(body)}"
+    )
+
+
 def cmd_delete(args: argparse.Namespace) -> dict:
     # The only command that removes a file checks at least as much as update does.
     path = document_path("delete", args.path)
@@ -303,6 +325,10 @@ def main() -> None:
     upd.add_argument("--status", choices=STATUSES)
     upd.set_defaults(run=cmd_update)
 
+    prog = sub.add_parser("progress", help="print the two progress lines: Using, and tasks done / next")
+    prog.add_argument("path")
+    prog.set_defaults(run=cmd_progress)
+
     delete = sub.add_parser("delete", help="delete a task document")
     delete.add_argument("path")
     delete.set_defaults(run=cmd_delete)
@@ -313,7 +339,7 @@ def main() -> None:
     except (OSError, UnicodeDecodeError) as err:
         where = getattr(err, "filename", None) or getattr(args, "path", "")
         raise SystemExit(f"{args.command}: {show(where) if where else where}: {describe(err)}")
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print(result if isinstance(result, str) else json.dumps(result, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
