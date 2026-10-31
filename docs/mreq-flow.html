@@ -800,13 +800,16 @@ flowchart TD
 <!-- ============================== 6 ============================== -->
 <section class="block" id="how">
   <h2><span class="stamp" aria-hidden="true">解</span>mreq-how</h2>
-  <p class="lede">用一頁離線 HTML 解說程式碼怎麼運作, 包含架構, 時序, 狀態, 與流程圖. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/how/</code> 裡的頁面. 只有使用者輸入 <code>/mreq-how</code> 才會執行.</p>
+  <p class="lede">用一頁離線 HTML 解說程式碼怎麼運作, 包含架構, 時序, 狀態, 與流程圖. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/how/</code> 裡的頁面. 分析前先和使用者確認問題的解讀. 只有使用者輸入 <code>/mreq-how</code> 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  S(["/mreq-how 問題"]):::user --> A0{"範圍模糊?"}
-  A0 -- 是 --> A0a["選一種解讀並繼續<br>報告第一句說明解讀"]
-  A0 -- 否 --> A1
+  S(["/mreq-how 問題"]):::user --> A0{"使用者明確要求<br>跳過確認?"}
+  A0 -- 否 --> C1["重述: 問題, 範圍,<br>不涵蓋的部分"]
+  C1 --> C2{"使用者確認?"}:::user
+  C2 -- 修正 --> C1
+  C2 -- Yes --> A1
+  A0 -- 是 --> A0a["選最可能的解讀<br>報告第一句說明解讀"]
   A0a --> A1["讀 README,<br>agent 指示檔,<br>相關文件"]:::doc
   A1 --> A2{"問題大小?"}
   A2 -- "Simple<br>一個模組或函式" --> A3["自己探索"]
@@ -825,7 +828,7 @@ flowchart TD
   R2 -- 是 --> R3(["開啟頁面"]):::stop
   R2 -- 否 --> R4(["結束"]):::stop
     </script>
-    <figcaption>mreq-how 的 6 個步驟. 修改頁面的追問也重走 page.py 的步驟</figcaption>
+    <figcaption>mreq-how 的 7 個步驟. 新問題的追問從確認重新開始; 修改頁面的追問只重走 page.py 的步驟</figcaption>
   </figure>
 
   <div class="grid2">
@@ -852,7 +855,7 @@ flowchart TD
       <p>每張圖最多 12 個節點; sequence 最多 6 個參與者, 14 則訊息.</p>
     </div>
   </div>
-  <div class="callout"><strong>規則:</strong> 除了 <code>.mreq/how/</code>, 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它. 解說實際執行的程式碼, 不是文件描述的內容; 兩者不同時寫進 Gotchas.</div>
+  <div class="callout"><strong>規則:</strong> 使用者確認解讀前, 不開始分析, 除非使用者明確要求跳過確認. 除了 <code>.mreq/how/</code>, 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它. 解說實際執行的程式碼, 不是文件描述的內容; 兩者不同時寫進 Gotchas.</div>
 </section>
 
 <!-- ============================== 7 ============================== -->
