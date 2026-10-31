@@ -267,7 +267,7 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
 flowchart TD
   U(["使用者提出需求"]):::user --> Q{"只是想了解<br>程式碼怎麼運作?"}
   Q -- 是 --> HOW["/mreq-how"]:::skill
-  HOW --> PAGE[("離線解說 HTML<br>系統 temp 資料夾")]:::doc
+  HOW --> PAGE[("離線解說 HTML<br>.mreq/how/")]:::doc
   Q -- 否 --> DO["/mreq-do<br>分類, 訪談, 重述確認"]:::skill
   DO -- "mreq.py new" --> DOC[(".mreq/ 任務文件<br>status: draft")]:::doc
   DOC --> N{"使用者選下一步"}:::user
@@ -387,7 +387,7 @@ flowchart TD
   NEW & UPD & DELC --> MREQ[(".mreq/*.md<br>位於 git root")]:::doc
   HOW --> PAGEPY["mreq-how/page.py<br>new, dir, build"]:::script
   PAGEPY -- "包裝內容" --> SKEL[("skeleton.html")]:::doc
-  PAGEPY -- "輸出" --> OUT[("temp/mreq-how/*.html")]:::doc
+  PAGEPY -- "輸出" --> OUT[(".mreq/how/*.html<br>位於 session root")]:::doc
     </script>
     <figcaption>skill, script 指令, 與檔案的關係</figcaption>
   </figure>
@@ -800,7 +800,7 @@ flowchart TD
 <!-- ============================== 6 ============================== -->
 <section class="block" id="how">
   <h2><span class="stamp" aria-hidden="true">解</span>mreq-how</h2>
-  <p class="lede">用一頁離線 HTML 解說程式碼怎麼運作, 包含架構, 時序, 狀態, 與流程圖. 對專案是 read-only: 唯一的寫入是 temp 資料夾裡的頁面. 只有使用者輸入 <code>/mreq-how</code> 才會執行.</p>
+  <p class="lede">用一頁離線 HTML 解說程式碼怎麼運作, 包含架構, 時序, 狀態, 與流程圖. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/how/</code> 裡的頁面. 只有使用者輸入 <code>/mreq-how</code> 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -852,7 +852,7 @@ flowchart TD
       <p>每張圖最多 12 個節點; sequence 最多 6 個參與者, 14 則訊息.</p>
     </div>
   </div>
-  <div class="callout"><strong>規則:</strong> 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它. 解說實際執行的程式碼, 不是文件描述的內容; 兩者不同時寫進 Gotchas.</div>
+  <div class="callout"><strong>規則:</strong> 除了 <code>.mreq/how/</code>, 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它. 解說實際執行的程式碼, 不是文件描述的內容; 兩者不同時寫進 Gotchas.</div>
 </section>
 
 <!-- ============================== 7 ============================== -->
@@ -891,7 +891,7 @@ flowchart TD
     <tr><th>被拒絕的對象</th><th>allow rule</th></tr>
     <tr><td><code>mreq.py</code> 指令</td><td><code>Bash(uv run *mreq.py*)</code> 或 <code>PowerShell(uv run *mreq.py*)</code>; 用 python 執行時把 <code>uv run</code> 換成 <code>python</code></td></tr>
     <tr><td><code>page.py</code> 指令</td><td><code>Bash(uv run *page.py*)</code> 或 <code>PowerShell(uv run *page.py*)</code></td></tr>
-    <tr><td>mreq-how 內容檔的 Write / Edit</td><td><code>Edit(//c/Users/me/AppData/Local/Temp/mreq-how/**)</code> (路徑來自 <code>page.py dir</code>)</td></tr>
+    <tr><td>mreq-how 內容檔的 Write / Edit</td><td><code>Edit(./.mreq/how/**)</code></td></tr>
     <tr><td>Skill 交接</td><td><code>Skill(mreq-apply)</code> 或 <code>Skill(mreq-grill)</code></td></tr>
     <tr><td>其他指令</td><td>tool 名稱加完整指令, 不用 <code>*</code>. 例: <code>Bash(python -m unittest discover -s tests)</code></td></tr>
   </table>

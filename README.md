@@ -8,7 +8,7 @@
 | `mreq-grill` | 用四象限壓力測試文件,把結論寫回文件 | 使用者, agent |
 | `mreq-apply` | 逐項實作文件的 Tasks,更新 checkbox 和 Handoff | 使用者, agent |
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
-| `mreq-how` | 產生解說程式碼的離線 HTML,放在系統 temp 資料夾 | 只有使用者 |
+| `mreq-how` | 產生解說程式碼的離線 HTML,放在 session root 的 `.mreq/how/` | 只有使用者 |
 
 「誰能呼叫」只適用 Claude Code. 其他 agent 不讀 `disable-model-invocation`, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
 
