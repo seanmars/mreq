@@ -9,6 +9,7 @@
 | `mreq-apply` | 逐項實作文件的 Tasks,更新 checkbox 和 Handoff | 使用者, agent |
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
 | `mreq-how` | 先確認問題的解讀,再產生解說程式碼的離線 HTML,放在 session root 的 `.mreq/how/` | 只有使用者 |
+| `mreq-graph` | 先確認描述的解讀,再把描述畫成 Mermaid 圖表,產生附閱讀說明的離線 HTML,放在 session root 的 `.mreq/graph/` | 只有使用者 |
 
 「誰能呼叫」只適用 Claude Code. 其他 agent 不讀 `disable-model-invocation`, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
 
@@ -45,7 +46,7 @@ npx skills add seanmars/mreq --skill '*'
 
 `uv`,或 Python 3.10 以上.script 只用標準函式庫.
 
-安裝時需要 Node.js (`npx`). 使用 skill 時不需要.
+安裝時需要 Node.js (`npx`). 使用 skill 時不需要. `mreq-graph` 有 Node.js 時會在 build 時檢查每張圖; 沒有時仍會產生頁面, 但不檢查.
 
 ## 目錄結構
 
@@ -57,5 +58,6 @@ skills/
 ├── mreq-grill/
 ├── mreq-apply/
 ├── mreq-close/
-└── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html, page.py
+├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html, page.py
+└── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html, page.py, check.mjs, vendor/ (Pele)
 ```

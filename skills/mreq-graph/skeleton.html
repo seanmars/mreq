@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Offline by construction: nothing outside this file can load, and only the two scripts below run.
+     page.py build writes their sha256 hashes into script-src. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src {{CSP}}; img-src data:">
+<title>{{TITLE}}</title>
+<style>
+  /* The page opens in the light theme. The switch in the top right corner turns on the dark theme.
+     The page is rice paper (宣紙): a warm ivory with soft mottling, fibers and specks, drawn by --paper.
+     The sheets on it (figures, legends, the table of contents on a phone) are smooth, a shade lighter.
+     The diagram canvas is a sheet of dot-grid drafting paper. */
+  :root {
+    color-scheme: light;
+    --bg: #f5f0e3;
+    --surface: #fbf8f1;
+    --surface-alt: #eee7d8;
+    --ink: #2b2823;
+    --muted: #6d665a;
+    --hairline: #e6dcc9;
+    --border: #cfc3ad;
+    --accent: #b5352a;
+    --accent-soft: #f3e1d8;
+    /* feTurbulence noise in three layers: mottling, fibers, specks. Each baseFrequency times 400 is a whole
+       number, so stitchTiles joins the 400 px tiles with no seam. The CSP allows data: images. */
+    --paper: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='0.0125' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.45  0 0 0 0 0.28  0.22 0 0 0 -0.06'/></filter><filter id='f'><feTurbulence type='turbulence' baseFrequency='0.0225 0.03' numOctaves='2' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.42  0 0 0 0 0.3  -2.8 0 0 0 0.13'/></filter><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.33  0 0 0 0 0.22  2.4 0 0 0 -1.62'/></filter><rect width='100%' height='100%' filter='url(%23m)'/><rect width='100%' height='100%' filter='url(%23f)'/><rect width='100%' height='100%' filter='url(%23s)'/></svg>");
+    --note-bg: #eef3fd;
+    --note-line: #d4e0f8;
+    --note-ink: #2a55b8;
+    --tip-bg: #ebf6f2;
+    --tip-line: #c6e5da;
+    --tip-ink: #17694f;
+    --warn-bg: #fdf4e8;
+    --warn-line: #f2dcba;
+    --warn-ink: #9a5a0b;
+    --grid-dot: rgba(96, 78, 46, 0.16);
+    --figure-shadow: 0 1px 0 rgba(70, 55, 30, 0.04), 0 10px 28px -16px rgba(70, 55, 30, 0.26);
+    --node-shadow: drop-shadow(0 1px 1.5px rgba(70, 55, 30, 0.14));
+    --sans: system-ui, -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+
+    /* Diagram colors. --pele-bg is the paper under the grid: edge labels take it, so they sit on the sheet.
+       The phase colors fill a node; the marks (WRITING.md) set its border, and some its fill and text. */
+    --pele-bg: #faf6ec;
+    --pele-fg: #2b2823;
+    --pele-muted: #6d665a;
+    --pele-line: #958a76;
+    --pele-surface: #fffdf8;
+    --pele-surface-alt: #eee7d8;
+    --pele-border: #c8bca6;
+    --c-blue: #d3e5ff;
+    --c-orange: #ffdcc4;
+    --c-purple: #e4dbff;
+    --c-yellow: #faeaa8;
+    --c-teal: #c8ece4;
+    --c-tan: #ebe1d4;
+    --c-pink: #ffd5e9;
+    --m-primary-line: #3d4fd1;
+    --m-success-fill: #e6f6ea;
+    --m-success-line: #2da44e;
+    --m-success-text: #1a7f37;
+    --m-warning-fill: #fff2e3;
+    --m-warning-line: #e8730c;
+    --m-warning-text: #b05405;
+    --m-danger-fill: #ffeced;
+    --m-danger-line: #e0313d;
+    --m-danger-text: #c42531;
+    --m-muted-line: #9aa1ad;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1b1915;
+    --surface: #23201b;
+    --surface-alt: #2e2a24;
+    --ink: #ece6da;
+    --muted: #a59d8f;
+    --hairline: #34302a;
+    --border: #4b453b;
+    --accent: #ec7a68;
+    --accent-soft: #3d2520;
+    /* The same paper in ink: light fibers at a lower alpha on the dark ground. */
+    --paper: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='0.0125' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.3 0 0 0 -0.08'/></filter><filter id='f'><feTurbulence type='turbulence' baseFrequency='0.0225 0.03' numOctaves='2' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.92  0 0 0 0 0.88  0 0 0 0 0.8  -1.6 0 0 0 0.05'/></filter><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.92  0 0 0 0 0.88  0 0 0 0 0.8  1.4 0 0 0 -0.95'/></filter><rect width='100%' height='100%' filter='url(%23m)'/><rect width='100%' height='100%' filter='url(%23f)'/><rect width='100%' height='100%' filter='url(%23s)'/></svg>");
+    --note-bg: #172036;
+    --note-line: #273857;
+    --note-ink: #a3bdff;
+    --tip-bg: #13251f;
+    --tip-line: #214537;
+    --tip-ink: #85dcbd;
+    --warn-bg: #2a2117;
+    --warn-line: #4a3820;
+    --warn-ink: #f2b46b;
+    --grid-dot: rgba(236, 230, 218, 0.1);
+    --figure-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 12px 30px -16px rgba(0, 0, 0, 0.6);
+    --node-shadow: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45));
+
+    --pele-bg: #1f1c18;
+    --pele-fg: #ece6da;
+    --pele-muted: #a59d8f;
+    --pele-line: #8a8274;
+    --pele-surface: #2a2620;
+    --pele-surface-alt: #34302a;
+    --pele-border: #585143;
+    --c-blue: #1e3a60;
+    --c-orange: #5a341a;
+    --c-purple: #3a2f62;
+    --c-yellow: #554812;
+    --c-teal: #174a42;
+    --c-tan: #40352b;
+    --c-pink: #5a2444;
+    --m-primary-line: #7d8cff;
+    --m-success-fill: #17301f;
+    --m-success-line: #2ea043;
+    --m-success-text: #5bd46c;
+    --m-warning-fill: #302518;
+    --m-warning-line: #d0700f;
+    --m-warning-text: #ffa55c;
+    --m-danger-fill: #321e21;
+    --m-danger-line: #d6343e;
+    --m-danger-text: #ff6b6b;
+    --m-muted-line: #6b7383;
+  }
+  * { box-sizing: border-box; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  body { margin: 0; background: var(--paper), var(--bg); color: var(--ink); font: 16.5px/1.8 var(--sans); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .masthead { border-bottom: 1px solid var(--hairline); }
+  .masthead-inner { position: relative; max-width: 72rem; margin: 0 auto; padding: 3.6rem 2rem 2.8rem; }
+  /* The theme switch stays in the top right corner as the page scrolls. The knob slides under the icon of
+     the theme in use: the sun on the left for light, the moon on the right for dark. */
+  .theme-toggle { position: fixed; top: 0.9rem; right: 0.9rem; z-index: 10; display: block; margin: 0; padding: 0; border: 0; background: none; border-radius: 999px; cursor: pointer; }
+  .theme-toggle[hidden] { display: none; }
+  .theme-track { position: relative; display: flex; align-items: center; justify-content: space-between; width: 3.6rem; height: 1.9rem; padding: 0 0.42rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); box-shadow: 0 2px 8px -3px rgba(70, 55, 30, 0.3); }
+  .theme-toggle:hover .theme-track { border-color: var(--muted); }
+  .theme-knob { position: absolute; top: 0.17rem; left: 0.17rem; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--accent-soft); }
+  :root[data-theme="dark"] .theme-knob { transform: translateX(1.7rem); }
+  .theme-track svg { position: relative; width: 1rem; height: 1rem; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  :root:not([data-theme="dark"]) .theme-track .icon-sun, :root[data-theme="dark"] .theme-track .icon-moon { stroke: var(--accent); }
+  @media (prefers-reduced-motion: no-preference) { .theme-knob { transition: transform 0.2s ease; } }
+  h1 { margin: 0 0 1.1rem; max-width: 48rem; font-size: clamp(1.8rem, 1.2rem + 1.8vw, 2.6rem); line-height: 1.25; font-weight: 700; letter-spacing: -0.015em; }
+  .request { margin: 0; max-width: 44rem; color: var(--muted); font-size: 1.06rem; line-height: 1.7; }
+  .meta { margin: 1.3rem 0 0; color: var(--muted); font-size: 0.85rem; line-height: 1.4; }
+  .meta:empty { display: none; }
+
+  .layout { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 3.5rem; max-width: 72rem; margin: 0 auto; padding: 3rem 2rem 5rem; }
+  .toc { position: sticky; top: 1.5rem; align-self: start; max-height: calc(100vh - 3rem); overflow: auto; font-size: 0.88rem; }
+  .toc-title { margin: 0 0 0.7rem; color: var(--muted); font: 600 0.82rem/1 var(--sans); }
+  .toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--hairline); }
+  .toc a { display: block; padding: 0.36rem 0 0.36rem 0.95rem; margin-left: -1px; border-left: 2px solid transparent; color: var(--muted); text-decoration: none; line-height: 1.45; }
+  .toc a:hover { color: var(--ink); }
+  .toc a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+
+  main { min-width: 0; max-width: 52rem; counter-reset: figure; }
+  section { margin: 0 0 3.2rem; scroll-margin-top: 1.5rem; }
+  main > section + section { padding-top: 3rem; border-top: 1px solid var(--hairline); }
+  h2 { margin: 0 0 1.2rem; font-size: 1.5rem; line-height: 1.35; font-weight: 700; letter-spacing: -0.01em; }
+  h3 { margin: 2rem 0 0.8rem; font-size: 1.05rem; line-height: 1.5; font-weight: 650; }
+  p { margin: 0 0 1rem; }
+  .lede { font-size: 1.14rem; line-height: 1.85; }
+  a { color: var(--accent); text-underline-offset: 0.2em; }
+  strong { font-weight: 650; }
+  ul, ol { padding-left: 1.3rem; margin: 0 0 1rem; }
+  li { margin: 0.35rem 0; }
+  li::marker { color: var(--accent); }
+  code { font: 0.84em/1.5 var(--mono); background: var(--surface-alt); border-radius: 4px; padding: 0.12em 0.4em; }
+
+  /* A walkthrough is a real sequence, so its steps carry numbers joined by a thread. */
+  ol.steps { counter-reset: step; list-style: none; padding: 0; }
+  ol.steps > li { counter-increment: step; position: relative; padding: 0 0 1.1rem 2.7rem; margin: 0; }
+  ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0.15rem; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 700 0.8rem/1.75rem var(--sans); text-align: center; }
+  ol.steps > li:not(:last-child)::after { content: ""; position: absolute; left: calc(0.875rem - 1px); top: 2.15rem; bottom: 0.3rem; width: 2px; border-radius: 1px; background: var(--hairline); }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 1.2rem; font-size: 0.94rem; }
+  th, td { text-align: left; vertical-align: top; padding: 0.65rem 0.8rem; border-bottom: 1px solid var(--hairline); }
+  th { color: var(--muted); font-weight: 600; border-bottom-color: var(--border); }
+
+  /* The legend sits right above its figure (WRITING.md). Joined to it, the two read as one sheet. */
+  ul.legend { list-style: none; margin: 1.6rem 0 0.8rem; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; font-size: 0.88rem; line-height: 1.6; }
+  ul.legend:has(+ figure.diagram) { margin-bottom: 0; padding: 0.8rem 1.15rem; background: var(--surface); border: 1px solid var(--hairline); border-bottom: none; border-radius: 14px 14px 0 0; }
+  ul.legend + figure.diagram { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+  ul.legend li { display: flex; gap: 0.5rem; align-items: baseline; margin: 0; }
+  .swatch { flex: none; display: inline-block; width: 1.15rem; height: 0.85rem; border-radius: 3px; border: 1px solid var(--pele-border); background: var(--pele-surface); transform: translateY(0.08rem); }
+  .swatch.blue { background: var(--c-blue); }
+  .swatch.orange { background: var(--c-orange); }
+  .swatch.purple { background: var(--c-purple); }
+  .swatch.yellow { background: var(--c-yellow); }
+  .swatch.teal { background: var(--c-teal); }
+  .swatch.tan { background: var(--c-tan); }
+  .swatch.pink { background: var(--c-pink); }
+  .swatch.primary { border: 2.5px solid var(--m-primary-line); }
+  .swatch.success { border: 2.5px solid var(--m-success-line); background: var(--m-success-fill); }
+  .swatch.warning { border: 2.5px solid var(--m-warning-line); background: var(--m-warning-fill); }
+  .swatch.danger { border: 2.5px solid var(--m-danger-line); background: var(--m-danger-fill); }
+  .swatch.muted { border: 2px dashed var(--m-muted-line); background: transparent; }
+  /* Line styles: --> solid, -.-> dotted, ==> thick. */
+  .swatch.solid, .swatch.dotted, .swatch.thick { width: 1.6rem; height: 0; border: none; border-radius: 0; background: none; transform: translateY(-0.3rem); }
+  .swatch.solid { border-top: 2px solid var(--pele-line); }
+  .swatch.dotted { border-top: 2px dashed var(--pele-line); }
+  .swatch.thick { border-top: 4px solid var(--pele-line); }
+  /* An item with no swatch, such as what a shape means, takes the whole row. */
+  ul.legend li:not(:has(.swatch)) { flex-basis: 100%; color: var(--muted); }
+
+  /* A tinted box with a soft border of the same hue all round: the color says what kind of note it is. */
+  .callout { margin: 0 0 1.2rem; padding: 1rem 1.25rem; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout > strong:first-child { display: block; margin-bottom: 0.35rem; font-size: 0.95rem; }
+  .callout ul { padding-left: 1.2rem; }
+  .callout.note { background: var(--note-bg); border-color: var(--note-line); }
+  .callout.note > strong:first-child, .callout.note li::marker { color: var(--note-ink); }
+  .callout.tip { background: var(--tip-bg); border-color: var(--tip-line); }
+  .callout.tip > strong:first-child, .callout.tip li::marker { color: var(--tip-ink); }
+  .callout.warn { background: var(--warn-bg); border-color: var(--warn-line); }
+  .callout.warn > strong:first-child, .callout.warn li::marker { color: var(--warn-ink); }
+
+  figure.diagram { counter-increment: figure; margin: 1.6rem 0 1.8rem; background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px; overflow: hidden; box-shadow: var(--figure-shadow); }
+  /* Drafting paper: a dot grid that edge labels (filled with --pele-bg) sit on. */
+  .dg-canvas { position: relative; padding: 2.4rem 1.5rem; text-align: center; overflow: auto; background-color: var(--pele-bg); background-image: radial-gradient(circle, var(--grid-dot) 1px, transparent 1.3px); background-size: 18px 18px; background-position: center; }
+  figcaption { display: flex; gap: 0.7rem; align-items: baseline; padding: 0.75rem 1.15rem; border-top: 1px solid var(--hairline); background: var(--surface); color: var(--muted); font-size: 0.88rem; line-height: 1.55; }
+  figcaption::before { flex: none; content: "Figure " counter(figure); color: var(--accent); font-weight: 700; }
+  :root:lang(zh) figcaption::before { content: "圖 " counter(figure); }
+  .dg-error { margin: 0; padding: 0.8rem 1rem; border-radius: 8px; background: var(--m-danger-fill); color: var(--m-danger-text); font: 0.85rem/1.6 var(--mono); white-space: pre-wrap; text-align: left; }
+
+  /* Pele reads the --pele-* variables from :root, so a theme change needs no redraw. */
+  .pele {
+    --pele-accent: var(--m-primary-line);
+    --pele-critical: var(--m-danger-line);
+    --pele-error: var(--m-danger-line);
+    --pele-font: var(--sans);
+    --pele-font-mono: var(--mono);
+    --pele-radius: 8px;
+  }
+  /* A soft lift so the nodes sit on the paper instead of being printed into it. */
+  .pele .pele-node > :not(text) { filter: var(--node-shadow); }
+  /* Phase colors: "class a,b teal". page.py refuses classDef and style, so these rules alone color the nodes. */
+  .pele .pele-node.blue > :not(text) { fill: var(--c-blue); }
+  .pele .pele-node.orange > :not(text) { fill: var(--c-orange); }
+  .pele .pele-node.purple > :not(text) { fill: var(--c-purple); }
+  .pele .pele-node.yellow > :not(text) { fill: var(--c-yellow); }
+  .pele .pele-node.teal > :not(text) { fill: var(--c-teal); }
+  .pele .pele-node.tan > :not(text) { fill: var(--c-tan); }
+  .pele .pele-node.pink > :not(text) { fill: var(--c-pink); }
+  /* Marks: "class c danger". They come after the phase colors, so a mark shows over a phase color. */
+  .pele .pele-node.primary > :not(text) { stroke: var(--m-primary-line); stroke-width: 2.5px; }
+  .pele .pele-node.success > :not(text) { fill: var(--m-success-fill); stroke: var(--m-success-line); stroke-width: 2.5px; }
+  .pele .pele-node.success text { fill: var(--m-success-text); }
+  .pele .pele-node.warning > :not(text) { fill: var(--m-warning-fill); stroke: var(--m-warning-line); stroke-width: 2.5px; }
+  .pele .pele-node.warning text { fill: var(--m-warning-text); }
+  .pele .pele-node.danger > :not(text) { fill: var(--m-danger-fill); stroke: var(--m-danger-line); stroke-width: 2.5px; }
+  .pele .pele-node.danger text { fill: var(--m-danger-text); }
+  .pele .pele-node.muted > :not(text) { fill: var(--pele-bg); stroke: var(--m-muted-line); stroke-dasharray: 6 3; filter: none; }
+  .pele .pele-node.muted text { fill: var(--pele-muted); }
+
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; padding: 1.4rem 1.2rem 3rem; }
+    .toc { position: static; max-height: none; padding: 0.9rem 1.1rem; background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; }
+    .masthead-inner { padding: 3.2rem 1.2rem 1.8rem; }
+  }
+  @media print {
+    .toc, .theme-toggle { display: none; }
+    .layout { display: block; }
+    .dg-canvas { background-image: none; }
+    figure.diagram { box-shadow: none; }
+    figure.diagram, .callout { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" type="button" role="switch" aria-checked="false" hidden>
+  <span class="theme-track">
+    <span class="theme-knob"></span>
+    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+  </span>
+</button>
+<header class="masthead">
+  <div class="masthead-inner">
+    <h1>{{TITLE}}</h1>
+    <p class="request">{{REQUEST}}</p>
+    <p class="meta">{{META}}</p>
+  </div>
+</header>
+<div class="layout">
+  <nav class="toc" aria-label="Contents"></nav>
+  <main>
+<!-- CONTENT -->
+  </main>
+</div>
+<script>{{PELE}}</script>
+<script>
+(function () {
+  'use strict';
+  var ZH = /^zh/i.test(document.documentElement.lang || '');
+  var T = ZH
+    ? { contents: '目錄', zoomIn: '放大', zoomOut: '縮小', reset: '重設', missing: '圖表程式庫沒有載入.',
+        dark: '深色模式' }
+    : { contents: 'Contents', zoomIn: 'Zoom in', zoomOut: 'Zoom out', reset: 'Reset', missing: 'The diagram library did not load.',
+        dark: 'Dark theme' };
+  // check.mjs passes the same limits: Pele's defaults are smaller than a large diagram can be.
+  var LIMITS = { limit: 1000000, outputLimit: 8000000, maxEdges: 10000 };
+
+  function themeToggle() {
+    var button = document.querySelector('.theme-toggle');
+    var root = document.documentElement;
+    // A switch keeps one name; aria-checked says whether the dark theme is on.
+    function sync() { button.setAttribute('aria-checked', root.dataset.theme === 'dark' ? 'true' : 'false'); }
+    button.setAttribute('aria-label', T.dark);
+    button.title = T.dark;
+    button.addEventListener('click', function () {
+      if (root.dataset.theme === 'dark') delete root.dataset.theme;
+      else root.dataset.theme = 'dark';
+      sync();
+    });
+    sync();
+    button.hidden = false;
+  }
+
+  function buildToc() {
+    var toc = document.querySelector('.toc');
+    var sections = document.querySelectorAll('main section[id]');
+    if (!toc || !sections.length) { if (toc) toc.remove(); return; }
+    var title = document.createElement('p');
+    title.className = 'toc-title';
+    title.textContent = T.contents;
+    var list = document.createElement('ol');
+    var links = [];
+    sections.forEach(function (section) {
+      var heading = section.querySelector('h2');
+      if (!heading) return;
+      var item = document.createElement('li');
+      var link = document.createElement('a');
+      link.href = '#' + section.id;
+      link.textContent = heading.textContent;
+      item.appendChild(link);
+      list.appendChild(item);
+      links.push({ link: link, section: section });
+    });
+    toc.appendChild(title);
+    toc.appendChild(list);
+    function mark() {
+      var current = links[0];
+      links.forEach(function (entry) {
+        if (entry.section.getBoundingClientRect().top < 120) current = entry;
+      });
+      links.forEach(function (entry) { entry.link.classList.toggle('active', entry === current); });
+    }
+    window.addEventListener('scroll', mark, { passive: true });
+    mark();
+  }
+
+  function showError(canvas, text) {
+    var box = document.createElement('pre');
+    box.className = 'dg-error';
+    box.textContent = text;
+    canvas.appendChild(box);
+  }
+
+  function drawDiagrams() {
+    var font = getComputedStyle(document.body).fontFamily;
+    document.querySelectorAll('figure.diagram').forEach(function (figure) {
+      var spec = figure.querySelector('script[type="text/x-mermaid"]');
+      if (!spec) return;
+      var source = spec.textContent.replace(/^\s*\n/, '').replace(/\s+$/, '');
+      var canvas = document.createElement('div');
+      canvas.className = 'dg-canvas';
+      spec.after(canvas);
+
+      if (typeof pele === 'undefined') { showError(canvas, T.missing); return; }
+      // mount() draws the error in the canvas itself and redraws when the width changes.
+      pele.mount(canvas, source, {
+        fontFamily: font,
+        limit: LIMITS.limit,
+        outputLimit: LIMITS.outputLimit,
+        maxEdges: LIMITS.maxEdges,
+        zoom: { labels: { zoomIn: T.zoomIn, zoomOut: T.zoomOut, reset: T.reset } }
+      });
+    });
+  }
+
+  themeToggle();
+  buildToc();
+  drawDiagrams();
+})();
+</script>
+</body>
+</html>
