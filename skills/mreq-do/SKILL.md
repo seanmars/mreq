@@ -83,7 +83,11 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **Assumptions**: what you inferred and the user never said, each marked as a guess.
    - **Open**: each decision the user deferred. Omit when none.
 
-   Ask the user to confirm or correct it. A correction means something is still hidden: go back to step 3, then restate again. Only the user's yes moves on.
+   Then ask one question (see "Asking the user") with these two options, the first one recommended:
+   - **Correct, write the document**: go to step 5, then step 6.
+   - **Correct, write the document, then grill it**: go to step 5, then run `mreq-grill` on the document (step 6).
+
+   Tell the user that, when something is wrong, they can type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means something is still hidden: go back to step 3, then restate again. Only one of the two options moves on.
 
    Only an explicit request to skip this confirmation (for example "stop asking, just write the document") skips it. "Just write it" alone, or answering the questions, does not: restate. When the user skips it, go to step 5 without restating: write every assumption in `## Assumptions`, mark the document unconfirmed in `## Handoff`, and name the assumptions in your reply.
 
@@ -105,7 +109,9 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - Leave `status` as `draft`.
 
 6. **Ask for the next step.**
-   One question. Recommend the first option unless the plan still feels untested or the document is unconfirmed:
+   When the user picked **Correct, write the document, then grill it** in step 4, do not ask: run the `mreq-grill` skill on this document now (in Claude Code: with the Skill tool).
+
+   Otherwise, ask one question. Recommend the first option unless the plan still feels untested or the document is unconfirmed:
    - **Implement (mreq-apply)**: run the `mreq-apply` skill on this document (in Claude Code: with the Skill tool).
    - **Pressure-test first (mreq-grill)**: run the `mreq-grill` skill on this document (in Claude Code: with the Skill tool).
    - **Stop here**: give the absolute path the script printed and say `/mreq-apply <path>` continues it later.
@@ -115,5 +121,5 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Guardrails
 
 - Write only the task document under `.mreq/`. Never edit source code or other files.
-- Never start the next step yourself: the user picks it in step 6.
+- Never start the next step yourself: the user picks it in step 4 (grill) or step 6.
 - Never skip step 4, even when the request looks clear. The only exception is the user's explicit request to skip the confirmation (step 4), and then the document records it as `Unconfirmed:`.

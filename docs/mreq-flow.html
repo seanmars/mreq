@@ -270,6 +270,7 @@ flowchart TD
   HOW --> PAGE[("離線解說 HTML<br>.mreq/how/")]:::doc
   Q -- 否 --> DO["/mreq-do<br>分類, 訪談, 重述確認"]:::skill
   DO -- "mreq.py new" --> DOC[(".mreq/ 任務文件<br>status: draft")]:::doc
+  DOC -- "確認時選<br>撰寫後 grill" --> GRILL
   DOC --> N{"使用者選下一步"}:::user
   N -- "Pressure-test" --> GRILL["mreq-grill<br>四象限壓力測試"]:::skill
   N -- "Implement<br>(推薦)" --> APPLY["mreq-apply<br>逐項實作 Tasks"]:::skill
@@ -305,8 +306,8 @@ sequenceDiagram
   Note over DO: 讀 README, 讀程式碼, 分類 schema
   DO->>U: 訪談問題, 附建議答案
   U-->>DO: 回答
-  DO->>U: 重述 Type, Goal, Problem ...
-  U-->>DO: 確認 Yes
+  DO->>U: 重述 Type, Goal, Problem ...<br>選項: 正確, 撰寫文件 / 正確, 撰寫後 grill
+  U-->>DO: 正確, 撰寫文件
   DO->>S: new --schema --slug --title --desc
   S->>F: 從 template 建立, status draft
   DO->>F: Edit 逐節填寫 body
@@ -441,12 +442,15 @@ flowchart TD
   C1 -- 是 --> D0{"使用者明確要求<br>跳過確認?"}
   D0 -- 否 --> D1["重述:<br>Type, Goal, Problem,<br>Decided, Out of scope,<br>Assumptions, Open"]
   D1 --> D2{"使用者回應"}:::user
-  D2 -- "修正" --> C2
-  D2 -- "Yes" --> E1["mreq.py new<br>--schema --slug<br>--title --desc"]:::script
+  D2 -- "在最下方自由回答<br>輸入修正" --> C2
+  D2 -- "正確, 撰寫文件<br>(推薦)" --> E1["mreq.py new<br>--schema --slug<br>--title --desc"]:::script
+  D2 -- "正確, 撰寫後 grill" --> E1
   D0 -- 是 --> E0["Handoff 加上<br>Unconfirmed: 一行"]:::doc
   E0 --> E1
   E1 --> E2["用 Edit 逐節填寫 body<br>不碰 front matter"]:::doc
-  E2 --> G1{"下一步?"}:::user
+  E2 --> G0{"Step 4 選了<br>撰寫後 grill?"}
+  G0 -- 是 --> GG
+  G0 -- 否 --> G1{"下一步?"}:::user
   G1 -- "Implement<br>(推薦)" --> GA["mreq-apply"]:::skill
   G1 -- "Pressure-test" --> GG["mreq-grill"]:::skill
   G1 -- "Stop here" --> GS(["給出絕對路徑<br>停止"]):::stop
@@ -489,7 +493,7 @@ flowchart TD
     <li><code>## Handoff</code> 寫: 尚未開始, 第一個要做的 task.</li>
     <li>status 保持 <code>draft</code>.</li>
   </ul>
-  <div class="callout"><strong>規則:</strong> 只寫 <code>.mreq/</code> 底下的文件. 不自己開始下一步. 不跳過 Step 4 的確認, 除非使用者明確要求; 這時文件會記錄 <code>Unconfirmed:</code>. Skill 呼叫被拒絕時, 給出 <code>/mreq-apply &lt;path&gt;</code> 與 allow rule <code>Skill(mreq-apply)</code>, 然後停止.</div>
+  <div class="callout"><strong>規則:</strong> 只寫 <code>.mreq/</code> 底下的文件. 不自己開始下一步: 使用者在 Step 4 (撰寫後 grill) 或 Step 6 選擇. 不跳過 Step 4 的確認, 除非使用者明確要求; 這時文件會記錄 <code>Unconfirmed:</code>. Skill 呼叫被拒絕時, 給出 <code>/mreq-apply &lt;path&gt;</code> 與 allow rule <code>Skill(mreq-apply)</code>, 然後停止.</div>
 </section>
 
 <section class="block" id="do-explore">
