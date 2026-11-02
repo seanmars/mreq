@@ -564,21 +564,24 @@ flowchart TD
   end
   Q4 --> RS["重述:<br>成立與推翻的主張<br>明確的假設, 決策<br>仍未決的事"]
   RS --> C1{"使用者回應"}:::user
-  C1 -- 修正 --> Q1
-  C1 -- Yes --> W0{"選了 Discuss only?"}
+  C1 -- "在最下方自由回答<br>輸入修正" --> Q1
+  C1 -- "正確, 寫回文件<br>(推薦)" --> W0{"選了 Discuss only?"}
+  C1 -- "正確, 寫回後實作" --> W0
   W0 -- 是 --> NX
   W0 -- 否 --> W1["Edit 逐節寫回<br>(見下表)"]:::doc
   W1 --> W2["刪除 Handoff 的<br>Unconfirmed: 行"]:::doc
   W2 --> W3{"Reopen 的<br>done 文件?"}
   W3 -- 是 --> W4["update --status active"]:::script
   W3 -- 否 --> W5["update"]:::script
-  W4 --> NX{"下一步?"}:::user
-  W5 --> NX
+  W4 --> WA{"Step 4 選了<br>寫回後實作?"}
+  W5 --> WA
+  WA -- 是 --> AP
+  WA -- 否 --> NX{"下一步?"}:::user
   NX -- Implement --> AP["mreq-apply"]:::skill
   NX -- "Grill more" --> Q1
   NX -- "Stop here" --> X3(["給出絕對路徑<br>停止"]):::stop
     </script>
-    <figcaption>mreq-grill 的流程. 用完問題不算確認, 只有使用者的 Yes 才算</figcaption>
+    <figcaption>mreq-grill 的流程. 用完問題不算確認, 只有使用者選了 "正確" 的選項才算. Discuss only 時, 選項改為 "正確, 到此為止" 與 "Grill more"</figcaption>
   </figure>
 
   <h3>四象限</h3>
