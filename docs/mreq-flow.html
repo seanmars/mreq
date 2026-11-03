@@ -879,7 +879,7 @@ flowchart TD
 <!-- ============================== 7 ============================== -->
 <section class="block" id="graph">
   <h2><span class="stamp" aria-hidden="true">圖</span>mreq-graph</h2>
-  <p class="lede">把使用者的描述畫成 Mermaid 圖表, 放在一頁離線 HTML, 每張圖附上閱讀說明. 由 <a href="https://pele.run/">Pele</a> 繪製; Pele 內嵌在頁面裡, 所以不需要網路. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/graph/</code> 裡的頁面. 畫圖前先和使用者確認描述的解讀. 只有使用者輸入 <code>/mreq-graph</code> 才會執行.</p>
+  <p class="lede">把使用者的描述畫成 Mermaid 圖表, 放在一頁離線 HTML. 頁面只放圖: 每張圖附上圖例與一行說明, 最後列出假設. 由 <a href="https://pele.run/">Pele</a> 繪製; Pele 內嵌在頁面裡, 所以不需要網路. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/graph/</code> 裡的頁面. 畫圖前先和使用者確認描述的解讀. 只有使用者輸入 <code>/mreq-graph</code> 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -888,9 +888,9 @@ flowchart TD
   C1 --> C2{"使用者確認?"}:::user
   C2 -- 修正 --> C1
   C2 -- Yes --> A1
-  A0 -- 是 --> A0a["選最可能的解讀<br>報告第一句說明解讀"]
+  A0 -- 是 --> A0a["選最可能的解讀<br>寫在報告第一句<br>與第一個假設"]
   A0a --> A1["讀描述指到的<br>檔案或文件"]:::doc
-  A1 --> B1["依 WRITING.md 規劃;<br>先寫 Mermaid, 再寫說明"]
+  A1 --> B1["依 WRITING.md 選圖與類型;<br>先寫 Mermaid,<br>再寫圖例與說明"]
   B1 --> B2["page.py new topic-slug"]:::script
   B2 --> B3["Write 內容檔:<br>4 行 header, 分隔線,<br>sections"]:::doc
   B3 --> B4["page.py build 內容檔<br>用 Node 和 Pele 檢查每張圖"]:::script
@@ -907,21 +907,23 @@ flowchart TD
   </figure>
   <div class="grid2">
     <div>
-      <h3>頁面章節 (依序, 用得到的才放)</h3>
+      <h3>頁面章節 (依序, 只放圖)</h3>
       <ol>
-        <li><strong>Overview</strong>: 圖表呈現什麼, 最重要的一個結論.</li>
-        <li><strong>每張圖一節</strong>: 圖例 (放在圖的正上方, 說明形狀, 線條, 顏色), 圖, 逐步說明.</li>
-        <li><strong>Key Points</strong>: 圖表呈現的 2-5 個結論.</li>
-        <li><strong>Assumptions</strong>: 描述沒說清楚, 由 agent 選擇的部分.</li>
+        <li><strong>每張圖一節</strong>: <code>h2</code> 標題, 圖例 (放在圖的正上方, 說明顏色與線條), 圖, 一行說明 (圖的範圍).</li>
+        <li><strong>一組相關的圖</strong>: 放在同一節, 例如總覽與細節圖. 每張圖用自己的 <code>h3</code>.</li>
+        <li><strong>Assumptions</strong>: 放最後. 描述沒說清楚, 由 agent 選擇的部分, 以及圖省略的細節. 沒有時不放.</li>
       </ol>
+      <p>不寫 overview, 逐步說明, 結論, 或圖旁的註記. 讀圖需要的資訊放在標籤, 圖例, 或說明裡.</p>
     </div>
     <div>
       <h3>頁面特性</h3>
       <ul>
         <li>Pele bundle 內嵌在頁面, CSP 只允許頁面自己的兩段 script.</li>
-        <li>預設 light theme, 右上角固定的開關可以切換成 dark theme.</li>
-        <li>階段顏色: <code>blue</code>, <code>orange</code>, <code>purple</code>, <code>yellow</code>, <code>teal</code>, <code>tan</code>, <code>pink</code>.</li>
+        <li>預設 light theme, 上方工具列的開關可以切換成 dark theme.</li>
+        <li>左側目錄列出每個 <code>h2</code> 與 <code>h3</code>. 寬度小於 1200px 時收進工具列的按鈕.</li>
+        <li><code>flowchart</code> 與 <code>stateDiagram-v2</code> 的階段顏色: <code>blue</code>, <code>orange</code>, <code>purple</code>, <code>yellow</code>, <code>teal</code>, <code>tan</code>, <code>pink</code>.</li>
         <li>標記: <code>primary</code>, <code>success</code>, <code>warning</code>, <code>danger</code>, <code>muted</code>.</li>
+        <li>mindmap 的分支與 timeline 的時期都用同一個中性色. pie, sankey, journey, gitGraph 保留 Pele 的顏色.</li>
         <li>不寫 <code>classDef</code>, <code>style</code>, <code>linkStyle</code>, <code>%%{init}%%</code>; 有寫時 build 失敗.</li>
         <li>標籤用讀者的用語; 每張圖大約 20 個箭頭以內.</li>
         <li>圖寬超過 1100 px 時 build 失敗, 因為縮小後文字會太小; 預設用 <code>TD</code>.</li>
