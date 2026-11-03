@@ -1,6 +1,6 @@
 ---
 name: mreq-graph
-description: Turn the user's description into Mermaid diagrams on an offline single-page HTML, with a clear explanation of how to read each diagram, written to .mreq/graph/ under the session root. Pele (https://pele.run/) renders the diagrams, inlined in the page so it works with no network. Covers flowcharts, sequence, state, ER, class, gantt, timeline, mindmap and other Mermaid charts. Confirms its reading of the description with the user before drawing. Use for /mreq-graph.
+description: Turn the user's description into Mermaid diagrams on an offline single-page HTML, each with a legend for its colors and line styles, written to .mreq/graph/ under the session root. Pele (https://pele.run/) renders the diagrams, inlined in the page so it works with no network. Covers flowcharts, sequence, state, ER, class, gantt, timeline, mindmap and other Mermaid charts. Confirms its reading of the description with the user before drawing. Use for /mreq-graph.
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Run only when the user typed `/mreq-graph`. If you are reading this file on your own, stop and ask the user to run `/mreq-graph <description>`.
 
-Turn the user's description into one or more Mermaid diagrams on a single offline HTML page. Each diagram comes with a short explanation: how to read it and the path through it.
+Turn the user's description into one or more Mermaid diagrams on a single offline HTML page. The page holds the diagrams and nothing else: each one has a legend and a one-line caption, and the assumptions close the page.
 
 **Input**: A description of what to draw: a process, a system, a lifecycle, a schedule, a set of relations. It may point at files or code to draw from. Confirm your reading of it with the user before drawing (step 1).
 
@@ -48,7 +48,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
    Before the yes, read only what you need to name the subject: the files the user pointed at, by name. Do not draw, and do not run `page.py`.
 
-   Only an explicit request to skip this confirmation (for example "don't ask, just draw") skips it. Then pick the most likely reading and go on, and state it in the first sentence of the report and in a note at the top of the Overview (see `WRITING.md`).
+   Only an explicit request to skip this confirmation (for example "don't ask, just draw") skips it. Then pick the most likely reading and go on, and state it in the first sentence of the report and as the first assumption on the page (see `WRITING.md`).
 
 2. **Gather the facts.**
    The diagrams are for a reader: the person who reads the page and decides whether the picture is right. Draw in that reader's words (see "Labels and arrows" in `WRITING.md`).
@@ -56,7 +56,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    When the description points at files, code or documents, read them, and draw what they say. When code and a document disagree, draw the code and say so on the page. When the description alone is the source, draw only what it says and the assumptions the user confirmed. Do not invent steps, names or numbers: what is missing goes under Assumptions. When a diagram cannot be drawn without a fact that no source gives (for example, which side opens a link in a sequence diagram), pick the usual answer and list it under Assumptions.
 
 3. **Plan the page.**
-   Follow `WRITING.md` in this skill's directory: pick the sections, then write each diagram's Mermaid source before the prose. The prose explains the diagrams, so the diagrams come first.
+   Follow `WRITING.md` in this skill's directory: pick the diagrams and their types, then write each diagram's Mermaid source, then its legend and caption.
 
 4. **Write the page.**
    1. Get the content file's path: `page.py new <topic-slug>`. It creates the output folder and stamps the name with the current time; never make up the time.
@@ -69,7 +69,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    2. The page's absolute path.
    3. One question offering to open it in the default browser.
 
-   Do not repeat the page's explanations in the chat, and do not show the Mermaid source. Open the page only when the user says so.
+   Do not repeat the page's captions or assumptions in the chat, and do not show the Mermaid source. Open the page only when the user says so.
 
    A follow-up that asks for a new subject starts again at step 1. A follow-up that changes the page goes through step 4 again; the 3 sentences then say what changed. When a Write, Edit or command is denied before the page is built, reply with only the denied path or command and its allow rule (see "When a tool call is denied"), then stop.
 
