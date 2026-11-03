@@ -22,7 +22,7 @@ When the `AskUserQuestion` tool is available, ask with it: up to 4 independent q
 
 ## The script
 
-`scripts/mreq.py` in this skill's directory creates, lists, and touches task documents. It prints JSON. Every document path you show the user is the absolute path the script printed.
+The script is `<mreq-shared directory>/scripts/mreq.py`, where `<mreq-shared directory>` is `../mreq-shared` from this skill's directory. It creates, lists, and touches task documents. It prints JSON. Every document path you show the user is the absolute path the script printed.
 
 Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Use the script's absolute path. Run `uv run <script> <command>` first. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python <script> <command>`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 

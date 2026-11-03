@@ -22,7 +22,7 @@ When the `AskUserQuestion` tool is available, ask with it: up to 4 independent q
 
 ## The script
 
-The script is `<mreq-do directory>/scripts/mreq.py`, where `<mreq-do directory>` is `../mreq-do` from this skill's directory. Every document path you show the user is the absolute path the script printed.
+The script is `<mreq-shared directory>/scripts/mreq.py`, where `<mreq-shared directory>` is `../mreq-shared` from this skill's directory. Every document path you show the user is the absolute path the script printed.
 
 - `list`: every document, most recently updated first. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
 - `delete <path>`: deletes the document. It refuses any file outside `.mreq/`.

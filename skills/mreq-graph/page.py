@@ -9,7 +9,7 @@
   page.py build <x.content.html>  assemble <x>.html from skeleton.html and check it
 
 The agent writes only a content file: header lines, "---", then the sections.
-The build inlines the Pele bundle (vendor/pele.global.js), so the page draws its
+The build inlines the Pele bundle (mreq-shared/vendor/pele.global.js), so the page draws its
 Mermaid diagrams offline. The browser shows a broken diagram as an error box the
 agent never sees, so the build renders every diagram with the same bundle in Node
 first. Without Node it still builds, and says the diagrams were not checked.
@@ -30,8 +30,10 @@ from pathlib import Path
 OUTPUT_DIR = Path.cwd() / ".mreq" / "graph"
 SKILL_DIR = Path(__file__).resolve().parent
 SKELETON = SKILL_DIR / "skeleton.html"
-PELE = SKILL_DIR / "vendor" / "pele.global.js"
-CHECKER = SKILL_DIR / "check.mjs"
+# mreq-shared sits beside this skill and holds what mreq-how and mreq-graph share: one Pele, one checker.
+SHARED_DIR = SKILL_DIR.parent / "mreq-shared"
+PELE = SHARED_DIR / "vendor" / "pele.global.js"
+CHECKER = SHARED_DIR / "scripts" / "check.mjs"
 CONTENT_SUFFIX = ".content.html"
 NODE_TIMEOUT = 60
 # The diagram canvas in skeleton.html is about 820 px wide. A wider diagram is shrunk to fit, and below
@@ -302,8 +304,10 @@ def build(content_file: str) -> int:
     with open(SKELETON, encoding="utf-8", newline="") as file:
         skeleton = file.read()
     missing = [p for p in PLACEHOLDERS if p not in skeleton]
-    if missing or not PELE.is_file():
-        return fail(page, ["skeleton.html or vendor/pele.global.js is missing or changed; reinstall the skill"])
+    if missing:
+        return fail(page, ["skeleton.html lost its placeholders; reinstall the skill"])
+    if not PELE.is_file():
+        return fail(page, [f"{PELE} is missing; install the mreq-shared skill beside this one"])
     pele = PELE.read_text(encoding="utf-8")
     page.write_text(assemble(skeleton, pele, header, body), encoding="utf-8", newline="")
     if warning:

@@ -10,6 +10,7 @@
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
 | `mreq-how` | 先確認問題的解讀,再產生解說程式碼的離線 HTML,放在 session root 的 `.mreq/how/` | 只有使用者 |
 | `mreq-graph` | 先確認描述的解讀,再把描述畫成 Mermaid 圖表,產生附圖例的離線 HTML,放在 session root 的 `.mreq/graph/` | 只有使用者 |
+| `mreq-shared` | 不執行任何任務. 放其他 skill 共用的 script, template, Pele, 與 Mermaid 規則 | 沒有人 |
 
 「誰能呼叫」只適用 Claude Code. 其他 agent 不讀 `disable-model-invocation`, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
 
@@ -21,7 +22,7 @@
 
 ## 安裝
 
-請一次安裝全部 skill. `mreq-grill`, `mreq-apply`, `mreq-close` 使用 `mreq-do` 裡的 `scripts/mreq.py`, 沒有 `mreq-do` 就不能執行. 下面兩種方式選一種, 不要同時使用.
+請一次安裝全部 skill. 其他 skill 都使用 `mreq-shared` 裡的檔案, 沒有 `mreq-shared` 就不能執行. 下面兩種方式選一種, 不要同時使用.
 
 ### Claude Code plugin
 
@@ -40,7 +41,7 @@ plugin 一定會安裝全部 skill. skill 名稱前會加上 `mreq:`, 例如 `/m
 npx skills add seanmars/mreq --skill '*'
 ```
 
-只安裝部分 skill 時, 一定要包含 `mreq-do`.
+只安裝部分 skill 時, 一定要包含 `mreq-shared`.
 
 ## 需求
 
@@ -54,10 +55,11 @@ npx skills add seanmars/mreq --skill '*'
 .claude-plugin/
 └── marketplace.json  # Claude Code plugin marketplace, plugin 為整個 repo
 skills/
-├── mreq-do/      # SKILL.md, EXPLORER.md, templates/, scripts/mreq.py (其他 skill 共用)
+├── mreq-do/      # SKILL.md, EXPLORER.md
 ├── mreq-grill/
 ├── mreq-apply/
 ├── mreq-close/
 ├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html, page.py
-└── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html, page.py, check.mjs, vendor/ (Pele)
+├── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html, page.py
+└── mreq-shared/  # 共用: scripts/mreq.py, templates/, scripts/check.mjs, vendor/ (Pele), MERMAID.md
 ```

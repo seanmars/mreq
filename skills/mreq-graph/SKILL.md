@@ -56,11 +56,11 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    When the description points at files, code or documents, read them, and draw what they say. When code and a document disagree, draw the code and say so on the page. When the description alone is the source, draw only what it says and the assumptions the user confirmed. Do not invent steps, names or numbers: what is missing goes under Assumptions. When a diagram cannot be drawn without a fact that no source gives (for example, which side opens a link in a sequence diagram), pick the usual answer and list it under Assumptions.
 
 3. **Plan the page.**
-   Follow `WRITING.md` in this skill's directory: pick the diagrams and their types, then write each diagram's Mermaid source, then its legend and caption.
+   Follow `WRITING.md` in this skill's directory and `MERMAID.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory): pick the diagrams and their types, then write each diagram's Mermaid source, then its legend and caption.
 
 4. **Write the page.**
    1. Get the content file's path: `page.py new <topic-slug>`. It creates the output folder and stamps the name with the current time; never make up the time.
-   2. Write the content file at that path in the format `WRITING.md` gives: the header lines, `---`, then the sections. Write only that. The build wraps it in `skeleton.html` and inlines Pele, so never read or copy the skeleton or `vendor/`.
+   2. Write the content file at that path in the format `WRITING.md` gives: the header lines, `---`, then the sections. Write only that. The build wraps it in `skeleton.html` and inlines Pele, so never read or copy the skeleton or the Pele bundle.
    3. Build the page: `page.py build <content file>`. It checks the page and every diagram, and writes `<same name>.html` beside the content file only when it prints `ok`. Fix every FAIL line in the content file with Edit (or Write for a rewrite) and build again. A FAIL line from Pele gives the line inside the Mermaid source. When the same Pele error is still there after 3 builds, stop: give the user Pele's error and the content file's absolute path, and ask how to go on. Between builds, change the content only with Edit or Write; never run `python`, a heredoc, `cd`, or any other script to generate or patch it. Never edit the built page: the next build overwrites it.
 
 5. **Report.**

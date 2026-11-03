@@ -365,7 +365,7 @@ stateDiagram-v2
 
 <section class="block" id="parts">
   <h2><span class="stamp sub" aria-hidden="true">件</span>元件與呼叫權限</h2>
-  <p>四個 skill 共用 <code>mreq-do/scripts/mreq.py</code>. 所以安裝時一定要包含 <code>mreq-do</code>. <code>mreq-how</code> 與 <code>mreq-graph</code> 各自使用自己的 <code>page.py</code>.</p>
+  <p>共用的檔案都放在 <code>mreq-shared</code>. 它不執行任何任務, 所以使用者與 agent 都不能呼叫它. 四個 skill 共用 <code>mreq-shared/scripts/mreq.py</code>. <code>mreq-how</code> 與 <code>mreq-graph</code> 各自使用自己的 <code>page.py</code> 與 <code>skeleton.html</code>, 但共用 Pele, <code>check.mjs</code>, 與 <code>MERMAID.md</code>. 安裝時一定要包含 <code>mreq-shared</code>.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -379,7 +379,7 @@ flowchart TD
     GRILL["mreq-grill"]:::skill
     APPLY["mreq-apply"]:::skill
   end
-  subgraph PY["mreq-do/scripts/mreq.py"]
+  subgraph PY["mreq-shared/scripts/mreq.py"]
     NEW["new"]:::script
     LIST["list [--open]"]:::script
     UPD["update [--status]"]:::script
@@ -393,11 +393,10 @@ flowchart TD
   NEW -- "讀取" --> TPL[("templates/<br>feature, issue,<br>refactor, task")]:::doc
   NEW & UPD & DELC --> MREQ[(".mreq/*.md<br>位於 git root")]:::doc
   HOW --> PAGEPY["mreq-how/page.py<br>new, dir, build"]:::script
-  PAGEPY -- "包裝內容" --> SKEL[("skeleton.html")]:::doc
-  PAGEPY -- "輸出" --> OUT[(".mreq/how/*.html<br>位於 session root")]:::doc
   GRAPH --> GPY["mreq-graph/page.py<br>new, dir, build"]:::script
-  GPY -- "包裝內容,<br>內嵌 Pele" --> GSKEL[("skeleton.html<br>vendor/pele.global.js")]:::doc
-  GPY -- "用 Node 檢查" --> GCHK["check.mjs"]:::script
+  PAGEPY & GPY -- "內嵌" --> PELE[("mreq-shared/vendor/<br>pele.global.js")]:::doc
+  PAGEPY & GPY -- "用 Node 檢查" --> GCHK["mreq-shared/scripts/<br>check.mjs"]:::script
+  PAGEPY -- "輸出" --> OUT[(".mreq/how/*.html<br>位於 session root")]:::doc
   GPY -- "輸出" --> GOUT[(".mreq/graph/*.html<br>位於 session root")]:::doc
     </script>
     <figcaption>skill, script 指令, 與檔案的關係</figcaption>
