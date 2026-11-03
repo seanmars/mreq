@@ -9,45 +9,39 @@
   page.py build <x.content.html>  assemble <x>.html from skeleton.html and check it
 
 The agent writes only a content file: header lines, "---", then the sections.
-The skeleton reaches the page byte for byte, so retyping it never costs tokens
-or breaks the diagrams. The page draws diagrams in the browser, where a broken
-spec is a red box the agent never sees, so the build repeats that validation.
+The build inlines the Pele bundle (mreq-shared/vendor/pele.global.js), so the page draws its
+Mermaid diagrams offline. The browser shows a broken diagram as an error box the
+agent never sees, so the build renders every diagram with the same bundle in Node
+first. Without Node it still builds, and says the diagrams were not checked.
 """
 
+import base64
+import hashlib
 import json
-import math
 import os
 import re
+import shutil
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 
 # The agent runs every command from the session root (no cd), so the cwd is that root.
 OUTPUT_DIR = Path.cwd() / ".mreq" / "how"
-SKELETON = Path(__file__).resolve().parent / "skeleton.html"
+SKILL_DIR = Path(__file__).resolve().parent
+SKELETON = SKILL_DIR / "skeleton.html"
+# mreq-shared sits beside this skill and holds what mreq-how and mreq-graph share: one Pele, one checker.
+SHARED_DIR = SKILL_DIR.parent / "mreq-shared"
+PELE = SHARED_DIR / "vendor" / "pele.global.js"
+CHECKER = SHARED_DIR / "scripts" / "check.mjs"
 CONTENT_SUFFIX = ".content.html"
+NODE_TIMEOUT = 60
+# The diagram canvas in skeleton.html is about 820 px wide. A wider diagram is shrunk to fit, and below
+# three quarters of its size the 16 px labels are too small to read. maxWidth does not make Pele lay it out again.
+CANVAS_WIDTH = 820
+MAX_WIDTH = 1100
 
-# The skeleton's CJK ranges: a CJK glyph is about twice as wide as a Latin one.
-CJK_RANGES = "ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹏＀-｠￠-￦"
-# The skeleton's emoji ranges, U+2300-23FF, U+2600-27BF, U+2B00-2BFF and all above U+FFFF:
-# an emoji is wider still, so it counts 3 (one is about 18 px; a line of 21 units is 160 px).
-EMOJI_RANGES = "⌀-⏿☀-➿⬀-⯿𐀀-􏿿"
-CJK = re.compile(f"[{CJK_RANGES}]")
-EMOJI = re.compile(f"[{EMOJI_RANGES}]")
-TOKENS = re.compile(f"[{CJK_RANGES}]|[^\\s{CJK_RANGES}]+|\\s+")
-# The node kinds WRITING.md lists; the browser draws any other value as a box.
-KINDS = ("box", "store", "external", "actor", "decision", "state", "start", "end")
-# Units a line holds, by node kind, as the skeleton draws them.
-LINE_UNITS = {"decision": 17}
-DEFAULT_LINE_UNITS = 21
-MAX_LINES = 3
-# A start or end label sits below its circle: a third line reaches up into the circle.
-END_LINE_UNITS = 20
-END_MAX_LINES = 2
-# An edge label, as the skeleton's labelSize() wraps it: two lines always fit the smallest canvas (268 x 164 px).
-EDGE_LINE_UNITS = 22
-EDGE_MAX_LINES = 2
-PLACEHOLDERS = ("{{LANG}}", "{{TITLE}}", "{{QUESTION}}", "{{META}}", "<!-- CONTENT -->")
+PLACEHOLDERS = ("{{LANG}}", "{{TITLE}}", "{{QUESTION}}", "{{META}}", "{{CSP}}", "{{PELE}}", "<!-- CONTENT -->")
 PLACEHOLDER = re.compile("|".join(re.escape(p) for p in PLACEHOLDERS))
 HEADER_KEYS = ("lang", "title", "question", "meta")
 REQUIRED_KEYS = ("lang", "title", "question")
@@ -57,242 +51,39 @@ HEADER_LINE = re.compile(r"^\s*([a-z]+)\s*:\s*(.*)$", re.IGNORECASE)
 WHOLE_PAGE = re.compile(r"<(?:!doctype|html|head|body|style)\b", re.IGNORECASE)
 # The body needs no <meta>, and a refresh one leaves the page: the Content-Security-Policy stops loads, not navigation.
 META_TAG = re.compile(r"<meta\b", re.IGNORECASE)
-# The Content-Security-Policy runs only the skeleton's script, so a script in the content would silently not run.
-# A JSON <script> outside its figure is not run either: the spec count below reports it.
-SCRIPT_TAG = re.compile(r"<script\b(?![^>]*application/json)", re.IGNORECASE)
+MERMAID_TYPE = "text/x-mermaid"
+# Any <script> but a Mermaid source: the Content-Security-Policy runs only the skeleton's scripts.
+SCRIPT_TAG = re.compile(r"<script\b(?![^>]*text/x-mermaid)", re.IGNORECASE)
 # A start tag, quoted values included, so a ">" inside a value does not end it.
 START_TAG = re.compile(r"""<[a-z][^\s/>]*(?:"[^"]*"|'[^']*'|[^"'>])*>""", re.IGNORECASE)
 QUOTED = re.compile(r""""[^"]*"|'[^']*'""")
 # An attribute name follows a space or a "/", as the HTML parser reads it.
 EVENT_ATTR = re.compile(r"[\s/]on[a-z]+\s*=", re.IGNORECASE)
-# What the HTML parser reads as text up to a closing string: a comment and the raw-text elements (<style> is refused
-# above). Left open, one swallows the skeleton's own script after the content. A <plaintext> never ends.
+# What the HTML parser reads as text up to a closing string. Left open, one swallows the skeleton's scripts.
 OPENER = re.compile(r"<!--|<(script|textarea|title|xmp|iframe|noembed|noframes|noscript|plaintext)\b", re.IGNORECASE)
 EXTERNAL_TAG = re.compile(
     r"""<(?:script|img|link|iframe|source|video|audio)\b[^>]*\b(?:src|href)\s*=\s*["']?(?:[a-z]+:)?//""",
     re.IGNORECASE,
 )
 EXTERNAL_CSS = re.compile(r"""url\(\s*["']?(?:https?:)?//""", re.IGNORECASE)
-# WRITING.md's figure. The spec ends where the figure goes on, so a "</script>" in a label stays in the spec.
+# WRITING.md's figure. The source ends where the figure goes on, so a "</script>" inside it stays in the source.
 DIAGRAM = re.compile(
-    r'<figure class="diagram">\s*<script type="application/json">(.*?)</script>(?=\s*(?:<figcaption|</figure>))',
+    r'<figure class="diagram">\s*<script type="text/x-mermaid">(.*?)</script>(?=\s*(?:<figcaption|</figure>))',
     re.DOTALL,
 )
-# Any JSON script, whatever its quotes or attributes: more of these than DIAGRAM matches is a misplaced spec.
-JSON_SCRIPT = re.compile(r"<script\b[^>]*application/json", re.IGNORECASE)
-# Where the HTML parser leaves the script early: the spec ends there, or the page's own script never runs.
-SPEC_BREAK = re.compile(r"</script|<!--", re.IGNORECASE)
+ANY_MERMAID = re.compile(r"<script\b[^>]*text/x-mermaid", re.IGNORECASE)
+SOURCE_BREAK = re.compile(r"</script|<!--", re.IGNORECASE)
+# Fixed colors in a source: Pele writes them as style attributes, which beat the page's class colors and
+# stay the same in the dark theme. Checked only in the types where these are statements, not node text.
+FIXED_COLOR_TYPES = re.compile(r"^\s*(?:flowchart|graph|stateDiagram|classDiagram)\b")
+FIXED_COLOR = re.compile(r"^\s*(classDef|style|linkStyle)\s|%%\{\s*init", re.MULTILINE)
 HTML_ENTITY = re.compile(r"&(?:lt|gt|amp|quot|apos|nbsp|#\d+|#x[0-9a-f]+);", re.IGNORECASE)
-
-
-def units(ch: str) -> int:
-    return 3 if EMOJI.match(ch) else 2 if CJK.match(ch) else 1
-
-
-def width(text: str) -> int:
-    return sum(units(ch) for ch in text)
-
-
-def wrap(label: str, max_units: int) -> list:
-    """The skeleton's wrap(), step for step, so the build counts the lines the browser draws."""
-    out = []
-    for para in label.split("\n"):
-        line, used = "", 0
-        for tok in TOKENS.findall(para):
-            if tok.isspace():
-                if line:
-                    line, used = line + " ", used + 1
-                continue
-            w = width(tok)
-            if used + w > max_units and line.strip():
-                out.append(line.strip())
-                line, used = "", 0
-            while w > max_units:
-                cut, cw = "", 0
-                for ch in tok:
-                    if cw + units(ch) > max_units - used:
-                        break
-                    cut, cw = cut + ch, cw + units(ch)
-                if not cut:
-                    if line.strip():
-                        out.append(line.strip())
-                    line, used = "", 0
-                    continue
-                if (line + cut).strip():
-                    out.append((line + cut).strip())
-                line, used = "", 0
-                tok = tok[len(cut):]
-                w = width(tok)
-            line, used = line + tok, used + w
-        if line.strip():
-            out.append(line.strip())
-    return out or [""]
+# A script the page runs: no attributes, as the skeleton writes them.
+RUN_SCRIPT = re.compile(r"<script>(.*?)</script>", re.DOTALL)
 
 
 def escape_html(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
-
-
-def is_number(value) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
-
-
-def no_constant(name: str):
-    # Python's json reads NaN, Infinity and -Infinity; the browser's JSON.parse does not.
-    raise ValueError(f"{name} is not JSON; write a number")
-
-
-def finite(text: str) -> None:
-    # Python's json reads 1e400 as inf and 400 digits as an exact integer; the browser's JSON.parse reads both as Infinity.
-    if not math.isfinite(float(text)):
-        shown = text if len(text) <= 20 else text[:17] + "..."
-        raise ValueError(f"{shown} is too large; write a smaller number")
-
-
-def parse_float(text: str) -> float:
-    finite(text)
-    return float(text)
-
-
-def parse_int(text: str) -> int:
-    finite(text)
-    return int(text)
-
-
-def is_name(value) -> bool:
-    return isinstance(value, str) and value != ""
-
-
-def js_str(value) -> str:
-    # Messages quote values the way the browser's copy of this check prints them.
-    if value is None:
-        return "undefined"
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
-    return str(value)
-
-
-def objects(spec: dict, key: str, errors: list) -> list:
-    """(index, item) for each object in spec[key]; anything else is an error."""
-    value = spec.get(key, [])
-    if not isinstance(value, list):
-        errors.append(f'"{key}" must be a list')
-        return []
-    found = []
-    for i, item in enumerate(value):
-        if isinstance(item, dict):
-            found.append((i, item))
-        else:
-            errors.append(f"{key}[{i}] must be an object")
-    return found
-
-
-def flow_errors(spec: dict) -> list:
-    errors = []
-    ids = set()
-    cells = {}
-    for i, n in objects(spec, "nodes", errors):
-        node_id = n.get("id")
-        if not is_name(node_id):
-            errors.append(f'nodes[{i}]: missing "id"' if not node_id else f'nodes[{i}]: "id" must be a string')
-            continue
-        if node_id in ids:
-            errors.append(f'node "{node_id}" is defined twice')
-        ids.add(node_id)
-        col, row = n.get("col"), n.get("row")
-        if not (is_number(col) and is_number(row)):
-            errors.append(f'node "{node_id}": "col" and "row" must be numbers')
-        elif col < 0 or row < 0:
-            errors.append(f'node "{node_id}": "col" and "row" must be 0 or more')
-        cell = f"{js_str(col)},{js_str(row)}"
-        if cell in cells:
-            errors.append(f'nodes "{cells[cell]}" and "{node_id}" share cell col {js_str(col)}, row {js_str(row)}')
-        cells[cell] = node_id
-        label = n.get("label")
-        kind = n.get("kind", "box")
-        # Tuple membership uses ==, so a list or dict kind cannot raise here.
-        if kind not in KINDS:
-            errors.append(f'node "{node_id}": unknown "kind" {json.dumps(kind, ensure_ascii=False)} (use {", ".join(KINDS)})')
-        elif label is not None and not isinstance(label, str):
-            errors.append(f'node "{node_id}": "label" must be a string')
-        elif kind in ("start", "end"):
-            # The skeleton draws only a given label here, not the id.
-            if label and len(wrap(label, END_LINE_UNITS)) > END_MAX_LINES:
-                errors.append(f'node "{node_id}": a start or end label is longer than two lines; move the detail into "note"')
-        else:
-            lines = wrap(label or node_id, LINE_UNITS.get(kind, DEFAULT_LINE_UNITS))
-            if len(lines) > MAX_LINES:
-                errors.append(f'node "{node_id}": label is longer than three lines; move the detail into "note"')
-    if not ids:
-        errors.append("no nodes")
-    for i, e in objects(spec, "edges", errors):
-        for end in ("from", "to"):
-            if not isinstance(e.get(end), str) or e.get(end) not in ids:
-                errors.append(f'edges[{i}]: unknown "{end}" node "{js_str(e.get(end))}"')
-        label = e.get("label")
-        if isinstance(label, str) and len(wrap(label, EDGE_LINE_UNITS)) > EDGE_MAX_LINES:
-            errors.append(f'edges[{i}]: label is longer than two lines; move the detail into "note"')
-    for i, st in objects(spec, "steps", errors):
-        show = st.get("show", [])
-        if not isinstance(show, list):
-            errors.append(f'steps[{i}]: "show" must be a list')
-            continue
-        for key in show:
-            if not isinstance(key, str):
-                errors.append(f'steps[{i}]: "show" holds {js_str(key)}; use node ids and "from->to" strings')
-                continue
-            parts = key.split("->")
-            # The browser reads a key of three or more parts as one node id, and lights nothing.
-            if len(parts) > 2:
-                errors.append(f'steps[{i}]: "{key}" is neither a node id nor a "from->to" edge')
-                continue
-            for node_id in parts:
-                if node_id not in ids:
-                    errors.append(f'steps[{i}]: unknown node "{node_id}" in "{key}"')
-    for i, g in objects(spec, "groups", errors):
-        for key in ("cols", "rows"):
-            value = g.get(key)
-            if not (isinstance(value, list) and len(value) == 2 and all(is_number(v) for v in value)):
-                errors.append(f'groups[{i}]: "{key}" must be [first, last] numbers')
-            elif not 0 <= value[0] <= value[1]:
-                errors.append(f'groups[{i}]: "{key}" must be [first, last] with 0 <= first <= last')
-    return errors
-
-
-def sequence_errors(spec: dict) -> list:
-    errors = []
-    ids = set()
-    for i, p in objects(spec, "participants", errors):
-        participant_id = p.get("id")
-        if not is_name(participant_id):
-            errors.append(f'participants[{i}]: missing "id"' if not participant_id else f'participants[{i}]: "id" must be a string')
-            continue
-        if participant_id in ids:
-            errors.append(f'participant "{participant_id}" is defined twice')
-        ids.add(participant_id)
-        label = p.get("label")
-        if label is not None and not isinstance(label, str):
-            errors.append(f'participant "{participant_id}": "label" must be a string')
-    if not ids:
-        errors.append("no participants")
-    for i, m in objects(spec, "messages", errors):
-        if "divider" in m:
-            continue
-        for end in ("from", "to"):
-            if not isinstance(m.get(end), str) or m.get(end) not in ids:
-                errors.append(f'messages[{i}]: unknown "{end}" participant "{js_str(m.get(end))}"')
-    return errors
-
-
-def strings(value):
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, list):
-        for item in value:
-            yield from strings(item)
-    elif isinstance(value, dict):
-        for item in value.values():
-            yield from strings(item)
 
 
 def is_inside(file: Path, directory: Path) -> bool:
@@ -330,6 +121,11 @@ def unclosed(markup: str) -> str:
         at = close.end()
 
 
+def mermaid_source(raw: str) -> str:
+    """The text the page script hands to Pele: the same trim, step for step."""
+    return re.sub(r"^\s*\n", "", raw).rstrip()
+
+
 def parse_content(text: str) -> tuple[dict, str, list]:
     """Split a content file into header values and body, at the first line that is exactly "---"."""
     lines = re.split(r"\r?\n", text)
@@ -352,85 +148,129 @@ def parse_content(text: str) -> tuple[dict, str, list]:
         if not header.get(key):
             problems.append(f'header "{key}" is missing or empty')
     body = "\n".join(lines[end + 1:])
-    # The skeleton supplies the document shell; a second one inside it means the agent copied the skeleton.
-    # A diagram spec is text for the browser to draw, so a "<style>" in a note is not a tag.
+    # A Mermaid source is text for Pele, so a "<style>" or "<br>" in it is not a tag.
     markup = DIAGRAM.sub("", body)
     if WHOLE_PAGE.search(markup):
         problems.append("the content holds a whole page (<html>, <head>, <body> or <style>); write only the <section> elements")
     if META_TAG.search(markup):
         problems.append("the content holds a <meta> tag; the skeleton has the page's meta tags, so drop it")
     if SCRIPT_TAG.search(markup):
-        problems.append("the content holds a <script> element; the page runs only the skeleton's script, so drop it")
+        problems.append("the content holds a <script> element; the page runs only the skeleton's scripts, so drop it")
     # Quoted values become a space: "onclick=" inside a title is text, and a name right after a quote still counts.
     if any(EVENT_ATTR.search(QUOTED.sub(" ", tag)) for tag in START_TAG.findall(markup)):
         problems.append(
             "the content holds an event handler attribute (onclick=, onerror=, ...);"
-            " the page runs only the skeleton's script, so drop it"
+            " the page runs only the skeleton's scripts, so drop it"
         )
     opener = unclosed(markup)
     if opener:
         problems.append(
-            f'the content opens "{opener}" and never closes it, so the page\'s own script would not run;'
+            f'the content opens "{opener}" and never closes it, so the page\'s scripts would not run;'
             ' close it, or write "<" in text as "&lt;"'
         )
+    if EXTERNAL_TAG.search(markup) or EXTERNAL_CSS.search(markup):
+        problems.append("the content loads something from outside the file; the page must work offline, so drop it")
     if not body.strip():
         problems.append('no sections after "---"')
     return header, body, problems
 
 
-def assemble(skeleton: str, header: dict, body: str) -> str:
+def diagram_problems(body: str) -> tuple[list, list]:
+    """The Mermaid sources in the body, and what is wrong with their markup."""
+    problems = []
+    sources = []
+    for index, match in enumerate(DIAGRAM.finditer(body), start=1):
+        raw = match.group(1)
+        if ANY_MERMAID.search(raw):
+            # A second source in this figure: the count below reports it.
+            sources.append("")
+            continue
+        if SOURCE_BREAK.search(raw):
+            problems.append(f'diagram {index}: the source holds "</script" or "<!--"; reword that label')
+        entity = HTML_ENTITY.search(raw)
+        if entity:
+            problems.append(
+                f'diagram {index}: the source holds the HTML entity "{entity.group(0)}";'
+                " the source is plain text, so write the character itself"
+            )
+        source = mermaid_source(raw)
+        if not source:
+            problems.append(f"diagram {index}: the Mermaid source is empty")
+        fixed = FIXED_COLOR.search(source) if FIXED_COLOR_TYPES.match(source) else None
+        if fixed:
+            problems.append(
+                f'diagram {index}: the source sets fixed colors ("{fixed.group(0).strip()}");'
+                ' drop it and use the color classes (WRITING.md, Colors)'
+            )
+        sources.append(source)
+    if len(ANY_MERMAID.findall(body)) != len(sources):
+        problems.append('put each Mermaid source first inside <figure class="diagram">, as WRITING.md shows')
+    return sources, problems
+
+
+def render_check(sources: list) -> tuple[list, str]:
+    """Render every source with Pele in Node. Returns (problems, warning)."""
+    if not sources:
+        return [], ""
+    node = shutil.which("node")
+    if not node:
+        return [], "WARN node not found: the diagrams were not checked; open the page and look for red error boxes"
+    try:
+        run = subprocess.run(
+            [node, str(CHECKER), str(PELE)],
+            input=json.dumps(sources),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=NODE_TIMEOUT,
+        )
+    except (OSError, subprocess.TimeoutExpired) as err:
+        return [], f"WARN the diagram check did not finish ({err}); open the page and look for red error boxes"
+    if run.returncode != 0:
+        detail = (run.stderr.strip().splitlines() or ["no output"])[-1]
+        return [], f"WARN the diagram check failed ({detail}); open the page and look for red error boxes"
+    problems = []
+    for index, result in enumerate(json.loads(run.stdout), start=1):
+        if result.get("ok"):
+            width = result.get("width") or 0
+            if width > MAX_WIDTH:
+                problems.append(
+                    f"diagram {index}: it is {round(width)} px wide, so the page shrinks it to"
+                    f" {round(CANVAS_WIDTH / width * 100)}% and its labels are too small to read;"
+                    " use TD, remove \"direction LR\", shorten the labels, or split it (WRITING.md, Keep it readable)"
+                )
+            continue
+        where = f" at line {result['line']}" if result.get("line") else ""
+        # Pele's message holds the source line and a "^" under the column: keep its lines, indented under the FAIL.
+        message = "\n".join("    " + line for line in result.get("message", "").splitlines() if line.strip())
+        problems.append(f"diagram {index}: Pele {result.get('code')} error{where} of the Mermaid source:\n{message}")
+    return problems, ""
+
+
+def script_hashes(html: str) -> str:
+    hashes = []
+    for match in RUN_SCRIPT.finditer(html):
+        digest = hashlib.sha256(match.group(1).encode("utf-8")).digest()
+        hashes.append(f"'sha256-{base64.b64encode(digest).decode('ascii')}'")
+    return " ".join(hashes)
+
+
+def assemble(skeleton: str, pele: str, header: dict, body: str) -> str:
     values = {
         "{{LANG}}": escape_html(header.get("lang", "")),
         "{{TITLE}}": escape_html(header.get("title", "")),
         "{{QUESTION}}": escape_html(header.get("question", "")),
         "{{META}}": escape_html(header.get("meta", "")),
+        "{{CSP}}": "{{CSP}}",
+        "{{PELE}}": pele,
         "<!-- CONTENT -->": body,
     }
-    # One pass over the skeleton: a value that holds "{{META}}" stays as written.
-    return PLACEHOLDER.sub(lambda match: values[match.group(0)], skeleton)
-
-
-def check_page(file: Path, html: str) -> tuple[list, int]:
-    problems = []
-    if not is_inside(file, OUTPUT_DIR):
-        problems.append(f"the page is not under {OUTPUT_DIR}; write it there")
-    if "Content-Security-Policy" not in html:
-        problems.append("the skeleton's Content-Security-Policy meta tag is missing")
-    if EXTERNAL_TAG.search(html) or EXTERNAL_CSS.search(html):
-        problems.append("the page loads something from outside the file; inline it or drop it")
-
-    index = 0
-    for match in DIAGRAM.finditer(html):
-        index += 1
-        # A second spec in this figure: the count below reports it.
-        if JSON_SCRIPT.search(match.group(1)):
-            continue
-        if SPEC_BREAK.search(match.group(1)):
-            problems.append(f'diagram {index}: the spec holds "</script" or "<!--"; write "<" in JSON strings as \\u003c')
-            continue
-        try:
-            spec = json.loads(match.group(1), parse_constant=no_constant, parse_float=parse_float, parse_int=parse_int)
-        except ValueError as err:
-            problems.append(f"diagram {index}: invalid JSON ({err})")
-            continue
-        if not isinstance(spec, dict):
-            problems.append(f"diagram {index}: the spec must be a JSON object")
-            continue
-        kind = spec.get("type")
-        if kind is not None and kind not in ("flow", "sequence"):
-            problems.append(f'diagram {index}: unknown "type" "{js_str(kind)}" (use "flow" or "sequence")')
-            continue
-        errors = sequence_errors(spec) if kind == "sequence" else flow_errors(spec)
-        # The browser draws JSON strings as plain text, so "&gt;" shows up as those four characters.
-        errors.extend(
-            f'"{text}" holds an HTML entity; JSON strings are plain text, so write the character itself'
-            for text in strings(spec) if HTML_ENTITY.search(text)
-        )
-        problems.extend(f"diagram {index}: {e}" for e in errors)
-    # The browser draws only the first spec in a figure.diagram; any other spec is skipped or unchecked.
-    if len(JSON_SCRIPT.findall(html)) != index:
-        problems.append('put each diagram spec first inside <figure class="diagram">, as WRITING.md shows')
-    return problems, index
+    # One pass over the skeleton: a value that holds a placeholder stays as written.
+    html = PLACEHOLDER.sub(lambda match: values[match.group(0)], skeleton)
+    # The HTML parser turns CRLF into LF before the browser hashes a script, so hash and write LF only.
+    html = html.replace("\r\n", "\n")
+    # The CSP sits before the scripts and holds no script text, so hashing first and filling it after is safe.
+    return html.replace("{{CSP}}", script_hashes(html), 1)
 
 
 def fail(page: Path, problems: list) -> int:
@@ -438,6 +278,7 @@ def fail(page: Path, problems: list) -> int:
     page.unlink(missing_ok=True)
     for p in problems:
         print(f"FAIL {p}")
+    print("Fix the content file and build again.")
     return 1
 
 
@@ -457,23 +298,30 @@ def build(content_file: str) -> int:
         return fail(page, [f"{source}: not UTF-8 text; save the content file as UTF-8"])
     except OSError as err:
         return fail(page, [f"{source}: {err.strerror or err}"])
-    header, body, content_problems = parse_content(text)
-    if content_problems:
-        return fail(page, content_problems)
-    # newline="" keeps the skeleton's line endings, so the page is the skeleton byte for byte.
+    header, body, problems = parse_content(text)
+    if problems:
+        return fail(page, problems)
+    # A page may have no diagram: WRITING.md skips one when the prose explains the point better.
+    sources, problems = diagram_problems(body)
+    if problems:
+        return fail(page, problems)
+    problems, warning = render_check(sources)
+    if problems:
+        return fail(page, problems)
+
     with open(SKELETON, encoding="utf-8", newline="") as file:
         skeleton = file.read()
     missing = [p for p in PLACEHOLDERS if p not in skeleton]
     if missing:
-        return fail(page, [f"skeleton.html lost its placeholders {', '.join(missing)}; reinstall the skill"])
-    html = assemble(skeleton, header, body)
-    problems, diagrams = check_page(page, html)
-    if problems:
-        fail(page, problems)
-        print("Fix the content file and build again.")
-        return 1
-    page.write_text(html, encoding="utf-8", newline="")
-    print(f"ok: {diagrams} diagram spec(s)")
+        return fail(page, ["skeleton.html lost its placeholders; reinstall the skill"])
+    if not PELE.is_file():
+        return fail(page, [f"{PELE} is missing; install the mreq-shared skill beside this one"])
+    pele = PELE.read_text(encoding="utf-8")
+    page.write_text(assemble(skeleton, pele, header, body), encoding="utf-8", newline="")
+    if warning:
+        print(warning)
+    checked = "not checked" if warning else "checked with Pele"
+    print(f"ok: {len(sources)} diagram(s), {checked}" if sources else "ok: no diagrams")
     print(page.resolve())
     return 0
 
@@ -488,7 +336,7 @@ def make_output_dir() -> None:
 
 def new(slug: str) -> int:
     if not SLUG_RE.fullmatch(slug):
-        print(f"invalid slug {slug!r}: use kebab-case, e.g. top-words", file=sys.stderr)
+        print(f"invalid slug {slug!r}: use kebab-case, e.g. artifact-status", file=sys.stderr)
         return 2
     make_output_dir()
     print(OUTPUT_DIR / f"{slug}-{datetime.now().strftime('%Y%m%d-%H%M%S')}{CONTENT_SUFFIX}")

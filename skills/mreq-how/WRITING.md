@@ -1,14 +1,16 @@
 # Writing the page
 
+Read this file and `MERMAID.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory). This file says what goes on the page; `MERMAID.md` says how to write each diagram figure, its colors and its legend.
+
 ## The content file
 
-You write only the content; `page.py build` wraps it in `skeleton.html`, whose stylesheet, script and Content-Security-Policy reach the page unchanged. Never read, copy or edit the skeleton or the built page. The file starts with four header lines, then a line that is exactly `---`, then the sections:
+You write only the content. `page.py build` wraps it in `skeleton.html` and inlines the Pele bundle, so the page draws its diagrams offline. Never read, copy or edit the skeleton, the bundle, or the built page. The file starts with four header lines, then a line that is exactly `---`, then the sections:
 
 ```html
-lang: zh-Hant-TW
+lang: en
 title: How the CLI derives artifact status
 question: How does the status command know each artifact's state?
-meta: my-project · 2026-10-23
+meta: 2026-11-03 · my-project
 ---
 <section id="overview">
   <h2>Overview</h2>
@@ -16,20 +18,24 @@ meta: my-project · 2026-10-23
 </section>
 ```
 
-- `lang` is the language you answer in (`zh-Hant-TW`, `en`, ...); it also picks the language of the page's buttons.
-- `title`, `question` (the user's question) and `meta` (project name and date) are plain text: the build escapes them, so write `<` and `&` as they are. `meta` may be empty.
-- Everything after `---` is HTML and goes into the page as written, so escape `<`, `>` and `&` in the text there yourself. No `<html>`, `<head>`, `<body>`, `<meta>` or `<style>`: the skeleton has them. No `<script>` besides the diagram specs and no event handler attributes (`onclick=`, `onerror=`, ...): the page runs only the skeleton's script. Close every `<!--` and `<textarea>` you open: one left open swallows the page's script.
+- `lang` is the language you answer in (`zh-Hant-TW`, `en`, ...). It also picks the language of the page's own labels.
+- `title`, `question` (the user's question, shortened to one sentence) and `meta` (the date, as `2026-11-03`, then ` · <project name>`) are plain text: the build escapes them, so write `<` and `&` as they are. `meta` may be empty.
+- Everything after `---` is HTML and goes into the page as written, so escape `<`, `>` and `&` in the text there yourself. No `<html>`, `<head>`, `<body>`, `<meta>` or `<style>`: the skeleton has them. No `<script>` besides the Mermaid sources, no event handler attributes (`onclick=`, ...), and nothing loaded from outside the file (`<img src="https://...">`, ...). Close every `<!--` and `<textarea>` you open.
 
-## Sections
+The examples in this file are in English. Write the page in the language SKILL.md's Language section picks: carry over what each example does, not its words. Identifiers, paths and established technical terms stay as they are.
 
-Each section is a `<section>` with an `<h2>`; the page builds its table of contents from them. Use the ones that apply, in this order:
+## The page
 
-- **Overview** — one or two paragraphs: what this is, what it does, why it exists. Open with `<p class="lede">`. A reader who stops here can still decide whether to read on.
-- **Key Concepts** — the types, services and abstractions the rest depends on, as a concept grid. Short definitions, not an inventory.
-- **How It Works** — the core, and the longest section. What triggers it, what happens step by step, where data goes, where it branches. Lead with the diagram, then walk it in prose or a numbered step list.
-- **Where Things Live** — a short file map: only what someone needs to start working here.
-- **Gotchas** — non-obvious behavior, historical context, pitfalls, and every place the code disagrees with a spec. Skip it when there is nothing.
-- **Open Questions** — what could not be traced. Skip it when there is nothing.
+After `---` write only `<section>` elements. Give each one an `id` in kebab-case, such as `id="how-it-works"`, and an `<h2>`. Use the sections that apply, in this order:
+
+- **Overview** (`id="overview"`): one or two paragraphs: what this is, what it does, why it exists. Open with `<p class="lede">`. A reader who stops here can still decide whether to read on. When the user skipped the confirmation, its first sentence states your reading of the question.
+- **Key Concepts** (`id="key-concepts"`): the types, services and abstractions the rest depends on, as a concept grid. Short definitions, not an inventory.
+- **How It Works** (`id="how-it-works"`): the core, and the longest section. What triggers it, what happens step by step, where data goes, where it branches. Lead with the diagram (its legend, then its figure), then walk it in prose or an `ol.steps`. When it has two or more parts, such as an overview and its zoom-ins, give each part its own `<h3>`, then its diagram and its walk.
+- **Where Things Live** (`id="where-things-live"`): a short file map: only what someone needs to start working here.
+- **Gotchas** (`id="gotchas"`): non-obvious behavior, historical context, pitfalls, and every place the code disagrees with a doc. Skip it when there is nothing.
+- **Open Questions** (`id="open-questions"`): what you could not trace, and each detail you left out of a diagram (see "Keep it readable"). Skip it when there is nothing.
+
+A contents panel on the left lists every section's `<h2>`, with the `<h3>` inside it one level down, and jumps to each. Headings are its entries, so keep each one short and different from the others.
 
 ## Style
 
@@ -37,101 +43,48 @@ Each section is a `<section>` with an `<h2>`; the page builds its table of conte
 - When something is complex, say why it is complex, not only what it does. When it is simple, do not pad it.
 - Prose, not pseudocode. Cite `path:line` so the reader knows where to look; quote code only when a snippet is essential to the point.
 - Use an analogy when one helps; never force one.
-- Write in the language SKILL.md's Language section picks. Identifiers, paths and established technical terms stay as they are.
+- One term for one concept: the term the code uses, or the term the diagram uses.
 
 ## Choosing diagrams
 
-| The reader needs to see | Diagram |
+| The reader needs to see | Mermaid type |
 | --- | --- |
-| Which parts exist and what depends on what | architecture: `flow` with `groups` for layers or processes |
-| Who calls whom, in what order, for one request or command | `sequence` |
-| The lifecycle of one thing: its statuses and what moves it | state: `flow` with `state` nodes, `start` / `end`, and events on the edges |
-| Branching logic | flowchart: `flow` with `decision` nodes |
+| Which parts exist and what depends on what | `flowchart` with `subgraph` for each layer, process or package |
+| Who calls whom, in what order, for one request or command | `sequenceDiagram` |
+| The lifecycle of one thing: its statuses and what moves it | `stateDiagram-v2` |
+| Branching logic | `flowchart` with `{decision}` nodes |
+| Types, fields and inheritance | `classDiagram` |
+| Tables or records and their relations | `erDiagram` |
 
-A diagram has to explain something the prose would explain worse; skip it when prose covers the point. Keep each one to 12 nodes or fewer (a sequence: 6 participants, 14 messages). Split a bigger picture into an overview and a zoom-in. Add `steps` when order matters: the reader walks them with Previous / Next (or the arrow keys), and each step lights up its part of the diagram.
+A diagram has to explain something the prose would explain worse; skip it when prose covers the point. A page may have no diagram. Pick the type that answers the part of the question with the fewest elements. Add a second diagram only when it shows something the first cannot.
 
-## Diagram specs
+Walk each diagram in the text right after it: the prose or the `ol.steps` names the nodes as the diagram labels them, in the order the arrows go.
 
-Put each spec in its own figure, written exactly like this, and the page draws it:
+## Labels and arrows
 
-```html
-<figure class="diagram">
-  <script type="application/json">{ "type": "flow", ... }</script>
-  <figcaption>What this diagram shows</figcaption>
-</figure>
-```
+The reader is an engineer who is about to work in this code.
 
-The JSON must be valid (double quotes, no trailing commas, no comments, no `NaN` or `Infinity`, and no number too large for the browser, such as `1e400`). Its strings are plain text, not HTML: write `>` and `&` as they are, never as `&gt;` or `&amp;`. Write `<` as `\u003c`: a raw `</script` or `<!--` ends the spec early in the browser, and the build fails on them.
+- **Nodes**: label a node with the name of what it is in the code: a module, a function, a type, a store, as written, such as `statusCommand` or `artifact-graph`. When the name says little, add what it does after a `<br>`. A `path:line` goes in the text, not in the label.
+- **Arrows**: label each arrow with what moves (a call, an event, data), such as "reads", "status --json" or "emits change". In a state diagram the label is the event or condition.
+- **Conditions**: name the condition as the code checks it, such as `[on timeout]` or "Cache hit?" (see "Mermaid rules" in `MERMAID.md`).
+- **One arrow for one outcome**: when two causes end the same in the diagram, give them one label and one arrow.
 
-### flow
+## Keep it readable
 
-```json
-{
-  "type": "flow",
-  "groups": [{ "label": "CLI process", "cols": [0, 1], "rows": [0, 0] }],
-  "nodes": [
-    { "id": "cli", "label": "commander program", "col": 0, "row": 0, "note": "Parses argv and dispatches to a command.", "ref": "src/cli/index.ts:422" },
-    { "id": "cmd", "label": "statusCommand", "col": 1, "row": 0 },
-    { "id": "fs", "label": "change directory", "kind": "store", "col": 1, "row": 1 }
-  ],
-  "edges": [
-    { "from": "cli", "to": "cmd", "label": "status --json" },
-    { "from": "cmd", "to": "fs", "label": "reads files", "dashed": true }
-  ],
-  "steps": [
-    { "title": "Dispatch", "text": "commander matches the subcommand.", "show": ["cli", "cli->cmd"] },
-    { "title": "Derive status", "text": "Status comes from which files exist.", "show": ["cmd->fs"] }
-  ]
-}
-```
+Aim for about 12 nodes or fewer in a diagram (a sequence: 6 participants, 14 messages), because a busier diagram is hard to read. A diagram must also fit the page (see "Size" in `MERMAID.md`).
 
-- **Grid**: `col` and `row` count from 0 and are never negative. Each cell is 220 × 116 px and holds one node; two nodes in one cell is an error. A fractional value (`0.5`) centres a node between two cells.
-- **Layout**: run the main path left to right (or top to bottom) in reading order. Keep a flow to 4 columns: wrap a longer path onto the next row, or split it into an overview and a zoom-in. Put a store below or beside what writes it, and external systems at the edges. An edge that would cross another node bends around it by itself; set `"bend": 60` (px, the sign picks the side) to override.
-- **Groups**: `cols` and `rows` are inclusive `[first, last]` ranges, with `first <= last`. Use them for a layer, a process or a package boundary.
-- **Node kinds**: `box` (the default: module, function, service), `store` (database, file, cache), `external` (outside the codebase), `actor` (a person or a calling tool), `decision` (a branch; label it as a question), `state`, `start`, `end`.
-- **Labels**: a name, not a sentence. About 20 Latin, 10 CJK or 7 emoji a line (a `decision`: 17 Latin, 8 CJK or 5 emoji), three lines at most; `\n` forces a break, and a word never splits unless it is longer than a line. A `start` or `end` label sits below its circle: about 20 Latin or 10 CJK a line, two lines at most. The explanation goes in `note`, shown when the reader clicks the node or edge; `ref` adds a copyable `path:line`.
-- **Edges**: `label` names what moves (a call, an event, data): about 22 Latin or 11 CJK a line, two lines at most; the detail goes in `note`. `"dashed": true` marks an async, optional or read-only link. In a state diagram the label is the event or condition.
-- **Steps**: `show` lists node ids and `"from->to"` edges (one arrow); an edge lights its two ends with it.
+When a diagram is too busy or too wide, do these in order:
 
-### sequence
+1. Give one node to the parts that act the same for this question.
+2. Leave out a detail the question does not need, such as a call whose result changes nothing.
+3. Leave out an arrow that every node has, such as "logs", and say it once in the caption.
+4. Split the picture into an overview and zoom-ins, each under its own `<h3>`.
 
-```json
-{
-  "type": "sequence",
-  "participants": [
-    { "id": "user", "label": "User", "kind": "actor" },
-    { "id": "cmd", "label": "validate command", "ref": "src/commands/validate.ts" },
-    { "id": "parser", "label": "spec parser" },
-    { "id": "fs", "label": "file system", "kind": "store" }
-  ],
-  "messages": [
-    { "from": "user", "to": "cmd", "label": "validate \u003cname>" },
-    { "divider": "Read" },
-    { "from": "cmd", "to": "fs", "label": "read specs/" },
-    { "from": "fs", "to": "cmd", "label": "spec files", "reply": true },
-    { "divider": "Check" },
-    { "from": "cmd", "to": "parser", "label": "parse requirements" },
-    { "from": "parser", "to": "cmd", "label": "issues", "reply": true, "note": "Any ERROR fails the run." }
-  ]
-}
-```
-
-- Participants are columns, left to right in the order a request first reaches them.
-- Each message is a row. `"reply": true` draws a dashed return; `from` equal to `to` is a self-call; `{ "divider": "..." }` labels a phase.
-- Every message is a step on its own, with its `note` as the step text. Set `"steps": false` to turn that off.
-
-### Hand-drawn SVG
-
-When neither type fits, put an `<svg viewBox="...">` straight into the figure, with no `<script>`. Use the page's classes so it matches: `<g class="node k-store">` around a shape and its `<text>`, `<g class="edge">` around a `<path class="line">`. Add `data-key`, `data-title` and `data-note` to a group to make it clickable. Nothing lays this out for you, so check every coordinate.
+When you leave something out, keep each node reachable by arrows from a start node. Keep every node and arrow the question asks about. List what you left out under Open Questions.
 
 ## Components
 
 ```html
-<section id="overview">
-  <h2>Overview</h2>
-  <p class="lede">The answer in one paragraph.</p>
-</section>
-
 <dl class="concepts">
   <div><dt>Artifact graph <code class="ref">src/core/artifact-graph/</code></dt><dd>What it is, in one or two sentences.</dd></div>
 </dl>
@@ -150,10 +103,8 @@ When neither type fits, put an `<svg viewBox="...">` straight into the figure, w
 <aside class="callout note"><strong>Title</strong><p>A side note.</p></aside>
 
 <details><summary>Deep dive: ...</summary><p>Detail most readers can skip.</p></details>
+
+<pre><code>a short snippet, only when it is essential</code></pre>
 ```
 
-A `<code class="ref">` copies its text when clicked: use it for every path and `path:line`, and plain `<code>` for identifiers.
-
-## Before reporting
-
-`page.py build` checks the page before it writes it. It fails on a missing header value, a whole page pasted in as content, an unknown node id, two nodes in one cell, an unknown node kind, a label too long for three lines (two for an edge, `start` or `end`), a negative `col` or `row`, a group range with `first > last`, a `show` key with two arrows, a field of the wrong type, a spec outside its figure, invalid JSON (`NaN`, `Infinity` and numbers such as `1e400` too), `</script` or `<!--` or an HTML entity in a spec, a `<meta>` tag, a `<script>` outside a spec, an event handler attribute, a `<!--` or `<textarea>` left open, anything loaded from outside the file, and a file outside `.mreq/how/`. The checks for outside loads, scripts and event handlers only catch common mistakes: the skeleton's Content-Security-Policy is what blocks them. Fix every FAIL line in the content file and build again. It cannot judge the writing, so also confirm that every claim about the code carries a `path` or `path:line`.
+A `<code class="ref">` copies its text when clicked: use it for every path and `path:line`, and plain `<code>` for identifiers. Every claim about the code carries a `path` or `path:line`: the build cannot check that, so check it yourself before the build.

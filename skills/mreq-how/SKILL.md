@@ -1,6 +1,6 @@
 ---
 name: mreq-how
-description: Explain how part of the codebase works as an offline HTML page with architecture, sequence, state, and flow diagrams, written to .mreq/how/ under the session root. Covers "how does X work", walkthroughs before changing something, and placement questions ("where should this live", "which layer owns this"). Confirms its reading of the question with the user before any analysis. Use for /mreq-how.
+description: Explain how part of the codebase works as an offline HTML page with architecture, sequence, state, and flow diagrams in Mermaid, written to .mreq/how/ under the session root. Pele (https://pele.run/) renders the diagrams, inlined in the page so it works with no network. Covers "how does X work", walkthroughs before changing something, and placement questions ("where should this live", "which layer owns this"). Confirms its reading of the question with the user before any analysis. Use for /mreq-how.
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Run only when the user typed `/mreq-how`. If you are reading this file on your own, stop and ask the user to run `/mreq-how <question>`.
 
-Explain how part of this codebase works (a subsystem, a flow, a module) at the depth a senior engineer needs before changing it, as an offline HTML page with diagrams.
+Explain how part of this codebase works (a subsystem, a flow, a module) at the depth a senior engineer needs before changing it, as an offline HTML page: prose that walks the reader through Mermaid diagrams, each with a legend and a one-line caption.
 
 **Input**: The question: "how does X work", a code path to walk through before a change, or a placement question. Confirm your reading of it with the user before any analysis (step 1).
 
@@ -27,6 +27,8 @@ When the `AskUserQuestion` tool is available, ask with it: up to 4 independent q
 `${CLAUDE_SKILL_DIR}/page.py` builds and checks the page. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place.
 
 Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Run `uv run ${CLAUDE_SKILL_DIR}/page.py <command>`, with the path written exactly as here; when the path contains a space, wrap it in double quotes: `uv run "${CLAUDE_SKILL_DIR}/page.py" <command>`. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is the project rule `Bash(uv run *page.py*)` or `PowerShell(uv run *page.py*)` (`python` or `python3` in place of `uv run` when you ran it), not one with the path written out.
+
+The build renders every diagram with Pele in Node to catch Mermaid errors. Without Node it still builds and prints a `WARN` line: the diagrams were not checked.
 
 The allow rule for a denied Write or Edit of the content file is `Edit(./.mreq/how/**)`.
 
@@ -61,15 +63,15 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Split the question into 2-4 distinct angles (for example: entry points and wiring, the core data flow, persistence and state, error paths). When you can spawn subagents, spawn one read-only explorer per angle in a single message. Each prompt holds only the question, that explorer's angle, and the instruction to read `EXPLORER.md` at its path in this skill's directory and report in its shape. Never paste the file into the prompt. Otherwise, work the angles yourself, one at a time, with notes in the shape `EXPLORER.md` gives. Then reconcile: merge overlaps, and settle a contradiction by reading the code yourself, not by picking one account.
 
 5. **Plan the page.**
-   Follow `WRITING.md` in this skill's directory to pick the sections that apply and the diagram that answers each part of the question. Decide the diagrams before the prose: the prose walks the reader through them.
+   Follow `WRITING.md` in this skill's directory and `MERMAID.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory): pick the sections that apply and the diagram that answers each part of the question, then write each diagram's Mermaid source, its legend and its caption. Decide the diagrams before the prose: the prose walks the reader through them.
 
 6. **Write the page.**
    1. Get the content file's path: `page.py new <topic-slug>`. It creates the output folder and stamps the name with the current time; never make up the time.
-   2. Write the content file at that path in the format `WRITING.md` gives: the header lines, `---`, then the sections. Write only that. The build wraps it in `skeleton.html`, so never read or copy the skeleton.
-   3. Build the page: `page.py build <content file>`. It checks the page and writes `<same name>.html` beside the content file only when it prints `ok`. Fix every FAIL line in the content file with Edit (or Write for a rewrite) and build again. Between builds, change the content only with Edit or Write; never run `python`, a heredoc, `cd`, or any other script to generate or patch it. Never edit the built page: the next build overwrites it.
+   2. Write the content file at that path in the format `WRITING.md` gives: the header lines, `---`, then the sections. Write only that. The build wraps it in `skeleton.html` and inlines Pele, so never read or copy the skeleton or the Pele bundle.
+   3. Build the page: `page.py build <content file>`. It checks the page and every diagram, and writes `<same name>.html` beside the content file only when it prints `ok`. Fix every FAIL line in the content file with Edit (or Write for a rewrite) and build again. A FAIL line from Pele gives the line inside the Mermaid source. When the same Pele error is still there after 3 builds, stop: give the user Pele's error and the content file's absolute path, and ask how to go on. Between builds, change the content only with Edit or Write; never run `python`, a heredoc, `cd`, or any other script to generate or patch it. Never edit the built page: the next build overwrites it.
 
 7. **Report.**
-   Reply with exactly this shape, nothing else: the answer in at most 4 sentences (the gist of the Overview), with no lists or headings, starting with your interpretation when the user skipped the confirmation (see step 1); the page's absolute path; one question offering to open it in the default browser. The page is the explanation, so do not repeat it in the chat: give each sentence one point, never join clauses with a semicolon to fit more in, and list no inputs, cases or files (the page has them). When a build limit or anything else kept you from doing part of the request, say so in one of the 4 sentences. Never go past 4 sentences: any other caveat, such as a layout you could not check, goes on the page under Open Questions. Open the page only when the user says so.
+   Reply with exactly this shape, nothing else: the answer in at most 4 sentences (the gist of the Overview), with no lists or headings, starting with your interpretation when the user skipped the confirmation (see step 1); the page's absolute path; one question offering to open it in the default browser. The page is the explanation, so do not repeat it in the chat: give each sentence one point, never join clauses with a semicolon to fit more in, and list no inputs, cases or files (the page has them). When a build limit or anything else kept you from doing part of the request, say so in one of the 4 sentences. When the build printed a `WARN` line, say in one of the 4 sentences that the diagrams were not checked. Never go past 4 sentences: any other caveat, such as a layout you could not check, goes on the page under Open Questions. Open the page only when the user says so.
 
    A follow-up that asks a new question starts again at step 1. A follow-up that changes the page goes through step 6 again. Both end with this same reply. After a change to the page, the 4 sentences say what changed on the page, not what the new part explains; never list the added content. When a Write, Edit or command is denied before the page is built, reply with only the denied path or command and its allow rule (see "When a tool call is denied"), then stop. Do not answer the question in the chat.
 

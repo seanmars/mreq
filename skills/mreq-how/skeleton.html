@@ -3,806 +3,528 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Offline by construction: nothing outside this file can load, and only the script below runs.
-     Its sha256 is in script-src: an edit to the script needs a new hash (tests/test_how_page.py checks it). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-XbKb+quwptI288WNut/DVPLMu9f2XalO06wUhE8kOOo='; img-src data:">
+<!-- Offline by construction: nothing outside this file can load, and only the two scripts below run.
+     page.py build writes their sha256 hashes into script-src. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src {{CSP}}; img-src data:">
 <title>{{TITLE}}</title>
 <style>
+  /* The page explains part of a codebase: a title and the question, then the sections (WRITING.md), each
+     with prose, diagrams and the components below. A contents panel on the left lists the headings
+     (h2, and the h3 inside a section) and jumps to each.
+     It opens in the light theme; the switch in the top bar turns on the dark theme.
+     The chrome holds no colour: ink on a blue-grey ground, white sheets for figures, tables and cards.
+     Colour belongs to the diagrams (phase colours and marks), to the callouts, and to one hue, --accent,
+     which also draws the "primary" mark and the code references. Surfaces are separated by a 1px edge,
+     never by a shadow. Radii: 8px on sheets, 6px on controls and small marks. */
   :root {
-    --bg: #fbfaf7;
+    color-scheme: light;
+    --bg: #f2f4f7;
     --surface: #ffffff;
-    --ink: #1f2328;
-    --muted: #5b6470;
-    --line: #e2dfd8;
-    --accent: #2f5bd3;
-    --accent-soft: #e9effd;
-    --warn: #8a5300;
-    --warn-soft: #fdf4e3;
-    --open: #63389a;
-    --open-soft: #f3edfb;
-    --note: #1f6f4a;
-    --note-soft: #e9f6ef;
-    --sans: system-ui, -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+    --surface-alt: #eceff3;
+    --ink: #111418;
+    --muted: #565d68;
+    --hairline: #e4e7ec;
+    --border: #d3d8df;
+    --accent: #1d5fbf;
+    --accent-soft: #e6eefa;
+    --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
     --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+    --bar-height: 52px;
+
+    /* Callouts: warn (a gotcha), open (an open question), note (a side note). */
+    --warn: #9a4a06;
+    --warn-line: #d9730d;
+    --warn-soft: #fff6ea;
+    --open: #5b3fa8;
+    --open-line: #7b5fd0;
+    --open-soft: #f4f0fc;
+    --note: #1e6a2f;
+    --note-line: #2e8540;
+    --note-soft: #edf7ef;
+
+    /* Diagram colours. --pele-bg is the sheet under the diagram: edge labels take it, so they sit on the sheet.
+       --pele-surface fills a plain node, one step off the sheet. The phase colours fill a node; the marks
+       (WRITING.md) set its border, and some its fill and text. */
+    --pele-bg: #ffffff;
+    --pele-fg: #111418;
+    --pele-muted: #565d68;
+    --pele-line: #7c8592;
+    --pele-surface: #f5f7f9;
+    --pele-surface-alt: #eceff3;
+    --pele-border: #aab2bd;
+    --c-blue: #d6e6fb;
+    --c-orange: #fbdcc6;
+    --c-purple: #e3dcf7;
+    --c-yellow: #f6e7a8;
+    --c-teal: #cbeae2;
+    --c-tan: #e9e1d6;
+    --c-pink: #f8d6e6;
+    --m-primary-line: #1d5fbf;
+    --m-success-fill: #e7f4e9;
+    --m-success-line: #2e8540;
+    --m-success-text: #1e6a2f;
+    --m-warning-fill: #fff3e2;
+    --m-warning-line: #d9730d;
+    --m-warning-text: #9a4a06;
+    --m-danger-fill: #fdecec;
+    --m-danger-line: #d0343c;
+    --m-danger-text: #ad1f28;
+    --m-muted-line: #98a0ab;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #111317;
+    --surface: #181b20;
+    --surface-alt: #22262c;
+    --ink: #eceef1;
+    --muted: #a3aab4;
+    --hairline: #262a31;
+    --border: #353a43;
+    --accent: #78a6ee;
+    --accent-soft: #1d2a3d;
+
+    --warn: #f3a95f;
+    --warn-line: #d77a1c;
+    --warn-soft: #2a2117;
+    --open: #b9a4f2;
+    --open-line: #8f74e0;
+    --open-soft: #241f36;
+    --note: #7fcf8b;
+    --note-line: #3fa556;
+    --note-soft: #172a1c;
+
+    --pele-bg: #181b20;
+    --pele-fg: #eceef1;
+    --pele-muted: #a3aab4;
+    --pele-line: #858e9b;
+    --pele-surface: #20242a;
+    --pele-surface-alt: #2a2f36;
+    --pele-border: #4f5662;
+    --c-blue: #1f3a5e;
+    --c-orange: #553420;
+    --c-purple: #392f5c;
+    --c-yellow: #4f4518;
+    --c-teal: #1a4740;
+    --c-tan: #3e352c;
+    --c-pink: #542842;
+    --m-primary-line: #78a6ee;
+    --m-success-fill: #17301f;
+    --m-success-line: #3fa556;
+    --m-success-text: #7fcf8b;
+    --m-warning-fill: #302518;
+    --m-warning-line: #d77a1c;
+    --m-warning-text: #f3a95f;
+    --m-danger-fill: #331d20;
+    --m-danger-line: #d9474f;
+    --m-danger-text: #ff8a8f;
+    --m-muted-line: #6b7380;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font: 17px/1.75 var(--sans);
-    -webkit-font-smoothing: antialiased;
-  }
-  body.dg-lock { overflow: hidden; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  html { scroll-padding-top: calc(var(--bar-height) + 1.5rem); }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.75 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: var(--accent-soft); }
 
-  .masthead { border-bottom: 1px solid var(--line); background: var(--surface); }
-  .masthead-inner { max-width: 74rem; margin: 0 auto; padding: 2.5rem 2rem 2rem; }
-  h1 { margin: 0 0 0.4rem; font-size: 2rem; line-height: 1.3; letter-spacing: -0.01em; }
-  .question { margin: 0; color: var(--muted); font-size: 1.05rem; }
+  /* The bar and the layout share two edges. Layout: 14rem contents panel + 3rem gap + 54rem page = 71rem.
+     The figure canvas inside the page column: 864 - 2 (edge) - 40 (padding) = 822px, the width page.py checks
+     against. Below 1200px the panel leaves the grid and the page column takes the whole width. */
+  .wrap { max-width: calc(71rem + 4rem); margin: 0 auto; padding: 0 2rem; }
+  .layout { display: grid; grid-template-columns: 14rem minmax(0, 54rem); gap: 3rem; align-items: start; }
+  .page { min-width: 0; }
+
+  /* The top bar holds the product name, the date and project, and the theme switch. It stays on screen. */
+  .bar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--hairline); }
+  .bar .wrap { display: flex; align-items: center; gap: 1rem; height: var(--bar-height); }
+  .brand { margin: 0; font-size: 0.875rem; font-weight: 600; line-height: 1; color: var(--ink); }
+  .meta { margin: 0; color: var(--muted); font-size: 0.875rem; line-height: 1; font-variant-numeric: tabular-nums; }
+  .meta:empty { display: none; }
+  .icon-button { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--muted); cursor: pointer; }
+  .icon-button[hidden] { display: none; }
+  .icon-button:hover, .icon-button[aria-expanded="true"] { color: var(--ink); border-color: var(--muted); }
+  .icon-button:active { transform: translateY(1px); }
+  .icon-button svg { width: 1.05rem; height: 1.05rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .theme-toggle { margin-left: auto; }
+  /* The contents button shows only when the panel is folded away (below 1200px). */
+  .toc-open { display: none; }
+  /* The button shows the theme it turns on: the moon in the light theme, the sun in the dark one. */
+  .theme-toggle .icon-sun, :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+
+  .masthead { padding: 3rem 0 2.5rem; }
+  h1 { margin: 0; font-size: clamp(1.5rem, 1.25rem + 0.8vw, 1.875rem); line-height: 1.3; font-weight: 700; }
+  .question { margin: 0.75rem 0 0; color: var(--muted); font-size: 1rem; line-height: 1.7; }
   .question::before { content: "\201C"; }
   .question::after { content: "\201D"; }
-  .meta { margin: 0.9rem 0 0; color: var(--muted); font-size: 0.85rem; }
+  :root:lang(zh) .question::before { content: "\300C"; }
+  :root:lang(zh) .question::after { content: "\300D"; }
 
-  .layout { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: 3rem; max-width: 74rem; margin: 0 auto; padding: 2rem; }
-  .toc { position: sticky; top: 1.5rem; align-self: start; max-height: calc(100vh - 3rem); overflow: auto; font-size: 0.9rem; }
-  .toc-title { margin: 0 0 0.5rem; color: var(--muted); font: 600 0.78rem/1 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; }
-  .toc ol { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); }
-  .toc a { display: block; padding: 0.3rem 0 0.3rem 0.9rem; margin-left: -2px; border-left: 2px solid transparent; color: var(--muted); text-decoration: none; line-height: 1.45; }
-  .toc a:hover { color: var(--ink); }
-  .toc a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  /* The contents panel: a sheet that stays beside the page while it scrolls. The reader's place is the grey pill. */
+  .toc { position: sticky; top: calc(var(--bar-height) + 1.5rem); margin-top: 3rem; max-height: calc(100vh - var(--bar-height) - 3rem); overflow: auto; padding: 0.75rem 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 0.875rem; }
+  .toc:empty { display: none; }
+  .toc-title { margin: 0.15rem 0.75rem 0.5rem; color: var(--muted); font-weight: 600; line-height: 1.4; }
+  .toc ol { list-style: none; margin: 0; padding: 0; }
+  .toc ol ol { padding-left: 0.85rem; }
+  .toc li { margin: 0; }
+  .toc a { display: block; padding: 0.4rem 0.75rem; border-radius: 6px; color: var(--muted); text-decoration: none; line-height: 1.45; }
+  .toc a:hover { color: var(--ink); background: var(--surface-alt); }
+  .toc a[aria-current] { color: var(--ink); background: var(--surface-alt); font-weight: 600; }
+  .toc-backdrop { position: fixed; inset: 0; z-index: 25; background: rgba(10, 12, 16, 0.28); }
+  .toc-backdrop[hidden] { display: none; }
+  @media (prefers-reduced-motion: no-preference) { .toc a { transition: background-color 0.15s ease, color 0.15s ease; } }
 
-  main { min-width: 0; max-width: 50rem; }
-  section { margin: 0 0 3.5rem; scroll-margin-top: 1.5rem; }
-  h2 { margin: 0 0 1rem; font-size: 1.45rem; line-height: 1.35; padding-bottom: 0.4rem; border-bottom: 1px solid var(--line); }
-  h3 { margin: 2rem 0 0.6rem; font-size: 1.12rem; line-height: 1.4; }
-  p { margin: 0 0 1rem; }
-  .lede { font-size: 1.12rem; }
-  a { color: var(--accent); }
+  main { min-width: 0; padding-bottom: 6rem; counter-reset: figure; }
+  section { margin: 0 0 4rem; }
+  section:last-child { margin-bottom: 0; }
+  h2 { margin: 0 0 1rem; font-size: 1.375rem; line-height: 1.4; font-weight: 700; }
+  h3 { margin: 2.5rem 0 0.75rem; font-size: 1.125rem; line-height: 1.5; font-weight: 650; }
+  h2 + h3 { margin-top: 0; }
   strong { font-weight: 650; }
-  ul, ol { padding-left: 1.4rem; margin: 0 0 1rem; }
-  li { margin: 0.25rem 0; }
+  a { color: var(--accent); text-underline-offset: 0.2em; }
 
-  code { font: 0.86em/1.5 var(--mono); background: #f1efea; border-radius: 4px; padding: 0.1em 0.35em; }
+  /* Prose. A line of text stops at 46rem, so it stays readable; sheets (figures, tables, cards) take the column. */
+  p { margin: 0 0 1rem; }
+  main p, main ul:not(.legend), main ol:not(.steps) { max-width: 46rem; }
+  .lede { font-size: 1.0625rem; }
+  main ul:not(.legend), main ol:not(.steps) { margin: 0 0 1rem; padding-left: 1.4rem; }
+  main li { margin: 0.3rem 0; }
+  main li::marker { color: var(--muted); }
+
+  code { font: 0.875em/1.5 var(--mono); background: var(--surface-alt); border-radius: 4px; padding: 0.1em 0.35em; margin: 0 0.1em; }
+  /* A code reference copies its path when clicked. */
   code.ref { cursor: copy; color: var(--accent); background: var(--accent-soft); }
   code.ref.copied { color: var(--note); background: var(--note-soft); }
-  pre { margin: 0 0 1.2rem; padding: 1rem 1.2rem; overflow: auto; background: #f6f5f1; border: 1px solid var(--line); border-radius: 8px; }
-  pre code { background: none; padding: 0; font-size: 0.85rem; }
+  pre { margin: 0 0 1.25rem; padding: 1rem 1.25rem; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+  pre code { background: none; padding: 0; margin: 0; font-size: 0.85rem; }
 
-  .concepts { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 0.9rem; margin: 0 0 1.2rem; }
-  .concepts > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; }
-  .concepts dt { font-weight: 650; margin: 0 0 0.3rem; }
-  .concepts dt code { font-size: 0.78em; margin-left: 0.3rem; }
-  .concepts dd { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+  /* Key concepts: a grid of cards. */
+  .concepts { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.75rem; margin: 0 0 1.5rem; }
+  .concepts > div { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem; }
+  .concepts dt { margin: 0 0 0.3rem; font-weight: 650; line-height: 1.5; }
+  .concepts dt code { font-size: 0.78em; }
+  .concepts dd { margin: 0; color: var(--muted); font-size: 0.9375rem; line-height: 1.65; }
 
-  ol.steps { counter-reset: step; list-style: none; padding: 0; }
-  ol.steps > li { counter-increment: step; position: relative; padding: 0 0 1.1rem 2.6rem; margin: 0; }
-  ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0.1rem; width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 700 0.85rem/1.7rem var(--sans); text-align: center; }
-  ol.steps > li:not(:last-child)::after { content: ""; position: absolute; left: 0.83rem; top: 2rem; bottom: 0.2rem; width: 2px; background: var(--line); }
+  /* A numbered walk through a diagram or a code path. */
+  ol.steps { counter-reset: step; list-style: none; margin: 0 0 1.25rem; padding: 0; max-width: 46rem; }
+  ol.steps > li { counter-increment: step; position: relative; margin: 0; padding: 0 0 1.1rem 2.6rem; }
+  ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0.15rem; width: 1.65rem; height: 1.65rem; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 700 0.8125rem/1.65rem var(--sans); text-align: center; font-variant-numeric: tabular-nums; }
+  ol.steps > li:not(:last-child)::after { content: ""; position: absolute; left: 0.8rem; top: 2.05rem; bottom: 0.25rem; width: 1px; background: var(--border); }
 
-  table { width: 100%; border-collapse: collapse; margin: 0 0 1.2rem; font-size: 0.95rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-  th, td { text-align: left; vertical-align: top; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--line); }
-  th { background: #f6f5f1; font-weight: 650; }
-  tr:last-child td { border-bottom: none; }
+  /* A table is a sheet: a 1px edge, a header row one step off the sheet. */
+  table { width: 100%; margin: 0 0 1.5rem; border-collapse: separate; border-spacing: 0; font-size: 0.9375rem; line-height: 1.6; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  th, td { text-align: left; vertical-align: top; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--hairline); }
+  th { background: var(--surface-alt); color: var(--ink); font-weight: 650; }
+  tr:last-child > td { border-bottom: none; }
   td:first-child { white-space: nowrap; }
 
-  .callout { margin: 0 0 1rem; padding: 0.9rem 1.1rem; border-radius: 8px; border-left: 4px solid; }
+  .callout { max-width: 46rem; margin: 0 0 1rem; padding: 0.85rem 1.1rem; border: 1px solid var(--border); border-left-width: 3px; border-radius: 8px; background: var(--surface); }
   .callout > :last-child { margin-bottom: 0; }
   .callout > strong:first-child { display: block; margin-bottom: 0.25rem; }
-  .callout.warn { background: var(--warn-soft); border-color: var(--warn); }
+  .callout.warn { background: var(--warn-soft); border-left-color: var(--warn-line); }
   .callout.warn > strong:first-child { color: var(--warn); }
-  .callout.open { background: var(--open-soft); border-color: var(--open); }
+  .callout.open { background: var(--open-soft); border-left-color: var(--open-line); }
   .callout.open > strong:first-child { color: var(--open); }
-  .callout.note { background: var(--note-soft); border-color: var(--note); }
+  .callout.note { background: var(--note-soft); border-left-color: var(--note-line); }
   .callout.note > strong:first-child { color: var(--note); }
 
-  details { margin: 0 0 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
-  summary { cursor: pointer; padding: 0.7rem 1rem; font-weight: 600; }
-  details > :not(summary) { margin-left: 1rem; margin-right: 1rem; }
-  details[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 0.8rem; }
+  details { margin: 0 0 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+  summary { cursor: pointer; padding: 0.7rem 1.1rem; font-weight: 600; }
+  details > :not(summary) { margin-left: 1.1rem; margin-right: 1.1rem; }
+  details[open] > summary { border-bottom: 1px solid var(--hairline); margin-bottom: 0.9rem; }
 
-  figure.diagram { margin: 1.4rem 0 1.8rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-  figure.diagram:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .dg-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); background: #f8f7f3; font-size: 0.85rem; }
-  .dg-bar .dg-count { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5rem; text-align: center; }
-  .dg-bar .dg-spacer { flex: 1; }
-  .dg-bar button { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.25rem 0.7rem; cursor: pointer; }
-  .dg-bar button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-  .dg-bar button:disabled { opacity: 0.4; cursor: default; }
-  .dg-bar button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-  .dg-canvas { overflow: auto; padding: 0.8rem; text-align: center; }
-  .dg-canvas svg { max-width: 100%; height: auto; }
-  .dg-panel { min-height: 3.2rem; padding: 0.7rem 1rem; border-top: 1px solid var(--line); background: #fcfbf9; font-size: 0.93rem; line-height: 1.6; }
-  .dg-panel .dg-hint { color: var(--muted); }
-  .dg-panel strong { display: block; }
-  .dg-panel p { margin: 0.2rem 0 0; }
-  figcaption { padding: 0.6rem 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.88rem; }
-  .dg-error { margin: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; background: #fdecec; color: #8f1d1d; font: 0.85rem/1.6 var(--mono); white-space: pre-wrap; text-align: left; }
+  /* The legend sits right above its figure (WRITING.md). Joined to it, the two read as one sheet:
+     the legend is the sheet's header row, the caption its footer. */
+  ul.legend { list-style: none; margin: 1.5rem 0 0.75rem; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem 1.4rem; color: var(--ink); font-size: 0.875rem; line-height: 1.6; }
+  ul.legend:has(+ figure.diagram) { margin-bottom: 0; padding: 0.85rem 1.25rem; background: var(--surface); border: 1px solid var(--border); border-bottom-color: var(--hairline); border-radius: 8px 8px 0 0; }
+  ul.legend + figure.diagram { margin-top: 0; border-top: none; border-top-left-radius: 0; border-top-right-radius: 0; }
+  ul.legend li { display: flex; gap: 0.5rem; align-items: center; margin: 0; }
+  .swatch { flex: none; display: inline-block; width: 1.1rem; height: 0.8rem; border-radius: 3px; border: 1px solid var(--pele-border); background: var(--pele-surface); }
+  .swatch.blue { background: var(--c-blue); }
+  .swatch.orange { background: var(--c-orange); }
+  .swatch.purple { background: var(--c-purple); }
+  .swatch.yellow { background: var(--c-yellow); }
+  .swatch.teal { background: var(--c-teal); }
+  .swatch.tan { background: var(--c-tan); }
+  .swatch.pink { background: var(--c-pink); }
+  .swatch.primary { border: 2px solid var(--m-primary-line); }
+  .swatch.success { border: 2px solid var(--m-success-line); background: var(--m-success-fill); }
+  .swatch.warning { border: 2px solid var(--m-warning-line); background: var(--m-warning-fill); }
+  .swatch.danger { border: 2px solid var(--m-danger-line); background: var(--m-danger-fill); }
+  .swatch.muted { border: 1.5px dashed var(--m-muted-line); background: transparent; }
+  /* Line styles: --> solid, -.-> dotted, ==> thick. */
+  .swatch.solid, .swatch.dotted, .swatch.thick { width: 1.6rem; height: 0; border: none; border-radius: 0; background: none; }
+  .swatch.solid { border-top: 2px solid var(--pele-line); }
+  .swatch.dotted { border-top: 2px dashed var(--pele-line); }
+  .swatch.thick { border-top: 4px solid var(--pele-line); }
+  /* An item with no swatch, such as what a shape means, takes the whole row. */
+  ul.legend li:not(:has(.swatch)) { flex-basis: 100%; color: var(--muted); }
 
-  figure.diagram.expanded { position: fixed; inset: 3vh 3vw; z-index: 50; margin: 0; display: flex; flex-direction: column; box-shadow: 0 0 0 100vmax rgba(31, 35, 40, 0.45), 0 20px 50px rgba(0, 0, 0, 0.25); }
-  figure.diagram.expanded .dg-canvas { flex: 1; }
-  figure.diagram.expanded .dg-canvas svg { max-width: none; width: calc(var(--w, 800px) * 1.35); }
+  figure.diagram { counter-increment: figure; margin: 1.5rem 0 1.75rem; background: var(--pele-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .dg-canvas { position: relative; padding: 2rem 1.25rem; text-align: center; overflow: auto; background: var(--pele-bg); }
+  figcaption { display: flex; gap: 0.75rem; align-items: baseline; padding: 0.75rem 1.25rem; border-top: 1px solid var(--hairline); background: var(--surface); color: var(--muted); font-size: 0.875rem; line-height: 1.6; }
+  figcaption::before { flex: none; content: "Figure " counter(figure); color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  :root:lang(zh) figcaption::before { content: "圖 " counter(figure); }
+  .dg-error { margin: 0; padding: 0.8rem 1rem; border-radius: 6px; background: var(--m-danger-fill); color: var(--m-danger-text); font: 0.85rem/1.6 var(--mono); white-space: pre-wrap; text-align: left; }
 
-  /* Diagram elements: shared by generated and hand-written SVG. */
-  .dg text { font-family: var(--sans); font-size: 13px; fill: var(--ink); }
-  .dg .node { cursor: pointer; }
-  .dg .node rect, .dg .node path, .dg .node circle, .dg .node ellipse { fill: #ffffff; stroke: #3d4a5c; stroke-width: 1.4; }
-  .dg .node.k-store rect, .dg .node.k-store path, .dg .node.k-store ellipse { fill: #f3f7ec; stroke: #56762a; }
-  .dg .node.k-external rect { fill: #f7f7f5; stroke: #8a919b; stroke-dasharray: 5 4; }
-  .dg .node.k-actor rect { fill: #f4effc; stroke: #6a4a9c; }
-  .dg .node.k-decision path { fill: #fff7e5; stroke: #a3741b; }
-  .dg .node.k-state rect { fill: #eef3ff; stroke: #2f5bd3; }
-  .dg .node.k-start circle { fill: #1f2328; stroke: #1f2328; }
-  .dg .node.k-end circle { fill: #ffffff; stroke: #1f2328; stroke-width: 2; }
-  .dg .node.k-end circle.dot { fill: #1f2328; }
-  .dg .node:hover rect, .dg .node:hover path, .dg .node:hover ellipse { stroke: var(--accent); }
-  .dg .group rect { fill: #f7f6f2; stroke: #d6d2c8; stroke-dasharray: 6 4; }
-  .dg .group text { fill: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
-  .dg .edge { cursor: pointer; }
-  .dg .edge path.line { fill: none; stroke: #6b7380; stroke-width: 1.5; }
-  .dg .edge.dashed path.line { stroke-dasharray: 6 4; }
-  .dg .edge path.hit { fill: none; stroke: transparent; stroke-width: 14; }
-  .dg .edge:hover path.line { stroke: var(--accent); }
-  .dg .label rect { fill: #ffffff; opacity: 0.94; }
-  .dg .label text { font-size: 12px; fill: #3d4550; }
-  .dg .lifeline { stroke: #b9b5ac; stroke-dasharray: 4 4; }
-  .dg .divider rect { fill: #f1efe9; }
-  .dg .divider text { font-size: 12px; font-weight: 600; fill: var(--muted); }
-  .dg [data-key] { transition: opacity 0.2s; }
-  .dg.stepping [data-key]:not(.on) { opacity: 0.18; }
-  .dg .on path.line { stroke: var(--accent); stroke-width: 2.4; }
-  .dg .node.on rect, .dg .node.on path, .dg .node.on ellipse { stroke: var(--accent); stroke-width: 2.4; }
-  .dg .picked rect, .dg .picked path, .dg .picked ellipse, .dg .picked path.line { stroke: var(--accent); stroke-width: 2.4; }
+  /* Pele reads the --pele-* variables from :root, so a theme change needs no redraw. */
+  .pele {
+    --pele-accent: var(--m-primary-line);
+    --pele-critical: var(--m-danger-line);
+    --pele-error: var(--m-danger-line);
+    --pele-font: var(--sans);
+    --pele-font-mono: var(--mono);
+    --pele-radius: 6px;
+  }
+  /* Phase colors: "class a,b teal". page.py refuses classDef and style, so these rules alone color the nodes. */
+  .pele .pele-node.blue > :not(text) { fill: var(--c-blue); }
+  .pele .pele-node.orange > :not(text) { fill: var(--c-orange); }
+  .pele .pele-node.purple > :not(text) { fill: var(--c-purple); }
+  .pele .pele-node.yellow > :not(text) { fill: var(--c-yellow); }
+  .pele .pele-node.teal > :not(text) { fill: var(--c-teal); }
+  .pele .pele-node.tan > :not(text) { fill: var(--c-tan); }
+  .pele .pele-node.pink > :not(text) { fill: var(--c-pink); }
+  /* Marks: "class c danger". They come after the phase colors, so a mark shows over a phase color. */
+  .pele .pele-node.primary > :not(text) { stroke: var(--m-primary-line); stroke-width: 2.5px; }
+  .pele .pele-node.success > :not(text) { fill: var(--m-success-fill); stroke: var(--m-success-line); stroke-width: 2px; }
+  .pele .pele-node.success text { fill: var(--m-success-text); }
+  .pele .pele-node.warning > :not(text) { fill: var(--m-warning-fill); stroke: var(--m-warning-line); stroke-width: 2px; }
+  .pele .pele-node.warning text { fill: var(--m-warning-text); }
+  .pele .pele-node.danger > :not(text) { fill: var(--m-danger-fill); stroke: var(--m-danger-line); stroke-width: 2px; }
+  .pele .pele-node.danger text { fill: var(--m-danger-text); }
+  .pele .pele-node.muted > :not(text) { fill: var(--pele-bg); stroke: var(--m-muted-line); stroke-dasharray: 6 3; }
+  .pele .pele-node.muted text { fill: var(--pele-muted); }
+  /* Pele colours mindmap branches and timeline periods by their order (--pele-series-1 to 8), so the colour
+     means nothing there. One neutral for all of them. */
+  .pele-mindmap, .pele-timeline {
+    --pele-series-1: var(--pele-line); --pele-series-2: var(--pele-line);
+    --pele-series-3: var(--pele-line); --pele-series-4: var(--pele-line);
+    --pele-series-5: var(--pele-line); --pele-series-6: var(--pele-line);
+    --pele-series-7: var(--pele-line); --pele-series-8: var(--pele-line);
+  }
 
+  /* Below 1200px the panel folds away. The contents button in the bar slides it in over the page. */
+  @media (max-width: 1199px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .toc-open { display: grid; }
+    .toc-open[hidden] { display: none; }
+    .toc { position: fixed; z-index: 30; top: calc(var(--bar-height) + 0.5rem); left: 0.75rem; width: min(18rem, calc(100vw - 1.5rem)); max-height: calc(100vh - var(--bar-height) - 1.25rem); margin: 0; box-shadow: 0 16px 40px -16px rgba(10, 12, 16, 0.45); visibility: hidden; opacity: 0; transform: translateX(-0.75rem); }
+    .toc.open { visibility: visible; opacity: 1; transform: none; }
+  }
+  @media (max-width: 1199px) and (prefers-reduced-motion: no-preference) {
+    .toc { transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s; }
+    .toc.open { transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s; }
+  }
   @media (max-width: 960px) {
-    .layout { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 1.2rem; }
-    .toc { position: static; max-height: none; padding: 0.8rem 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
-    .masthead-inner { padding: 1.8rem 1.2rem 1.4rem; }
-    h1 { font-size: 1.6rem; }
+    .wrap { padding: 0 1.25rem; }
+    .masthead { padding: 2rem 0 1.5rem; }
+    main { padding-bottom: 4rem; }
+    section { margin-bottom: 3rem; }
+  }
+  @media (max-width: 560px) {
+    .meta { display: none; }
+    .dg-canvas { padding: 1.5rem 0.75rem; }
+    ul.legend:has(+ figure.diagram), figcaption { padding-left: 1rem; padding-right: 1rem; }
+    td:first-child { white-space: normal; }
   }
   @media print {
-    .toc, .dg-bar { display: none; }
+    .bar, .toc, .toc-backdrop { display: none; }
     .layout { display: block; }
-    figure.diagram, .callout, details { break-inside: avoid; }
+    body { background: #fff; }
+    .masthead { padding-top: 0; }
+    figure.diagram, table, .callout, details, .concepts > div { break-inside: avoid; }
   }
 </style>
 </head>
 <body>
-<header class="masthead">
-  <div class="masthead-inner">
-    <h1>{{TITLE}}</h1>
-    <p class="question">{{QUESTION}}</p>
+<header class="bar">
+  <div class="wrap">
+    <button class="icon-button toc-open" type="button" aria-controls="toc" aria-expanded="false" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    </button>
+    <p class="brand">mreq how</p>
     <p class="meta">{{META}}</p>
+    <button class="icon-button theme-toggle" type="button" role="switch" aria-checked="false" hidden>
+      <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
   </div>
 </header>
-<div class="layout">
-  <nav class="toc" aria-label="Contents"></nav>
-  <main>
+<div class="wrap layout">
+  <nav class="toc" id="toc" aria-label="Contents"></nav>
+  <div class="page">
+    <div class="masthead">
+      <h1>{{TITLE}}</h1>
+      <p class="question">{{QUESTION}}</p>
+    </div>
+    <main>
 <!-- CONTENT -->
-  </main>
+    </main>
+  </div>
 </div>
+<div class="toc-backdrop" hidden></div>
+<script>{{PELE}}</script>
 <script>
 (function () {
   'use strict';
-
-  var NS = 'http://www.w3.org/2000/svg';
   var ZH = /^zh/i.test(document.documentElement.lang || '');
   var T = ZH
-    ? { prev: '上一步', next: '下一步', all: '全部', expand: '放大', close: '關閉', contents: '目錄', copied: '已複製', error: '圖表定義有誤',
-        hint: '點選節點或箭頭查看說明.有步驟的圖可以用 ← → 逐步瀏覽.' }
-    : { prev: 'Previous', next: 'Next', all: 'All', expand: 'Expand', close: 'Close', contents: 'Contents', copied: 'Copied', error: 'Diagram spec error',
-        hint: 'Click a node or an arrow for details. Diagrams with steps can be walked with the arrow keys.' };
-  var uid = 0;
+    ? { contents: '目錄', zoomIn: '放大', zoomOut: '縮小', reset: '還原大小', missing: '繪圖程式沒有載入, 所以畫不出這張圖.',
+        dark: '深色模式', copied: '已複製' }
+    : { contents: 'Contents', zoomIn: 'Zoom in', zoomOut: 'Zoom out', reset: 'Reset zoom', missing: 'This diagram cannot be drawn: the drawing library did not load.',
+        dark: 'Dark theme', copied: 'Copied' };
+  // check.mjs passes the same limits: Pele's defaults are smaller than a large diagram can be.
+  var LIMITS = { limit: 1000000, outputLimit: 8000000, maxEdges: 10000 };
 
-  function make(name, attrs, parent) {
-    var node = document.createElementNS(NS, name);
-    for (var k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) node.setAttribute(k, attrs[k]);
-    if (parent) parent.appendChild(node);
-    return node;
-  }
-  function html(name, className, parent, text) {
-    var node = document.createElement(name);
-    if (className) node.className = className;
-    if (text !== undefined) node.textContent = text;
-    if (parent) parent.appendChild(node);
-    return node;
-  }
-
-  // ---- text measurement: a CJK glyph is about twice as wide as a Latin one.
-  var CJK = 'ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹏＀-｠￠-￦';
-  // U+2300-23FF, U+2600-27BF, U+2B00-2BFF and all above U+FFFF; the 'u' flag reads the last range as code points.
-  var EMOJI = '⌀-⏿☀-➿⬀-⯿𐀀-􏿿';
-  var CJK_CHAR = new RegExp('[' + CJK + ']');
-  var EMOJI_CHAR = new RegExp('[' + EMOJI + ']', 'u');
-  var TOKENS = new RegExp('[' + CJK + ']|[^\\s' + CJK + ']+|\\s+', 'g');
-  // An emoji is wider still and counts 3. Work in code points, not UTF-16 units, so a cut never splits a surrogate pair.
-  function units(ch) { return EMOJI_CHAR.test(ch) ? 3 : CJK_CHAR.test(ch) ? 2 : 1; }
-  function width(s) { var n = 0; Array.from(s).forEach(function (ch) { n += units(ch); }); return n; }
-  function wrap(label, max) {
-    var out = [];
-    String(label).split('\n').forEach(function (para) {
-      var line = '';
-      var used = 0;
-      function flush() { if (line.trim()) out.push(line.trim()); line = ''; used = 0; }
-      (para.match(TOKENS) || []).forEach(function (tok) {
-        if (/^\s+$/.test(tok)) { if (line) { line += ' '; used += 1; } return; }
-        var w = width(tok);
-        if (used + w > max && line.trim()) flush();
-        while (w > max) {
-          var cut = '';
-          var cw = 0;
-          var chars = Array.from(tok);
-          for (var i = 0; i < chars.length && cw + units(chars[i]) <= max - used; i++) { cut += chars[i]; cw += units(chars[i]); }
-          if (!cut) { flush(); continue; }
-          line += cut;
-          flush();
-          tok = tok.slice(cut.length);
-          w = width(tok);
-        }
-        line += tok;
-        used += w;
-      });
-      flush();
+  function themeToggle() {
+    var button = document.querySelector('.theme-toggle');
+    var root = document.documentElement;
+    // A switch keeps one name; aria-checked says whether the dark theme is on.
+    function sync() { button.setAttribute('aria-checked', root.dataset.theme === 'dark' ? 'true' : 'false'); }
+    button.setAttribute('aria-label', T.dark);
+    button.title = T.dark;
+    button.addEventListener('click', function () {
+      if (root.dataset.theme === 'dark') delete root.dataset.theme;
+      else root.dataset.theme = 'dark';
+      sync();
     });
-    return out.length ? out : [''];
-  }
-  function textBlock(parent, lines, x, y, lineH, anchor) {
-    var t = make('text', { x: x, 'text-anchor': anchor || 'middle', 'dominant-baseline': 'central' }, parent);
-    var top = y - ((lines.length - 1) * lineH) / 2;
-    lines.forEach(function (line, i) {
-      var span = make('tspan', { x: x, y: top + i * lineH }, t);
-      span.textContent = line;
-    });
-    return t;
-  }
-  function labelSize(text, maxUnits) {
-    var lines = wrap(text, maxUnits || 24);
-    return { lines: lines, w: Math.max.apply(null, lines.map(width)) * 6.6 + 10, h: lines.length * 15 + 6 };
-  }
-  function labelBox(parent, size, x, y, key) {
-    var g = make('g', { 'class': 'label', 'data-key': key }, parent);
-    make('rect', { x: x - size.w / 2, y: y - size.h / 2, width: size.w, height: size.h, rx: 3 }, g);
-    textBlock(g, size.lines, x, y, 15);
-    return g;
-  }
-  function markers(svg, id) {
-    var defs = make('defs', {}, svg);
-    [['a', '#6b7380'], ['h', '#2f5bd3']].forEach(function (m) {
-      var mk = make('marker', { id: id + m[0], viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
-      make('path', { d: 'M0 0 L10 5 L0 10 z', fill: m[1] }, mk);
-    });
-    var open = make('marker', { id: id + 'o', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
-    make('path', { d: 'M0 0 L10 5 L0 10', fill: 'none', stroke: '#6b7380', 'stroke-width': 1.5 }, open);
-  }
-  function newSvg(w, h) {
-    var id = 'dg' + (++uid);
-    var svg = make('svg', { viewBox: '0 0 ' + w + ' ' + h, width: w, height: h, 'class': 'dg', role: 'img' });
-    svg.style.setProperty('--w', w + 'px');
-    markers(svg, id);
-    return { svg: svg, id: id };
+    sync();
+    button.hidden = false;
   }
 
-  // ---- flow: architecture, flowchart and state diagrams on a grid.
-  var F = { colW: 220, rowH: 116, nodeW: 160, pad: 24, lineH: 17 };
-
-  function geometry(n) {
-    var kind = n.kind || 'box';
-    var cx = F.pad + n.col * F.colW + F.colW / 2;
-    var cy = F.pad + n.row * F.rowH + F.rowH / 2;
-    if (kind === 'start' || kind === 'end') return { n: n, kind: kind, shape: 'circle', cx: cx, cy: cy, hw: 11, hh: 11, lines: [] };
-    if (kind === 'decision') {
-      var dl = wrap(n.label || n.id, 17);
-      return { n: n, kind: kind, shape: 'diamond', cx: cx, cy: cy, hw: 86, hh: Math.max(36, dl.length * F.lineH / 2 + 24), lines: dl };
-    }
-    var lines = wrap(n.label || n.id, 21);
-    return { n: n, kind: kind, shape: 'rect', cx: cx, cy: cy, hw: F.nodeW / 2, hh: Math.max(24, lines.length * F.lineH / 2 + 12), lines: lines };
-  }
-  // Point where a ray from the node's centre leaves its outline, plus a small gap.
-  function boundary(g, dx, dy) {
-    var len = Math.sqrt(dx * dx + dy * dy) || 1;
-    var ux = dx / len;
-    var uy = dy / len;
-    var t;
-    if (g.shape === 'circle') t = g.hw;
-    else if (g.shape === 'diamond') t = 1 / (Math.abs(ux) / g.hw + Math.abs(uy) / g.hh);
-    else t = Math.min(Math.abs(ux) > 1e-6 ? g.hw / Math.abs(ux) : Infinity, Math.abs(uy) > 1e-6 ? g.hh / Math.abs(uy) : Infinity);
-    return { x: g.cx + ux * (t + 3), y: g.cy + uy * (t + 3) };
-  }
-  function route(a, b, bend, offset) {
-    var dx = b.cx - a.cx;
-    var dy = b.cy - a.cy;
-    var len = Math.sqrt(dx * dx + dy * dy) || 1;
-    var px = -dy / len;
-    var py = dx / len;
-    var mx = (a.cx + b.cx) / 2 + px * bend;
-    var my = (a.cy + b.cy) / 2 + py * bend;
-    var s = bend ? boundary(a, mx - a.cx, my - a.cy) : boundary(a, dx, dy);
-    var e = bend ? boundary(b, mx - b.cx, my - b.cy) : boundary(b, -dx, -dy);
-    s = { x: s.x + px * offset, y: s.y + py * offset };
-    e = { x: e.x + px * offset, y: e.y + py * offset };
-    if (!bend) return { s: s, e: e, d: 'M' + s.x + ' ' + s.y + ' L' + e.x + ' ' + e.y, lx: (s.x + e.x) / 2, ly: (s.y + e.y) / 2 };
-    // Control point chosen so the curve's midpoint lands on (mx, my).
-    var c = { x: 2 * mx - (s.x + e.x) / 2, y: 2 * my - (s.y + e.y) / 2 };
-    return { s: s, e: e, c: c, d: 'M' + s.x + ' ' + s.y + ' Q' + c.x + ' ' + c.y + ' ' + e.x + ' ' + e.y, lx: mx, ly: my };
-  }
-  function pointAt(r, t) {
-    if (!r.c) return { x: r.s.x + (r.e.x - r.s.x) * t, y: r.s.y + (r.e.y - r.s.y) * t };
-    var u = 1 - t;
-    return { x: u * u * r.s.x + 2 * u * t * r.c.x + t * t * r.e.x, y: u * u * r.s.y + 2 * u * t * r.c.y + t * t * r.e.y };
-  }
-  // A label centre pulled inside the W x H canvas, for edge and self-loop labels
-  // alike; the build keeps a label to two lines, which always fits.
-  function inside(v, half, max) { return Math.min(Math.max(v, half), max - half); }
-  // Where on the edge a label covers no node and no other label (a group name
-  // counts as one): the midpoint first, then off to either side of the line,
-  // then further along it. Between two neighbouring nodes the midpoint alone
-  // would sit on top of them. Every spot goes through inside().
-  function labelSpot(r, size, geos, placed, W, H) {
-    var s = pointAt(r, 0.45);
-    var e = pointAt(r, 0.55);
-    var dx = e.x - s.x;
-    var dy = e.y - s.y;
-    var len = Math.sqrt(dx * dx + dy * dy) || 1;
-    var nx = -dy / len;
-    var ny = dx / len;
-    var side = size.h / 2 + 5;
-    var ts = [0.5, 0.38, 0.62, 0.28, 0.72];
-    // The outer shifts clear a whole node height: a label wider than the gap
-    // between two neighbours has no free spot on the line itself.
-    var shifts = [0, -side, side, -side * 2, side * 2, -side * 3, side * 3];
-    function free(x, y) {
-      var hw = size.w / 2 + 3;
-      var hh = size.h / 2 + 3;
-      for (var i = 0; i < geos.length; i++) {
-        var g = geos[i];
-        if (Math.abs(x - g.cx) < g.hw + hw && Math.abs(y - g.cy) < g.hh + hh) return false;
-      }
-      for (var j = 0; j < placed.length; j++) {
-        var p = placed[j];
-        if (Math.abs(x - p.x) < (p.w + size.w) / 2 + 2 && Math.abs(y - p.y) < (p.h + size.h) / 2 + 2) return false;
-      }
-      return true;
-    }
-    for (var a = 0; a < ts.length; a++) {
-      var q = pointAt(r, ts[a]);
-      for (var b = 0; b < shifts.length; b++) {
-        var x = inside(q.x + nx * shifts[b], size.w / 2, W);
-        var y = inside(q.y + ny * shifts[b], size.h / 2, H);
-        if (free(x, y)) return { x: x, y: y };
-      }
-    }
-    var mid = pointAt(r, 0.5);
-    return { x: inside(mid.x, size.w / 2, W), y: inside(mid.y, size.h / 2, H) };
-  }
-  function crosses(r, geos, a, b) {
-    for (var i = 1; i < 30; i++) {
-      var q = pointAt(r, i / 30);
-      for (var j = 0; j < geos.length; j++) {
-        var g = geos[j];
-        if (g === a || g === b) continue;
-        if (Math.abs(q.x - g.cx) < g.hw + 6 && Math.abs(q.y - g.cy) < g.hh + 6) return true;
-      }
-    }
-    return false;
-  }
-
-  // Maps without a prototype: an id such as "constructor" must not find a built-in.
-  function validateFlow(spec) {
-    var errors = [];
-    var ids = Object.create(null);
-    var cells = Object.create(null);
-    (spec.nodes || []).forEach(function (n, i) {
-      if (!n.id) errors.push('nodes[' + i + ']: missing "id"');
-      if (ids[n.id]) errors.push('node "' + n.id + '" is defined twice');
-      ids[n.id] = true;
-      // JSON.parse reads 1e400 as Infinity, which draws NaN paths instead of a red box.
-      if (!Number.isFinite(n.col) || !Number.isFinite(n.row)) errors.push('node "' + n.id + '": "col" and "row" must be numbers');
-      var cell = n.col + ',' + n.row;
-      if (cells[cell]) errors.push('nodes "' + cells[cell] + '" and "' + n.id + '" share cell col ' + n.col + ', row ' + n.row);
-      cells[cell] = n.id;
-    });
-    (spec.edges || []).forEach(function (e, i) {
-      if (!ids[e.from]) errors.push('edges[' + i + ']: unknown "from" node "' + e.from + '"');
-      if (!ids[e.to]) errors.push('edges[' + i + ']: unknown "to" node "' + e.to + '"');
-    });
-    (spec.steps || []).forEach(function (st, i) {
-      (st.show || []).forEach(function (key) {
-        var parts = String(key).split('->');
-        parts.forEach(function (p) { if (!ids[p]) errors.push('steps[' + i + ']: unknown node "' + p + '" in "' + key + '"'); });
-      });
-    });
-    return errors;
-  }
-
-  function renderFlow(spec, info) {
-    var geos = (spec.nodes || []).map(geometry);
-    var byId = {};
-    geos.forEach(function (g) { byId[g.n.id] = g; });
-    var cols = 1;
-    var rows = 1;
-    geos.forEach(function (g) { cols = Math.max(cols, g.n.col + 1); rows = Math.max(rows, g.n.row + 1); });
-    (spec.groups || []).forEach(function (gr) { cols = Math.max(cols, gr.cols[1] + 1); rows = Math.max(rows, gr.rows[1] + 1); });
-    var W = F.pad * 2 + Math.ceil(cols) * F.colW;
-    var H = F.pad * 2 + Math.ceil(rows) * F.rowH;
-    var made = newSvg(W, H);
-    var svg = made.svg;
-
-    // Group names go into `placed` first, so no edge label covers one. The name
-    // is 12px bold with letter spacing: about 7.2 px a unit, from y + 6 to y + 22.
-    var placed = [];
-    (spec.groups || []).forEach(function (gr) {
-      var g = make('g', { 'class': 'group' }, svg);
-      var x = F.pad + gr.cols[0] * F.colW + 8;
-      var y = F.pad + gr.rows[0] * F.rowH + 4;
-      make('rect', { x: x, y: y, width: (gr.cols[1] - gr.cols[0] + 1) * F.colW - 16, height: (gr.rows[1] - gr.rows[0] + 1) * F.rowH - 8, rx: 10 }, g);
-      var t = make('text', { x: x + 12, y: y + 18 }, g);
-      t.textContent = gr.label || '';
-      var nameW = width(t.textContent) * 7.2;
-      if (nameW) placed.push({ x: x + 12 + nameW / 2, y: y + 14, w: nameW, h: 16 });
-    });
-
-    var edgeLayer = make('g', {}, svg);
-    var labels = [];
-    var pairs = {};
-    (spec.edges || []).forEach(function (e) { pairs[e.from + '->' + e.to] = true; });
-    (spec.edges || []).forEach(function (e) {
-      var a = byId[e.from];
-      var b = byId[e.to];
-      var key = 'e:' + e.from + '->' + e.to;
-      var g = make('g', { 'class': 'edge' + (e.dashed ? ' dashed' : ''), 'data-key': key }, edgeLayer);
-      var r;
-      if (a === b) {
-        var sx = a.cx + a.hw * 0.35;
-        var sy = a.cy - a.hh - 2;
-        var ex = a.cx + a.hw + 2;
-        var ey = a.cy - a.hh * 0.35;
-        r = { d: 'M' + sx + ' ' + sy + ' C' + (sx + 6) + ' ' + (sy - 46) + ' ' + (ex + 46) + ' ' + (ey - 6) + ' ' + ex + ' ' + ey, loop: { x: ex + 30, y: sy - 30 } };
-      } else {
-        var offset = pairs[e.to + '->' + e.from] ? 7 : 0;
-        if (typeof e.bend === 'number') {
-          r = route(a, b, e.bend, offset);
-        } else {
-          // A straight line through another node reads as a connection to it,
-          // so bend around anything in the way.
-          var tries = [0, 50, -50, 95, -95];
-          for (var i = 0; i < tries.length; i++) {
-            r = route(a, b, tries[i], offset);
-            if (!crosses(r, geos, a, b)) break;
-          }
-        }
-      }
-      make('path', { 'class': 'hit', d: r.d }, g);
-      var line = make('path', { 'class': 'line', d: r.d, 'marker-end': 'url(#' + made.id + 'a)' }, g);
-      line.dataset.marker = made.id;
-      if (e.label) labels.push({ route: r, text: e.label, key: key });
-      info[key] = { title: e.label || (labelOf(a) + ' → ' + labelOf(b)), text: e.note, ref: e.ref, ends: [e.from, e.to] };
-    });
-
-    geos.forEach(function (g) {
-      var key = 'n:' + g.n.id;
-      var node = make('g', { 'class': 'node k-' + g.kind, 'data-key': key }, svg);
-      if (g.kind === 'start') {
-        make('circle', { cx: g.cx, cy: g.cy, r: 10 }, node);
-      } else if (g.kind === 'end') {
-        make('circle', { cx: g.cx, cy: g.cy, r: 11 }, node);
-        make('circle', { 'class': 'dot', cx: g.cx, cy: g.cy, r: 6 }, node);
-      } else if (g.shape === 'diamond') {
-        make('path', { d: 'M' + g.cx + ' ' + (g.cy - g.hh) + ' L' + (g.cx + g.hw) + ' ' + g.cy + ' L' + g.cx + ' ' + (g.cy + g.hh) + ' L' + (g.cx - g.hw) + ' ' + g.cy + ' z' }, node);
-      } else if (g.kind === 'store') {
-        var top = g.cy - g.hh;
-        var bottom = g.cy + g.hh;
-        var x0 = g.cx - g.hw;
-        var x1 = g.cx + g.hw;
-        make('path', { d: 'M' + x0 + ' ' + (top + 7) + ' L' + x0 + ' ' + (bottom - 7) + ' A' + g.hw + ' 7 0 0 0 ' + x1 + ' ' + (bottom - 7) + ' L' + x1 + ' ' + (top + 7) }, node);
-        make('ellipse', { cx: g.cx, cy: top + 7, rx: g.hw, ry: 7 }, node);
-      } else {
-        make('rect', { x: g.cx - g.hw, y: g.cy - g.hh, width: g.hw * 2, height: g.hh * 2, rx: g.kind === 'state' ? 18 : (g.kind === 'actor' ? 24 : 6) }, node);
-      }
-      if (g.lines.length) textBlock(node, g.lines, g.cx, g.kind === 'store' ? g.cy + 4 : g.cy, F.lineH);
-      else if (g.n.label) textBlock(node, wrap(g.n.label, 20), g.cx, g.cy + 26, 15);
-      info[key] = { title: labelOf(g), text: g.n.note, ref: g.n.ref };
-    });
-
-    // Labels go on top of the nodes, each sharing its edge's key so a step or
-    // a click treats the two as one.
-    labels.forEach(function (l) {
-      var size = labelSize(l.text, 22);
-      // A self-loop's label sits above its node, to the right: the last column
-      // or the top row would push it off the canvas.
-      var loop = l.route.loop;
-      var at = loop ? { x: inside(loop.x, size.w / 2, W), y: inside(loop.y, size.h / 2, H) } : labelSpot(l.route, size, geos, placed, W, H);
-      placed.push({ x: at.x, y: at.y, w: size.w, h: size.h });
-      labelBox(svg, size, at.x, at.y, l.key);
-    });
-
-    var steps = (spec.steps || []).map(function (st) {
-      var keys = [];
-      (st.show || []).forEach(function (k) {
-        var parts = String(k).split('->');
-        if (parts.length === 2) { keys.push('e:' + k, 'n:' + parts[0], 'n:' + parts[1]); } else keys.push('n:' + k);
-      });
-      return { title: st.title, text: st.text, keys: keys };
-    });
-    return { svg: svg, steps: steps };
-  }
-  function labelOf(g) { return String(g.n && (g.n.label || g.n.id) || '').replace(/\n/g, ' '); }
-
-  // ---- sequence: who calls whom, in order.
-  var S = { colW: 184, pad: 24, headW: 152, rowH: 46 };
-
-  function validateSequence(spec) {
-    var errors = [];
-    var ids = Object.create(null);
-    (spec.participants || []).forEach(function (p, i) {
-      if (!p.id) errors.push('participants[' + i + ']: missing "id"');
-      if (ids[p.id]) errors.push('participant "' + p.id + '" is defined twice');
-      ids[p.id] = true;
-    });
-    (spec.messages || []).forEach(function (m, i) {
-      if (m.divider !== undefined) return;
-      if (!ids[m.from]) errors.push('messages[' + i + ']: unknown "from" participant "' + m.from + '"');
-      if (!ids[m.to]) errors.push('messages[' + i + ']: unknown "to" participant "' + m.to + '"');
-    });
-    return errors;
-  }
-
-  function renderSequence(spec, info) {
-    var ps = spec.participants || [];
-    var xs = {};
-    ps.forEach(function (p, i) { xs[p.id] = S.pad + i * S.colW + S.colW / 2; });
-    var heads = ps.map(function (p) { return wrap(p.label || p.id, 19); });
-    var headH = Math.max.apply(null, heads.map(function (l) { return l.length * 16 + 20; }).concat([40]));
-    var W = S.pad * 2 + Math.max(1, ps.length) * S.colW;
-
-    // Lay rows out first: a wrapped label needs a taller row.
-    var y = S.pad + headH + 30;
-    var rows = (spec.messages || []).map(function (m) {
-      // The next message's label sits above its line, so leave it room below the band.
-      if (m.divider !== undefined) { var dy = y - 8; y += 46; return { m: m, y: dy }; }
-      var span = m.from === m.to ? 30 : Math.abs(xs[m.to] - xs[m.from]) / 6.6 - 2;
-      var lines = m.label ? wrap(m.label, Math.max(14, Math.floor(span))) : [];
-      var extra = Math.max(0, lines.length - 1) * 15;
-      var row = { m: m, y: y + extra, lines: lines };
-      y += S.rowH + extra + (m.from === m.to ? 16 : 0);
-      return row;
-    });
-    var H = y + S.pad;
-    var made = newSvg(W, H);
-    var svg = made.svg;
-
-    ps.forEach(function (p, i) {
-      var key = 'n:' + p.id;
-      var x = xs[p.id];
-      make('line', { 'class': 'lifeline', x1: x, y1: S.pad + headH, x2: x, y2: H - S.pad }, svg);
-      var g = make('g', { 'class': 'node k-' + (p.kind || 'box'), 'data-key': key }, svg);
-      make('rect', { x: x - S.headW / 2, y: S.pad, width: S.headW, height: headH, rx: p.kind === 'actor' ? 20 : 6 }, g);
-      textBlock(g, heads[i], x, S.pad + headH / 2, 16);
-      info[key] = { title: String(p.label || p.id).replace(/\n/g, ' '), text: p.note, ref: p.ref };
-    });
-
-    var steps = [];
-    rows.forEach(function (row, i) {
-      var m = row.m;
-      if (m.divider !== undefined) {
-        var dg = make('g', { 'class': 'divider' }, svg);
-        make('rect', { x: S.pad / 2, y: row.y, width: W - S.pad, height: 24, rx: 4 }, dg);
-        var dt = make('text', { x: W / 2, y: row.y + 12, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, dg);
-        dt.textContent = m.divider;
-        return;
-      }
-      var key = 'e:m' + i;
-      var g = make('g', { 'class': 'edge' + (m.reply ? ' dashed' : ''), 'data-key': key }, svg);
-      var x1 = xs[m.from];
-      var x2 = xs[m.to];
-      var d;
-      var lx;
-      var anchor = 'middle';
-      if (m.from === m.to) {
-        d = 'M' + x1 + ' ' + row.y + ' h34 v20 h-32';
-        lx = x1 + 42;
-        anchor = 'start';
-      } else {
-        var dir = x2 > x1 ? 1 : -1;
-        d = 'M' + (x1 + dir * 2) + ' ' + row.y + ' L' + (x2 - dir * 3) + ' ' + row.y;
-        lx = (x1 + x2) / 2;
-      }
-      make('path', { 'class': 'hit', d: d }, g);
-      var line = make('path', { 'class': 'line', d: d, 'marker-end': 'url(#' + made.id + (m.reply ? 'o' : 'a') + ')' }, g);
-      line.dataset.marker = made.id;
-      if (row.lines.length) {
-        var ty = m.from === m.to ? row.y + 10 : row.y - 10 - (row.lines.length - 1) * 15;
-        var t = make('text', { x: lx, 'text-anchor': anchor, 'class': 'msg' }, g);
-        row.lines.forEach(function (line2, j) {
-          var span = make('tspan', { x: lx, y: ty + j * 15 }, t);
-          span.textContent = line2;
-        });
-      }
-      info[key] = { title: m.label || (m.from + ' → ' + m.to), text: m.note, ref: m.ref, ends: [m.from, m.to] };
-      steps.push({ title: m.label, text: m.note, keys: [key, 'n:' + m.from, 'n:' + m.to] });
-    });
-    return { svg: svg, steps: spec.steps === false ? [] : steps };
-  }
-
-  // ---- figure chrome: toolbar, step-through, detail panel, expand.
-  function setupFigure(fig, svg, steps, info) {
-    var bar = html('div', 'dg-bar');
-    var canvas = html('div', 'dg-canvas');
-    var panel = html('div', 'dg-panel');
-    panel.setAttribute('aria-live', 'polite');
-    var caption = fig.querySelector('figcaption');
-    fig.insertBefore(bar, caption);
-    fig.insertBefore(canvas, caption);
-    fig.insertBefore(panel, caption);
-    canvas.appendChild(svg);
-    fig.tabIndex = 0;
-
-    var current = -1;
-    var prev;
-    var next;
-    var all;
-    var count;
-    if (steps.length) {
-      prev = html('button', '', bar, '◀ ' + T.prev);
-      count = html('span', 'dg-count', bar);
-      next = html('button', '', bar, T.next + ' ▶');
-      all = html('button', '', bar, T.all);
-      prev.type = next.type = all.type = 'button';
-      prev.onclick = function () { show(current - 1); };
-      next.onclick = function () { show(current + 1); };
-      all.onclick = function () { show(-1); };
-    }
-    html('span', 'dg-spacer', bar);
-    var expand = html('button', '', bar, T.expand);
-    expand.type = 'button';
-    expand.setAttribute('aria-pressed', 'false');
-    expand.onclick = function () { setExpanded(!fig.classList.contains('expanded')); };
-
-    function setExpanded(on) {
-      fig.classList.toggle('expanded', on);
-      document.body.classList.toggle('dg-lock', on);
-      expand.textContent = on ? T.close : T.expand;
-      expand.setAttribute('aria-pressed', on ? 'true' : 'false');
-      if (on) fig.focus();
-    }
-    function setMarkers(keys) {
-      svg.querySelectorAll('path.line').forEach(function (p) {
-        var lit = keys && p.parentNode.classList.contains('on');
-        // Hand-drawn SVG brings its own markers; a reply keeps its open head.
-        var m = p.getAttribute('marker-end') || '';
-        if (!p.dataset.marker || /o\)$/.test(m)) return;
-        p.setAttribute('marker-end', 'url(#' + p.dataset.marker + (lit ? 'h' : 'a') + ')');
-      });
-    }
-    function highlight(keys) {
-      svg.classList.toggle('stepping', !!keys);
-      svg.querySelectorAll('[data-key]').forEach(function (el) {
-        el.classList.toggle('on', !!keys && keys.indexOf(el.getAttribute('data-key')) !== -1);
-      });
-      setMarkers(keys);
-    }
-    function describe(title, text, ref, prefix) {
-      panel.textContent = '';
-      if (!title && !text) { html('span', 'dg-hint', panel, T.hint); return; }
-      var head = html('strong', '', panel, (prefix || '') + (title || ''));
-      if (ref) { head.appendChild(document.createTextNode(' ')); html('code', 'ref', head, ref); }
-      if (text) html('p', '', panel, text);
-    }
-    function show(i) {
-      svg.querySelectorAll('.picked').forEach(function (el) { el.classList.remove('picked'); });
-      if (!steps.length || i < 0 || i >= steps.length) {
-        current = -1;
-        highlight(null);
-        describe();
-      } else {
-        current = i;
-        highlight(steps[i].keys);
-        describe(steps[i].title, steps[i].text, null, (i + 1) + '. ');
-      }
-      if (count) {
-        count.textContent = current < 0 ? steps.length + ' ' + (ZH ? '步' : 'steps') : (current + 1) + ' / ' + steps.length;
-        prev.disabled = current <= 0;
-        next.disabled = current >= steps.length - 1;
-        all.disabled = current < 0;
-      }
-    }
-
-    svg.addEventListener('click', function (ev) {
-      var el = ev.target.closest('[data-key]');
-      if (!el) return;
-      var data = info[el.getAttribute('data-key')] || {};
-      if (current < 0) {
-        svg.querySelectorAll('.picked').forEach(function (p) { p.classList.remove('picked'); });
-        el.classList.add('picked');
-      }
-      describe(data.title || el.getAttribute('data-title'), data.text || el.getAttribute('data-note'), data.ref || el.getAttribute('data-ref'));
-    });
-    fig.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Escape' && fig.classList.contains('expanded')) { setExpanded(false); ev.preventDefault(); }
-      if (!steps.length) return;
-      if (ev.key === 'ArrowRight') { show(Math.min(current + 1, steps.length - 1)); ev.preventDefault(); }
-      if (ev.key === 'ArrowLeft') { show(Math.max(current - 1, 0)); ev.preventDefault(); }
-    });
-    show(-1);
-  }
-
-  function initDiagram(fig) {
-    var info = {};
-    var specEl = fig.querySelector('script[type="application/json"]');
-    var handSvg = fig.querySelector(':scope > svg');
-    var result;
-    try {
-      if (specEl) {
-        var spec = JSON.parse(specEl.textContent);
-        var errors = spec.type === 'sequence' ? validateSequence(spec) : validateFlow(spec);
-        if (errors.length) throw new Error(errors.join('\n'));
-        result = spec.type === 'sequence' ? renderSequence(spec, info) : renderFlow(spec, info);
-      } else if (handSvg) {
-        handSvg.classList.add('dg');
-        if (!handSvg.style.getPropertyValue('--w') && handSvg.viewBox && handSvg.viewBox.baseVal) {
-          handSvg.style.setProperty('--w', handSvg.viewBox.baseVal.width + 'px');
-        }
-        result = { svg: handSvg, steps: [] };
-      } else {
-        return;
-      }
-    } catch (err) {
-      var box = html('div', 'dg-error', null, T.error + ':\n' + err.message);
-      fig.insertBefore(box, fig.querySelector('figcaption'));
-      if (window.console) console.error('[diagram]', err.message);
-      return;
-    }
-    setupFigure(fig, result.svg, result.steps, info);
-  }
-
-  // ---- page: contents, scroll spy, copyable code references.
-  function slug(text, i) {
-    var s = text.toLowerCase().trim().replace(/[^\wÀ-￿]+/g, '-').replace(/^-+|-+$/g, '');
-    return s || 'section-' + (i + 1);
-  }
+  // The contents panel: each section's h2, and the h3 inside it one level down.
   function buildToc() {
-    var toc = document.querySelector('.toc');
-    var heads = document.querySelectorAll('main h2');
-    if (!toc || !heads.length) { if (toc) toc.remove(); return; }
-    html('p', 'toc-title', toc, T.contents);
-    var list = html('ol', '', toc);
-    var links = [];
-    heads.forEach(function (h, i) {
-      var target = h.closest('section') || h;
-      if (!target.id) target.id = slug(h.textContent, i);
-      var li = html('li', '', list);
-      var a = html('a', '', li, h.textContent);
-      a.href = '#' + target.id;
-      links.push({ a: a, target: target });
-    });
-    if (!('IntersectionObserver' in window)) return;
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        links.forEach(function (l) { l.a.classList.toggle('active', l.target === en.target); });
-      });
-    }, { rootMargin: '0px 0px -70% 0px' });
-    links.forEach(function (l) { io.observe(l.target); });
-  }
-  function copy(text) {
-    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
-    var ta = html('textarea', '', document.body);
-    ta.value = text;
-    ta.select();
-    try { document.execCommand('copy'); } finally { ta.remove(); }
-    return Promise.resolve();
-  }
-  document.addEventListener('click', function (ev) {
-    var ref = ev.target.closest('code.ref');
-    if (!ref) return;
-    copy(ref.textContent).then(function () {
-      ref.classList.add('copied');
-      ref.title = T.copied;
-      setTimeout(function () { ref.classList.remove('copied'); ref.removeAttribute('title'); }, 1200);
-    });
-  });
+    var toc = document.getElementById('toc');
+    var opener = document.querySelector('.toc-open');
+    var backdrop = document.querySelector('.toc-backdrop');
+    var root = document.documentElement;
+    var entries = [];
+    var list = document.createElement('ol');
 
-  document.querySelectorAll('figure.diagram').forEach(initDiagram);
+    function entry(heading, target, parentList) {
+      var item = document.createElement('li');
+      var link = document.createElement('a');
+      link.href = '#' + target.id;
+      link.textContent = heading.textContent;
+      item.appendChild(link);
+      parentList.appendChild(item);
+      entries.push({ link: link, target: target });
+      return item;
+    }
+
+    document.querySelectorAll('main section').forEach(function (section, index) {
+      var h2 = section.querySelector('h2');
+      if (!h2) return;
+      if (!section.id) section.id = 'section-' + (index + 1);
+      var item = entry(h2, section, list);
+      var subs = section.querySelectorAll('h3');
+      if (!subs.length) return;
+      var sublist = document.createElement('ol');
+      subs.forEach(function (h3, subIndex) {
+        if (!h3.id) h3.id = section.id + '-' + (subIndex + 1);
+        entry(h3, h3, sublist);
+      });
+      item.appendChild(sublist);
+    });
+    if (!entries.length) { toc.remove(); backdrop.remove(); return; }
+
+    var title = document.createElement('p');
+    title.className = 'toc-title';
+    title.textContent = T.contents;
+    toc.setAttribute('aria-label', T.contents);
+    toc.appendChild(title);
+    toc.appendChild(list);
+
+    // The entry whose target has passed just under the top bar is the one being read.
+    function mark() {
+      var line = (parseFloat(getComputedStyle(root).scrollPaddingTop) || 76) + 48;
+      var current = entries[0];
+      entries.forEach(function (e) { if (e.target.getBoundingClientRect().top < line) current = e; });
+      entries.forEach(function (e) {
+        if (e === current) e.link.setAttribute('aria-current', 'location');
+        else e.link.removeAttribute('aria-current');
+      });
+    }
+    window.addEventListener('scroll', mark, { passive: true });
+    mark();
+
+    // Below 1200px the panel is folded away; the contents button opens it over the page.
+    var narrow = window.matchMedia('(max-width: 1199px)');
+    function setOpen(open, returnFocus) {
+      toc.classList.toggle('open', open);
+      backdrop.hidden = !open;
+      opener.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) (toc.querySelector('a[aria-current]') || toc.querySelector('a')).focus();
+      else if (returnFocus) opener.focus();
+    }
+    opener.setAttribute('aria-label', T.contents);
+    opener.title = T.contents;
+    opener.addEventListener('click', function () { setOpen(!toc.classList.contains('open'), false); });
+    backdrop.addEventListener('click', function () { setOpen(false, true); });
+    toc.addEventListener('click', function (event) {
+      if (event.target.closest('a') && narrow.matches) setOpen(false, false);
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && toc.classList.contains('open')) setOpen(false, true);
+    });
+    narrow.addEventListener('change', function () { setOpen(false, false); });
+    opener.hidden = false;
+  }
+
+  function showError(canvas, text) {
+    var box = document.createElement('pre');
+    box.className = 'dg-error';
+    box.textContent = text;
+    canvas.appendChild(box);
+  }
+
+  function drawDiagrams() {
+    var font = getComputedStyle(document.body).fontFamily;
+    document.querySelectorAll('figure.diagram').forEach(function (figure) {
+      var spec = figure.querySelector('script[type="text/x-mermaid"]');
+      if (!spec) return;
+      var source = spec.textContent.replace(/^\s*\n/, '').replace(/\s+$/, '');
+      var canvas = document.createElement('div');
+      canvas.className = 'dg-canvas';
+      spec.after(canvas);
+
+      if (typeof pele === 'undefined') { showError(canvas, T.missing); return; }
+      // mount() draws the error in the canvas itself and redraws when the width changes.
+      pele.mount(canvas, source, {
+        fontFamily: font,
+        limit: LIMITS.limit,
+        outputLimit: LIMITS.outputLimit,
+        maxEdges: LIMITS.maxEdges,
+        zoom: { labels: { zoomIn: T.zoomIn, zoomOut: T.zoomOut, reset: T.reset } }
+      });
+    });
+  }
+
+  // A code reference (code.ref) copies its text when clicked.
+  function copyRefs() {
+    function copy(text) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+      var area = document.createElement('textarea');
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      try { document.execCommand('copy'); } finally { area.remove(); }
+      return Promise.resolve();
+    }
+    document.addEventListener('click', function (event) {
+      var ref = event.target.closest('code.ref');
+      if (!ref) return;
+      copy(ref.textContent).then(function () {
+        ref.classList.add('copied');
+        ref.title = T.copied;
+        setTimeout(function () { ref.classList.remove('copied'); ref.removeAttribute('title'); }, 1200);
+      });
+    });
+  }
+
+  themeToggle();
   buildToc();
+  drawDiagrams();
+  copyRefs();
 })();
 </script>
 </body>
