@@ -1,6 +1,6 @@
 ---
 name: mreq-grill
-description: Pressure-test an mreq task document under .mreq/ with a four-quadrant Known/Unknown interview, then write what it settles back into the document's Decisions, Tasks, Assumptions, and Open sections. Use when the user says "grill", "grill me", or wants to find unspoken assumptions and blind spots in a plan, or after mreq-do hands a document over.
+description: Pressure-test an mreq task document under .mreq/ with a four-quadrant Known/Unknown interview, then write what it settles back into the document's Decisions, Tasks, Assumptions, and Open sections. Use when the user says "grill", "grill me", or wants to find unspoken assumptions and blind spots in a plan, or after mreq-define hands a document over.
 ---
 
 # mreq-grill
@@ -34,10 +34,10 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 1. **Pick the document.**
    Use the path the user gave, or the one document this conversation is about. Otherwise run `list --open` and let the user pick, even when only one exists. Never pick one yourself.
-   When there is no open document, say so and suggest `/mreq-do`. Do not invent a subject.
+   When there is no open document, say so and suggest `/mreq-define`. Do not invent a subject.
 
 2. **Read it and the code it cites.**
-   When its `status` is `done`, say so before you read the code, and ask once: **Reopen** (grill it; step 5 sets it back to `active`), **Discuss only** (grill it, but write nothing in step 5), or **New document** (suggest `/mreq-do` and stop).
+   When its `status` is `done`, say so before you read the code, and ask once: **Reopen** (grill it; step 5 sets it back to `active`), **Discuss only** (grill it, but write nothing in step 5), or **New document** (suggest `/mreq-define` and stop).
    When `## Handoff` has an `Unconfirmed:` line, tell the user first: nobody confirmed this document's assumptions and decisions. Grill each of them as a known unknown.
 
 3. **Sweep the four quadrants.** The last two hide the real risk.

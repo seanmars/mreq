@@ -4,7 +4,7 @@
 
 | Skill | 作用 | 誰能呼叫 |
 |---|---|---|
-| `mreq-do` | 判斷意圖 (feature / issue / refactor / task),訪談,確認後產生文件 | 只有使用者 |
+| `mreq-define` | 判斷意圖 (feature / issue / refactor / task),訪談,確認後產生文件 | 只有使用者 |
 | `mreq-grill` | 用四象限壓力測試文件,把結論寫回文件 | 使用者, agent |
 | `mreq-apply` | 逐項實作文件的 Tasks,更新 checkbox 和 Handoff | 使用者, agent |
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
@@ -14,7 +14,7 @@
 
 「誰能呼叫」只適用 Claude Code. 其他 agent 不讀 `disable-model-invocation`, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
 
-典型流程: `/mreq-do` → (`mreq-grill`) → `mreq-apply` → commit (程式碼和 `.mreq/`) → `/mreq-close`.
+典型流程: `/mreq-define` → (`mreq-grill`) → `mreq-apply` → commit (程式碼和 `.mreq/`) → `/mreq-close`.
 
 `mreq-apply` 不會自己 commit. `mreq-close` 刪除前不檢查 git 狀態, 也不詢問. 要保留文件內容, 請先 commit, 再執行 `/mreq-close`.
 
@@ -31,7 +31,7 @@ claude plugin marketplace add seanmars/mreq
 claude plugin install mreq@mreq
 ```
 
-plugin 一定會安裝全部 skill. skill 名稱前會加上 `mreq:`, 例如 `/mreq:mreq-do`. 沒有其他同名指令時, `/mreq-do` 也能用.
+plugin 一定會安裝全部 skill. skill 名稱前會加上 `mreq:`, 例如 `/mreq:mreq-define`. 沒有其他同名指令時, `/mreq-define` 也能用.
 
 ### 其他 agent
 
@@ -55,7 +55,7 @@ npx skills add seanmars/mreq --skill '*'
 .claude-plugin/
 └── marketplace.json  # Claude Code plugin marketplace, plugin 為整個 repo
 skills/
-├── mreq-do/      # SKILL.md, EXPLORER.md
+├── mreq-define/  # SKILL.md, EXPLORER.md
 ├── mreq-grill/
 ├── mreq-apply/
 ├── mreq-close/

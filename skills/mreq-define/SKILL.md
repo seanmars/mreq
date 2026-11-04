@@ -1,12 +1,12 @@
 ---
-name: mreq-do
-description: Start a new piece of work. Classify what the user wants (feature, issue, refactor, or another task), interview until the goal is clear, get the user to confirm a restatement, then write a task document under .mreq/ that tracks progress and hands off to the next agent. Use for /mreq-do.
+name: mreq-define
+description: Start a new piece of work. Classify what the user wants (feature, issue, refactor, or another task), interview until the goal is clear, get the user to confirm a restatement, then write a task document under .mreq/ that tracks progress and hands off to the next agent. Use for /mreq-define.
 disable-model-invocation: true
 ---
 
-# mreq-do
+# mreq-define
 
-Run only when the user typed `/mreq-do`. If you are reading this file on your own, stop and ask the user to run `/mreq-do <request>`.
+Run only when the user typed `/mreq-define`. If you are reading this file on your own, stop and ask the user to run `/mreq-define <request>`.
 
 Turn a request into one confirmed task document. Do not implement anything: `mreq-apply` does that, after the user chooses it.
 

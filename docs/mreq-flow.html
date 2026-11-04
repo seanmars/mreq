@@ -220,8 +220,8 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
     <li class="sub"><a href="#session"><span class="stamp sub" aria-hidden="true">序</span>典型 session 時序</a></li>
     <li class="sub"><a href="#lifecycle"><span class="stamp sub" aria-hidden="true">態</span>文件生命週期</a></li>
     <li class="sub"><a href="#parts"><span class="stamp sub" aria-hidden="true">件</span>元件與呼叫權限</a></li>
-    <li><a href="#do"><span class="stamp" aria-hidden="true">立</span>mreq-do</a></li>
-    <li class="sub"><a href="#do-explore"><span class="stamp sub" aria-hidden="true">探</span>平行探索</a></li>
+    <li><a href="#define"><span class="stamp" aria-hidden="true">立</span>mreq-define</a></li>
+    <li class="sub"><a href="#define-explore"><span class="stamp sub" aria-hidden="true">探</span>平行探索</a></li>
     <li><a href="#grill"><span class="stamp" aria-hidden="true">詰</span>mreq-grill</a></li>
     <li><a href="#apply"><span class="stamp" aria-hidden="true">行</span>mreq-apply</a></li>
     <li class="sub"><a href="#apply-loop"><span class="stamp sub" aria-hidden="true">環</span>Task 迴圈</a></li>
@@ -272,7 +272,7 @@ flowchart TD
   Q -- 否 --> Q2{"只是想把描述<br>畫成圖?"}
   Q2 -- 是 --> GRAPH["/mreq-graph"]:::skill
   GRAPH --> GPAGE[("離線圖表 HTML<br>.mreq/graph/")]:::doc
-  Q2 -- 否 --> DO["/mreq-do<br>分類, 訪談, 重述確認"]:::skill
+  Q2 -- 否 --> DO["/mreq-define<br>分類, 訪談, 重述確認"]:::skill
   DO -- "mreq.py new" --> DOC[(".mreq/ 任務文件<br>status: draft")]:::doc
   DOC -- "確認時選<br>撰寫後 grill" --> GRILL
   DOC --> N{"使用者選下一步"}:::user
@@ -299,12 +299,12 @@ flowchart TD
     <script type="text/x-mermaid">
 sequenceDiagram
   actor U as 使用者
-  participant DO as mreq-do
+  participant DO as mreq-define
   participant S as mreq.py
   participant F as .mreq 文件
   participant AP as mreq-apply
   participant CL as mreq-close
-  U->>DO: /mreq-do 需求
+  U->>DO: /mreq-define 需求
   DO->>S: list --open
   S-->>DO: 開啟中的文件 (JSON)
   Note over DO: 讀 README, 讀程式碼, 分類 schema
@@ -346,7 +346,7 @@ sequenceDiagram
   <figure class="diagram">
     <script type="text/x-mermaid">
 stateDiagram-v2
-  [*] --> draft : mreq-do<br>mreq.py new
+  [*] --> draft : mreq-define<br>mreq.py new
   draft --> active : mreq-apply 開始<br>update --status active
   active --> active : 每完成一個 task<br>update
   active --> done : 全部 task 完成<br>且測試通過
@@ -370,7 +370,7 @@ stateDiagram-v2
     <script type="text/x-mermaid">
 flowchart TD
   subgraph ONLYU["只有使用者能呼叫 (disable-model-invocation)"]
-    DO["mreq-do"]:::skill
+    DO["mreq-define"]:::skill
     CLOSE["mreq-close"]:::skill
     HOW["mreq-how"]:::skill
     GRAPH["mreq-graph"]:::skill
@@ -405,7 +405,7 @@ flowchart TD
   <h3>mreq.py 指令</h3>
   <table class="cmd">
     <tr><th>指令</th><th>作用</th><th>使用者</th></tr>
-    <tr><td><code>new --schema --slug --title --desc</code></td><td>在 git root 建立 <code>.mreq/&lt;yyyyMMdd-HHmmss&gt;-&lt;slug&gt;.md</code>. 內容來自對應的 template. status 是 <code>draft</code>. slug 必須是 kebab-case, 最多 60 字元.</td><td>mreq-do</td></tr>
+    <tr><td><code>new --schema --slug --title --desc</code></td><td>在 git root 建立 <code>.mreq/&lt;yyyyMMdd-HHmmss&gt;-&lt;slug&gt;.md</code>. 內容來自對應的 template. status 是 <code>draft</code>. slug 必須是 kebab-case, 最多 60 字元.</td><td>mreq-define</td></tr>
     <tr><td><code>list [--open]</code></td><td>列出每份文件的 front matter 與 <code>## Tasks</code> 的勾選進度. 最近更新的排前面. <code>--open</code> 排除 <code>done</code>. 有 <code>warning</code> 或 <code>error</code> 的項目要告知使用者.</td><td>do, grill, apply, close</td></tr>
     <tr><td><code>update &lt;path&gt; [--status]</code></td><td>把 <code>updated</code> 設為現在. 可以同時改 status. 不改其他行.</td><td>do, grill, apply</td></tr>
     <tr><td><code>progress &lt;path&gt;</code></td><td>印出兩行純文字 (不是 JSON): <code>Using: 絕對路徑</code> 與 <code>schema: N/M tasks done. Next: 第一個未勾選的 task</code>. 全部勾選時 Next 是 <code>none</code>.</td><td>mreq-apply</td></tr>
@@ -424,13 +424,13 @@ flowchart TD
 </section>
 
 <!-- ============================== 2 ============================== -->
-<section class="block" id="do">
-  <h2><span class="stamp" aria-hidden="true">立</span>mreq-do</h2>
-  <p class="lede">把一個需求變成一份確認過的任務文件. 它不實作任何東西, 只寫 <code>.mreq/</code> 底下的文件. 只有使用者輸入 <code>/mreq-do</code> 才會執行.</p>
+<section class="block" id="define">
+  <h2><span class="stamp" aria-hidden="true">立</span>mreq-define</h2>
+  <p class="lede">把一個需求變成一份確認過的任務文件. 它不實作任何東西, 只寫 <code>.mreq/</code> 底下的文件. 只有使用者輸入 <code>/mreq-define</code> 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  S(["/mreq-do 需求"]):::user --> A1["git rev-parse --show-toplevel"]:::script
+  S(["/mreq-define 需求"]):::user --> A1["git rev-parse --show-toplevel"]:::script
   A1 --> A2{"git root 等於<br>agent 啟動目錄?"}
   A2 -- 否 --> X1(["請使用者從 git root<br>啟動 agent, 停止"]):::stop
   A2 -- "是 (或非 git:<br>用目前目錄)" --> A3["mreq.py list --open"]:::script
@@ -463,7 +463,7 @@ flowchart TD
   G1 -- "Pressure-test" --> GG["mreq-grill"]:::skill
   G1 -- "Stop here" --> GS(["給出絕對路徑<br>停止"]):::stop
     </script>
-    <figcaption>mreq-do 的 6 個步驟</figcaption>
+    <figcaption>mreq-define 的 6 個步驟</figcaption>
   </figure>
 
   <h3>Step 2: 分類與 Step 3: 訪談順序</h3>
@@ -504,9 +504,9 @@ flowchart TD
   <div class="callout"><strong>規則:</strong> 只寫 <code>.mreq/</code> 底下的文件. 不自己開始下一步: 使用者在 Step 4 (撰寫後 grill) 或 Step 6 選擇. 不跳過 Step 4 的確認, 除非使用者明確要求; 這時文件會記錄 <code>Unconfirmed:</code>. Skill 呼叫被拒絕時, 給出 <code>/mreq-apply &lt;path&gt;</code> 與 allow rule <code>Skill(mreq-apply)</code>, 然後停止.</div>
 </section>
 
-<section class="block" id="do-explore">
+<section class="block" id="define-explore">
   <h2><span class="stamp sub" aria-hidden="true">探</span>平行探索 (Complex 需求)</h2>
-  <p><code>mreq-do</code> 與 <code>mreq-how</code> 都使用這個模式. 每個 skill 有自己的 <code>EXPLORER.md</code>, 報告格式不同. 無法啟動 subagent 時, 主 agent 依序自己處理每個角度.</p>
+  <p><code>mreq-define</code> 與 <code>mreq-how</code> 都使用這個模式. 每個 skill 有自己的 <code>EXPLORER.md</code>, 報告格式不同. 無法啟動 subagent 時, 主 agent 依序自己處理每個角度.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 sequenceDiagram
@@ -532,7 +532,7 @@ sequenceDiagram
     <figcaption>prompt 只放需求, 角度, 與 EXPLORER.md 的路徑, 不貼上檔案內容</figcaption>
   </figure>
   <table>
-    <tr><th>mreq-do 的報告</th><th>mreq-how 的報告</th></tr>
+    <tr><th>mreq-define 的報告</th><th>mreq-how 的報告</th></tr>
     <tr><td>Facts: 程式碼已回答的事, 附 <code>path:line</code></td><td>Components: 主要型別, 函式, 模組</td></tr>
     <tr><td>Touchpoints: 要改的檔案與呼叫者</td><td>Flow: 逐步的執行流程與分支點</td></tr>
     <tr><td>Tests: 相關測試與執行指令</td><td>State: 保存什麼, 什麼改變它</td></tr>
@@ -552,13 +552,13 @@ flowchart TD
   S(["mreq-grill [path]"]):::user --> P1{"有指定路徑, 或<br>本對話只談一份文件?"}
   P1 -- 否 --> P2["mreq.py list --open"]:::script
   P2 --> P3{"有開啟中的文件?"}
-  P3 -- 否 --> X1(["建議 /mreq-do<br>停止"]):::stop
+  P3 -- 否 --> X1(["建議 /mreq-define<br>停止"]):::stop
   P3 -- 是 --> P4["使用者挑選<br>只有一份也要問"]:::user
   P1 -- 是 --> RD["讀文件"]:::doc
   P4 --> RD
   RD --> D1{"status 是 done?"}
   D1 -- 是 --> D2{"先說明, 再問一次"}:::user
-  D2 -- "New document" --> X2(["建議 /mreq-do<br>停止"]):::stop
+  D2 -- "New document" --> X2(["建議 /mreq-define<br>停止"]):::stop
   D2 -- "Reopen 或<br>Discuss only" --> RC
   D1 -- 否 --> RC["讀文件引用的程式碼"]
   RC --> U1{"Handoff 有<br>Unconfirmed: ?"}
@@ -830,7 +830,7 @@ flowchart TD
   A0a --> A1["讀 README,<br>agent 指示檔,<br>相關文件"]:::doc
   A1 --> A2{"問題大小?"}
   A2 -- "Simple<br>一個模組或函式" --> A3["自己探索"]
-  A2 -- "Complex<br>子系統, 跨檔案" --> A4["拆成 2-4 個角度<br>平行 explorer<br>(同 mreq-do)"]
+  A2 -- "Complex<br>子系統, 跨檔案" --> A4["拆成 2-4 個角度<br>平行 explorer<br>(同 mreq-define)"]
   A4 --> A5["整合報告<br>矛盾處自己讀程式碼"]
   A3 --> B1["依 WRITING.md<br>規劃頁面; 先寫 Mermaid,<br>圖例與說明, 再寫文字"]
   A5 --> B1
