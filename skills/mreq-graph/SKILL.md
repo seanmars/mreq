@@ -22,6 +22,12 @@ Write and reply in the language the agent instruction files (`AGENTS.md`, `CLAUD
 
 When the `AskUserQuestion` tool is available, ask with it: up to 4 independent questions at once, the recommended option first and labelled "(Recommended)". Otherwise, ask in plain text as a numbered list, the recommended option first, and wait for the answer.
 
+Ask with options, so the user picks instead of types:
+- Give every question 2 to 4 options. Keep each label short (1 to 5 words) and put the detail in its description. Keep each `header` to 12 characters or fewer.
+- Never add an "Other" option: `AskUserQuestion` adds a free-text answer to every question. When an answer may need a value no option holds (a path, a correction), say in the question that the user can type it there.
+- Ask for a typed answer only when no option can hold it, such as an error message only the user has seen. When you can guess the answer, offer the guess as an option.
+- Never ask the user to type a command that this skill's steps say to run for them.
+
 ## The script
 
 `${CLAUDE_SKILL_DIR}/page.py` builds and checks the page. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place.
@@ -44,7 +50,11 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **Diagrams**: each diagram you plan, with its Mermaid type (see "Choosing diagrams" in `WRITING.md`) and what it shows.
    - **Assumptions**: what the description leaves open and what you will choose. Omit when none.
 
-   When the description can be read more than one way, or two diagram types fit, give each as an option, the most likely one first. Ask the user to confirm or correct it. A correction means you read it wrong: restate again. Only the user's yes moves on.
+   Then ask one question (see "Asking the user"):
+   - When the description can be read more than one way, or two diagram types fit, give each as an option, the most likely one first, with its diagrams in the description. Picking one confirms it.
+   - Otherwise, offer **Correct, draw it** first, then **Correct, also draw <X>**, where X is the diagram the user most likely wants too. When there is no such diagram, offer **Stop** as the second option.
+
+   Say in the question that the user can type a correction in the free-text answer. A correction means you read it wrong: restate again. Only a pick that confirms a reading moves on.
 
    Before the yes, read only what you need to name the subject: the files the user pointed at, by name. Do not draw, and do not run `page.py`.
 
@@ -61,13 +71,13 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 4. **Write the page.**
    1. Get the content file's path: `page.py new <topic-slug>`. It creates the output folder and stamps the name with the current time; never make up the time.
    2. Write the content file at that path in the format `WRITING.md` gives: the header lines, `---`, then the sections. Write only that. The build wraps it in `skeleton.html` and inlines Pele, so never read or copy the skeleton or the Pele bundle.
-   3. Build the page: `page.py build <content file>`. It checks the page and every diagram, and writes `<same name>.html` beside the content file only when it prints `ok`. Fix every FAIL line in the content file with Edit (or Write for a rewrite) and build again. A FAIL line from Pele gives the line inside the Mermaid source. When the same Pele error is still there after 3 builds, stop: give the user Pele's error and the content file's absolute path, and ask how to go on. Between builds, change the content only with Edit or Write; never run `python`, a heredoc, `cd`, or any other script to generate or patch it. Never edit the built page: the next build overwrites it.
+   3. Build the page: `page.py build <content file>`. It checks the page and every diagram, and writes `<same name>.html` beside the content file only when it prints `ok`. Fix every FAIL line in the content file with Edit (or Write for a rewrite) and build again. A FAIL line from Pele gives the line inside the Mermaid source. When the same Pele error is still there after 3 builds, stop: give the user Pele's error and the content file's absolute path, and ask once: **Simplify the diagram** (rewrite it as "Keep it readable" in `WRITING.md` says, then build up to 3 more times), **Try another type** (draw the same thing with the next Mermaid type in "Choosing diagrams" that fits, then build up to 3 more times), or **Stop**. Between builds, change the content only with Edit or Write; never run `python`, a heredoc, `cd`, or any other script to generate or patch it. Never edit the built page: the next build overwrites it.
 
 5. **Report.**
    Reply with exactly this shape, nothing else:
    1. What the page shows, in at most 3 sentences, with no lists or headings. Start with your interpretation when the user skipped the confirmation (see step 1). When a diagram leaves out something the user may expect, say what in one of the sentences. When the build printed a `WARN` line, say in one of the sentences that the diagrams were not checked.
    2. The page's absolute path.
-   3. One question offering to open it in the default browser.
+   3. One question (see "Asking the user") with **Open it** (in the default browser) and **Don't open**, which says the user can type a follow-up in the free-text answer.
 
    Do not repeat the page's captions or assumptions in the chat, and do not show the Mermaid source. Open the page only when the user says so.
 

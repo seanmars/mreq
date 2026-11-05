@@ -20,6 +20,12 @@ Write and reply in the language the agent instruction files (`AGENTS.md`, `CLAUD
 
 When the `AskUserQuestion` tool is available, ask with it: up to 4 independent questions at once, the recommended option first and labelled "(Recommended)". Otherwise, ask in plain text as a numbered list, the recommended option first, and wait for the answer.
 
+Ask with options, so the user picks instead of types:
+- Give every question 2 to 4 options. Keep each label short (1 to 5 words) and put the detail in its description. Keep each `header` to 12 characters or fewer.
+- Never add an "Other" option: `AskUserQuestion` adds a free-text answer to every question. When an answer may need a value no option holds (a path, a correction), say in the question that the user can type it there.
+- Ask for a typed answer only when no option can hold it, such as an error message only the user has seen. When you can guess the answer, offer the guess as an option.
+- Never ask the user to type a command that this skill's steps say to run for them.
+
 ## The script
 
 The script is `<mreq-shared directory>/scripts/mreq.py`, where `<mreq-shared directory>` is `../mreq-shared` from this skill's directory. It creates, lists, and touches task documents. It prints JSON. Every document path you show the user is the absolute path the script printed.
@@ -40,7 +46,9 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 1. **Read before you ask.**
    Find the git root: run `git rev-parse --show-toplevel` on its own, without `-C`. When it fails (not a git repository), use the current directory. When the git root is not the directory the agent was started in, say so in your first reply, before any `new`: the document goes to `<git root>/.mreq/`, and the agent cannot read or edit it from here in later turns. Ask the user to start the agent from the git root, then stop.
-   Run `list --open`. When an open document already covers this request, ask whether to continue it or start a new one. Continue: give `/mreq-apply <path>` and stop; do not run `mreq-apply` yourself.
+   Run `list --open`. When an open document already covers this request, ask one question (see "Asking the user"), with the document's title and absolute path in the question:
+   - **Continue it (mreq-apply)**: run the `mreq-apply` skill on that document (in Claude Code: with the Skill tool), and do nothing more in this skill. When the Skill call is denied, follow step 6.
+   - **Start a new document**: go on with this step.
    Read the project's README and agent instruction files, from the git root. Then size the request:
    - **Simple**: one module, one function, one file. Read the code it touches and its tests yourself.
    - **Complex**: several modules, a cross-cutting change, or code you cannot place yet. Split it into 2-4 distinct angles (for example: the code the request touches and its callers; the tests and how to run them; for a bug, the history of the code the symptom runs through). When you can spawn subagents, spawn one read-only explorer per angle in a single message. Each prompt holds only the request, that explorer's angle, and the instruction to read `EXPLORER.md` at its path in this skill's directory and report in its shape. Never paste the file into the prompt. Otherwise, work the angles yourself, one at a time, with notes in the shape `EXPLORER.md` gives. Then reconcile: merge overlaps, and settle a contradiction by reading the code yourself, not by picking one account.
@@ -57,11 +65,14 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    | `task` | anything else | docs, config, CI, dependency bumps, scripts |
 
    When two fit, pick the one whose done state the user cares about most, and name the choice in step 4.
-   When the request is only a question about how the code works, it is not a task: suggest the user run `/mreq-how <question>` and stop. `/mreq-how` is user-invoked, so it does not appear in your skill list; do not say it is missing.
+   When the request reads only as a question about how the code works, ask one question:
+   - **Explain it (/mreq-how)**: give the user `/mreq-how <the question>`, with the question filled in so they can copy it, and stop. `/mreq-how` is user-invoked, so it does not appear in your skill list; do not say it is missing, and do not try to run it.
+   - **Treat it as a task**: go on with this step.
 
 3. **Interview until the goal is clear.**
    Skip every question the request or the code already answers. A clear request goes straight to step 4.
-   - Give each question a suggested answer and its reason, so the user can just confirm.
+   - Ask each decision as an option question (see "Asking the user"): your suggested answer first, with its reason in the description, then the real alternatives. When the decision does not block the document, add **Decide later** as the last option.
+   - Ask for a typed answer only for a fact that only the user has, such as an exact repro or an error message. Then say so in the question, and still offer your best guess as an option when you have one.
    - Ask unrelated questions together. Hold a question that depends on an open one.
    - Look up facts; ask for decisions (behavior, scope, trade-offs).
    - Ask what each answer implies that nobody said.
@@ -83,11 +94,12 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **Assumptions**: what you inferred and the user never said, each marked as a guess.
    - **Open**: each decision the user deferred. Omit when none.
 
-   Then ask one question (see "Asking the user") with these two options, the first one recommended:
+   Then ask one question (see "Asking the user") with these three options, the first one recommended:
    - **Correct, write the document**: go to step 5, then step 6.
    - **Correct, write the document, then grill it**: go to step 5, then run `mreq-grill` on the document (step 6).
+   - **Something is wrong**: ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then ask about each item the user picked as in step 3, and restate again.
 
-   Tell the user that, when something is wrong, they can type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means something is still hidden: go back to step 3, then restate again. Only one of the two options moves on.
+   Tell the user that, when something is wrong, they can also type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means something is still hidden: go back to step 3, then restate again. Only the two "Correct" options move on.
 
    Only an explicit request to skip this confirmation (for example "stop asking, just write the document") skips it. "Just write it" alone, or answering the questions, does not: restate. When the user skips it, go to step 5 without restating: write every assumption in `## Assumptions`, mark the document unconfirmed in `## Handoff`, and name the assumptions in your reply.
 
@@ -121,5 +133,5 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Guardrails
 
 - Write only the task document under `.mreq/`. Never edit source code or other files.
-- Never start the next step yourself: the user picks it in step 4 (grill) or step 6.
+- Never start the next step yourself: the user picks it in step 1 (continue an open document), step 4 (grill) or step 6.
 - Never skip step 4, even when the request looks clear. The only exception is the user's explicit request to skip the confirmation (step 4), and then the document records it as `Unconfirmed:`.

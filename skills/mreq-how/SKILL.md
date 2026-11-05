@@ -22,6 +22,12 @@ Write and reply in the language the agent instruction files (`AGENTS.md`, `CLAUD
 
 When the `AskUserQuestion` tool is available, ask with it: up to 4 independent questions at once, the recommended option first and labelled "(Recommended)". Otherwise, ask in plain text as a numbered list, the recommended option first, and wait for the answer.
 
+Ask with options, so the user picks instead of types:
+- Give every question 2 to 4 options. Keep each label short (1 to 5 words) and put the detail in its description. Keep each `header` to 12 characters or fewer.
+- Never add an "Other" option: `AskUserQuestion` adds a free-text answer to every question. When an answer may need a value no option holds (a path, a correction), say in the question that the user can type it there.
+- Ask for a typed answer only when no option can hold it, such as an error message only the user has seen. When you can guess the answer, offer the guess as an option.
+- Never ask the user to type a command that this skill's steps say to run for them.
+
 ## The script
 
 `${CLAUDE_SKILL_DIR}/page.py` builds and checks the page. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place.
@@ -44,7 +50,11 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **Scope**: the subsystem, flow, or files it covers.
    - **Out of scope**: what the page will leave out. Omit when none.
 
-   When the question can be read more than one way, give each reading as an option, the most likely one first. Ask the user to confirm or correct it. A correction means you read it wrong: restate again. Only the user's yes moves on.
+   Then ask one question (see "Asking the user"):
+   - When the question can be read more than one way, give each reading as an option, the most likely one first, with its scope in the description. Picking a reading confirms it.
+   - Otherwise, offer **Correct, go on** first, then **Correct, also cover <X>**, where X is the out-of-scope item the user most likely wants too. With nothing out of scope, offer **Stop** as the second option.
+
+   Say in the question that the user can type a correction in the free-text answer. A correction means you read it wrong: restate again. Only a pick that confirms a reading moves on.
 
    Before the yes, read only what you need to name the scope (file and directory names). Do not explore the code, spawn explorers, or run `page.py`.
 
@@ -68,10 +78,10 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 6. **Write the page.**
    1. Get the content file's path: `page.py new <topic-slug>`. It creates the output folder and stamps the name with the current time; never make up the time.
    2. Write the content file at that path in the format `WRITING.md` gives: the header lines, `---`, then the sections. Write only that. The build wraps it in `skeleton.html` and inlines Pele, so never read or copy the skeleton or the Pele bundle.
-   3. Build the page: `page.py build <content file>`. It checks the page and every diagram, and writes `<same name>.html` beside the content file only when it prints `ok`. Fix every FAIL line in the content file with Edit (or Write for a rewrite) and build again. A FAIL line from Pele gives the line inside the Mermaid source. When the same Pele error is still there after 3 builds, stop: give the user Pele's error and the content file's absolute path, and ask how to go on. Between builds, change the content only with Edit or Write; never run `python`, a heredoc, `cd`, or any other script to generate or patch it. Never edit the built page: the next build overwrites it.
+   3. Build the page: `page.py build <content file>`. It checks the page and every diagram, and writes `<same name>.html` beside the content file only when it prints `ok`. Fix every FAIL line in the content file with Edit (or Write for a rewrite) and build again. A FAIL line from Pele gives the line inside the Mermaid source. When the same Pele error is still there after 3 builds, stop: give the user Pele's error and the content file's absolute path, and ask once: **Simplify the diagram** (rewrite it as "Keep it readable" in `WRITING.md` says, then build up to 3 more times), **Use prose instead** (remove the diagram, explain that part in the text, and say so under Open Questions), or **Stop**. Between builds, change the content only with Edit or Write; never run `python`, a heredoc, `cd`, or any other script to generate or patch it. Never edit the built page: the next build overwrites it.
 
 7. **Report.**
-   Reply with exactly this shape, nothing else: the answer in at most 4 sentences (the gist of the Overview), with no lists or headings, starting with your interpretation when the user skipped the confirmation (see step 1); the page's absolute path; one question offering to open it in the default browser. The page is the explanation, so do not repeat it in the chat: give each sentence one point, never join clauses with a semicolon to fit more in, and list no inputs, cases or files (the page has them). When a build limit or anything else kept you from doing part of the request, say so in one of the 4 sentences. When the build printed a `WARN` line, say in one of the 4 sentences that the diagrams were not checked. Never go past 4 sentences: any other caveat, such as a layout you could not check, goes on the page under Open Questions. Open the page only when the user says so.
+   Reply with exactly this shape, nothing else: the answer in at most 4 sentences (the gist of the Overview), with no lists or headings, starting with your interpretation when the user skipped the confirmation (see step 1); the page's absolute path; one question (see "Asking the user") with **Open it** (in the default browser) and **Don't open**, which says the user can type a follow-up in the free-text answer. The page is the explanation, so do not repeat it in the chat: give each sentence one point, never join clauses with a semicolon to fit more in, and list no inputs, cases or files (the page has them). When a build limit or anything else kept you from doing part of the request, say so in one of the 4 sentences. When the build printed a `WARN` line, say in one of the 4 sentences that the diagrams were not checked. Never go past 4 sentences: any other caveat, such as a layout you could not check, goes on the page under Open Questions. Open the page only when the user says so.
 
    A follow-up that asks a new question starts again at step 1. A follow-up that changes the page goes through step 6 again. Both end with this same reply. After a change to the page, the 4 sentences say what changed on the page, not what the new part explains; never list the added content. When a Write, Edit or command is denied before the page is built, reply with only the denied path or command and its allow rule (see "When a tool call is denied"), then stop. Do not answer the question in the chat.
 

@@ -16,6 +16,10 @@
 
 典型流程: `/mreq-define` → (`mreq-grill`) → `mreq-apply` → commit (程式碼和 `.mreq/`) → `/mreq-close`.
 
+skill 之間能自動接續的地方, 會用選項問你下一步, 不需要輸入指令: `mreq-define` 可接 `mreq-grill` 或 `mreq-apply`, `mreq-grill` 與 `mreq-apply` 可互相接續, `mreq-close` 發現未完成的 task, 失敗的測試或要修正的 finding 時, 可帶著它們接 `mreq-apply`. 「只有使用者」能呼叫的 skill 不會被自動接續, 這時 skill 會給出完整的指令讓你執行.
+
+Claude Code 有 `AskUserQuestion` 時, 每個問題都用選項回答. 選項沒有你要的答案時, 在選項下方的文字欄輸入.
+
 `mreq-apply` 不會自己 commit. `mreq-close` 刪除前不檢查 git 狀態, 也不詢問. 要保留文件內容, 請先 commit, 再執行 `/mreq-close`.
 
 建議在新的 session 執行 `/mreq-close`. 同一個 session 做過修改時, 它的檢查不獨立. 這時 `mreq-close` 會先說明, 並問你要繼續還是停下.

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- 每個 skill 都用 `AskUserQuestion` 的選項提問: 每題 2 到 4 個選項, 推薦答案排第一. 選文件, 確認解讀, 是否開啟網頁, build 失敗後的處理, 都改成選項. 選項沒有的答案, 在選項下方的文字欄輸入.
+- `mreq-define` 與 `mreq-grill` 確認重述時, 多一個 "Something is wrong" 選項, 用多選標出有誤的項目. 訪談可以選 "Decide later" 或 "Leave it open".
+- skill 之間改用 Skill tool 直接接續, 不需要輸入指令: `mreq-define` 繼續舊文件時接 `mreq-apply`; `mreq-apply` 選 "Grill first" 時接 `mreq-grill`; `mreq-close` 發現未完成的 task, 測試失敗或選 "Fix the code" 時, 帶 findings 接 `mreq-apply`, 而且不刪除文件.
+- 「只有使用者」能呼叫的 skill (`mreq-define`, `mreq-close`, `mreq-how`, `mreq-graph`) 仍要手動輸入. skill 會給出填好參數的完整指令.
+
 ## 0.8.0
 
 ### Breaking

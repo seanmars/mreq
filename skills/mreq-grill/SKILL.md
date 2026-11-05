@@ -17,6 +17,12 @@ Write and reply in the language the agent instruction files (`AGENTS.md`, `CLAUD
 
 When the `AskUserQuestion` tool is available, ask with it: up to 4 independent questions at once, the recommended option first and labelled "(Recommended)". Otherwise, ask in plain text as a numbered list, the recommended option first, and wait for the answer.
 
+Ask with options, so the user picks instead of types:
+- Give every question 2 to 4 options. Keep each label short (1 to 5 words) and put the detail in its description. Keep each `header` to 12 characters or fewer.
+- Never add an "Other" option: `AskUserQuestion` adds a free-text answer to every question. When an answer may need a value no option holds (a path, a correction), say in the question that the user can type it there.
+- Ask for a typed answer only when no option can hold it, such as an error message only the user has seen. When you can guess the answer, offer the guess as an option.
+- Never ask the user to type a command that this skill's steps say to run for them.
+
 ## The script
 
 The script is `<mreq-shared directory>/scripts/mreq.py`, where `<mreq-shared directory>` is `../mreq-shared` from this skill's directory. Every document path you show the user is the absolute path the script printed.
@@ -34,6 +40,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 1. **Pick the document.**
    Use the path the user gave, or the one document this conversation is about. Otherwise run `list --open` and let the user pick, even when only one exists. Never pick one yourself.
+   Ask one question (see "Asking the user") with one option per document, in the order `list` gives: its title as the label, and its status, task progress and absolute path in the description. With one document, add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer.
    When there is no open document, say so and suggest `/mreq-define`. Do not invent a subject.
 
 2. **Read it and the code it cites.**
@@ -42,7 +49,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 3. **Sweep the four quadrants.** The last two hide the real risk.
    1. **Known knowns**: the claims the document rests on. Verify each against the code. A false known is the most dangerous kind.
-   2. **Known unknowns**: the open questions. Ask each, with your suggested answer and its reason.
+   2. **Known unknowns**: the open questions. Ask each as an option question (see "Asking the user"): your suggested answer first, with its reason in the description, then the real alternatives, and **Leave it open** last when the decision can wait.
    3. **Unknown knowns**: the premises nobody said out loud. Name each and confirm it holds.
    4. **Unknown unknowns**: the blind spots. Ask "what would have to be true for this to fail?" and follow the answers.
 
@@ -53,15 +60,17 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - A fact you bring in yourself is a known too: verify it in the code or the docs before you rely on it. A fact you cannot verify goes into the restatement as an assumption, never into a decision's reason.
    - Ask unrelated questions together. Hold a question that depends on an open one.
    - Ask what each answer implies that nobody said.
+   - To confirm an unknown known, ask with **It holds** and **It does not hold** as options, and your reason in the description of the one you recommend.
 
 4. **Restate and get confirmation.**
    In your own words: the claims that held and the ones that fell, the assumptions now explicit, the decisions made (each with its reason and the alternative ruled out), and what is still open.
 
-   Then ask one question (see "Asking the user") with these two options, the first one recommended:
+   Then ask one question (see "Asking the user") with these three options, the first one recommended:
    - **Correct, write it into the document**: go to step 5, then step 6.
    - **Correct, write it into the document, then implement**: go to step 5, then run `mreq-apply` on the document (step 6).
+   - **Something is wrong**: ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then grill each item the user picked, and restate again.
 
-   When the user picked **Discuss only** in step 2, step 5 writes nothing: offer **Correct, stop here** (go to step 6) and **Grill more** (go back to step 3) instead.
+   When the user picked **Discuss only** in step 2, step 5 writes nothing: offer **Correct, stop here** (go to step 6), **Grill more** (go back to step 3) and **Something is wrong** instead.
 
    Tell the user that, when something is wrong, they can type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means keep grilling, then restate again. Running out of questions is not confirmation; only the user's pick of a "Correct" option is.
 
