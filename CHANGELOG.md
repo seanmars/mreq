@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `mreq-close` 不再重跑 `mreq-apply` 已跑過的測試指令. 條件: 有已勾選的 task, 而且它的工作就是跑相關測試 (例: `issue` 的 "Run the related tests"). 只說明檢查方式的 task, 或未勾選的 task, 不算. repro, Behavior Pin 與 task 自己的檢查仍會執行. 報告會寫出沒重跑的指令與 task 編號.
+
 ## 0.9.0
 
 ### Changed

@@ -782,7 +782,7 @@ flowchart TD
   K2 -- "Close anyway" --> A1
   K1 -- 否 --> A1["Audit: 完整讀文件<br>與它引用的每個檔案"]:::doc
   A1 --> A2["逐項檢查 Goal,<br>每個 Dn, 每個<br>已勾選的 task:<br>done, partly done,<br>done differently,<br>missing, 附 path:line"]
-  A2 --> A3["Run: 只跑文件<br>指定的檢查:<br>測試指令,<br>issue 的 repro,<br>refactor 的<br>Behavior Pin"]:::script
+  A2 --> A3["Run: 只跑文件<br>指定的檢查:<br>測試指令,<br>issue 的 repro,<br>refactor 的<br>Behavior Pin.<br>已勾選的 task<br>跑過的測試指令<br>不重跑"]:::script
   A3 --> RS{"結果"}
   RS -- "測試失敗" --> T1{"Fix now<br>或 Stop"}:::user
   T1 -- "Fix now" --> HA
@@ -812,6 +812,7 @@ flowchart TD
       <li>指令照文件原樣執行. 不加 <code>uv run</code>, 不用 <code>python -c</code> 代替.</li>
       <li>會寫入資料的檢查, 指向新的路徑 (例: <code>--file</code>), 或交給使用者執行.</li>
       <li>不加自己的檢查. Audit 的 <code>path:line</code> 就是證據.</li>
+      <li>已勾選的 task 的工作就是跑相關測試時, 不重跑測試指令. repro, Behavior Pin 與 task 自己的檢查仍要跑. 報告寫出沒重跑的指令與 task 編號, 不算通過.</li>
       <li>指令被拒絕時, 不換方式重試, 也不停止; 它歸到 "測試沒執行".</li>
     </ul>
   </div>
