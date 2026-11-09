@@ -19,6 +19,9 @@ Where this slice meets the rest of the codebase: its inputs, its outputs, and wh
 ### Non-obvious things
 Behavior that is surprising, historically motivated, or easy to get wrong: things that look like they work one way and work another.
 
+### Reader names
+Only when the prompt says "Reader: plain". For each component above, what the README, the docs, the text the user sees in the product, or the settings call it. Write "none found" when only the code names it. Still give every `path:line` in the other sections: the synthesis checks claims with them.
+
 ### Files read
 Every file you read, so the synthesis can cite them.
 

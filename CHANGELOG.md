@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `mreq-how` 新增 `--plain` style: `/mreq-how --plain <問題>`. 頁面寫給企劃, PM 等不讀程式碼的人: 用功能名詞解說, 列出規則與數值, 不放路徑, `path:line` 和程式碼名稱. 內容仍然逐一對照程式碼確認. 沒加 style 時維持原本的工程師版. 不認得的 `--` 參數會用選項詢問讀者是誰.
+
 ## 0.10.0
 
 ### Changed

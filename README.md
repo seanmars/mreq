@@ -8,7 +8,7 @@
 | `mreq-grill` | 用四象限壓力測試文件,把結論寫回文件 | 使用者, agent |
 | `mreq-apply` | 逐項實作文件的 Tasks,更新 checkbox 和 Handoff | 使用者, agent |
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
-| `mreq-how` | 先確認問題的解讀,再產生解說程式碼的離線 HTML,附 Mermaid 圖表與圖例,放在 session root 的 `.mreq/how/` | 只有使用者 |
+| `mreq-how` | 先確認問題的解讀,再產生解說程式碼的離線 HTML,附 Mermaid 圖表與圖例,放在 session root 的 `.mreq/how/`. 加 `--plain` 改寫給企劃, PM 等非程式人員: 用功能名詞, 不放程式碼位置 | 只有使用者 |
 | `mreq-graph` | 先確認描述的解讀,再把描述畫成 Mermaid 圖表,產生附圖例的離線 HTML,放在 session root 的 `.mreq/graph/` | 只有使用者 |
 | `mreq-shared` | 不執行任何任務. 放其他 skill 共用的 script, template, Pele, 與 Mermaid 規則 | 沒有人 |
 

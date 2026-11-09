@@ -540,6 +540,7 @@ sequenceDiagram
     <tr><td>Tests: 相關測試與執行指令</td><td>State: 保存什麼, 什麼改變它</td></tr>
     <tr><td>Constraints: 慣例, 不變條件</td><td>Boundaries: 輸入, 輸出, 誰呼叫</td></tr>
     <tr><td>Decisions the code cannot settle</td><td>Non-obvious things</td></tr>
+    <tr><td></td><td>Reader names: 只在 <code>--plain</code>. 文件, 畫面文字, 設定怎麼稱呼每個部分</td></tr>
     <tr><td>Files read, Open questions</td><td>Files read, Open questions</td></tr>
   </table>
 </section>
@@ -827,12 +828,12 @@ flowchart TD
 <!-- ============================== 6 ============================== -->
 <section class="block" id="how">
   <h2><span class="stamp" aria-hidden="true">解</span>mreq-how</h2>
-  <p class="lede">用一頁離線 HTML 解說程式碼怎麼運作. 文字帶讀者看懂 Mermaid 畫的架構, 時序, 狀態, 與流程圖; 每張圖附上圖例與一行說明. 和 <code>mreq-graph</code> 一樣由 <a href="https://pele.run/">Pele</a> 繪製, Pele 內嵌在頁面裡, 所以不需要網路. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/how/</code> 裡的頁面. 分析前先和使用者確認問題的解讀. 只有使用者輸入 <code>/mreq-how</code> 才會執行.</p>
+  <p class="lede">用一頁離線 HTML 解說程式碼怎麼運作. 文字帶讀者看懂 Mermaid 畫的架構, 時序, 狀態, 與流程圖; 每張圖附上圖例與一行說明. 和 <code>mreq-graph</code> 一樣由 <a href="https://pele.run/">Pele</a> 繪製, Pele 內嵌在頁面裡, 所以不需要網路. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/how/</code> 裡的頁面. 分析前先和使用者確認問題的解讀. 只有使用者輸入 <code>/mreq-how</code> 才會執行. 預設寫給要修改程式碼的工程師; 加 <code>--plain</code> 改寫給企劃, PM 等不讀程式碼的人: 用功能名詞, 不放路徑與程式碼名稱, 但內容仍對照程式碼確認.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  S(["/mreq-how 問題"]):::user --> A0{"使用者明確要求<br>跳過確認?"}
-  A0 -- 否 --> C1["重述: 問題, 範圍,<br>不涵蓋的部分"]
+  S(["/mreq-how [--plain] 問題"]):::user --> A0{"使用者明確要求<br>跳過確認?"}
+  A0 -- 否 --> C1["重述: 問題, 範圍,<br>不涵蓋的部分, 讀者"]
   C1 --> C2{"選項: 每種解讀一個<br>或 Correct, go on"}:::user
   C2 -- 修正 --> C1
   C2 -- "選了一種解讀" --> A1
@@ -870,6 +871,7 @@ flowchart TD
         <li><strong>Gotchas</strong>: 不明顯的行為, 程式碼與文件的差異.</li>
         <li><strong>Open Questions</strong>: 無法追蹤的部分.</li>
       </ol>
+      <p><code>--plain</code> 的章節: Overview, Key Terms (功能名詞), How It Works, Rules and Values (規則與數值), Things to Know (意料外的行為), Open Questions. 不放 Where Things Live. 圖只用 <code>flowchart</code>, <code>stateDiagram-v2</code>, <code>sequenceDiagram</code>.</p>
     </div>
     <div>
       <h3>選擇圖的類型</h3>
@@ -885,7 +887,7 @@ flowchart TD
       <p>每張圖大約 12 個節點以內; sequence 最多 6 個參與者, 14 則訊息. 頁面外觀, 顏色 class, 圖例, 與 build 檢查都和 <code>mreq-graph</code> 相同.</p>
     </div>
   </div>
-  <div class="callout"><strong>規則:</strong> 使用者確認解讀前, 不開始分析, 除非使用者明確要求跳過確認. 除了 <code>.mreq/how/</code>, 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它. 解說實際執行的程式碼, 不是文件描述的內容; 兩者不同時寫進 Gotchas.</div>
+  <div class="callout"><strong>規則:</strong> 使用者確認解讀前, 不開始分析, 除非使用者明確要求跳過確認. 除了 <code>.mreq/how/</code>, 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它. 解說實際執行的程式碼, 不是文件描述的內容; 兩者不同時寫進 Gotchas. <code>--plain</code> 的頁面與回覆不放路徑, <code>path:line</code> 與程式碼名稱, 但每個說法仍要對照程式碼確認.</div>
 </section>
 
 <!-- ============================== 7 ============================== -->
