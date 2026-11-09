@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.1
+
+### Added
+
+- 輸入 slash command 時顯示參數提示 (`argument-hint`): `/mreq-how [--plain] <question>`, `/mreq-define <request>`, `/mreq-graph <description>`, `/mreq-apply`, `/mreq-grill`, `/mreq-close` 顯示 `[<path>]`.
+
 ## 0.11.0
 
 ### Added
