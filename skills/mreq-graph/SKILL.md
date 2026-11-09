@@ -1,6 +1,7 @@
 ---
 name: mreq-graph
 description: Turn the user's description into Mermaid diagrams on an offline single-page HTML, each with a legend for its colors and line styles, written to .mreq/graph/ under the session root. Pele (https://pele.run/) renders the diagrams, inlined in the page so it works with no network. Covers flowcharts, sequence, state, ER, class, gantt, timeline, mindmap and other Mermaid charts. Confirms its reading of the description with the user before drawing. Use for /mreq-graph.
+argument-hint: "<description>"
 disable-model-invocation: true
 ---
 

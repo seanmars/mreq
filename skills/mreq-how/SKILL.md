@@ -1,6 +1,7 @@
 ---
 name: mreq-how
 description: Explain how part of the codebase works as an offline HTML page with architecture, sequence, state, and flow diagrams in Mermaid, written to .mreq/how/ under the session root. Pele (https://pele.run/) renders the diagrams, inlined in the page so it works with no network. Covers "how does X work", walkthroughs before changing something, and placement questions ("where should this live", "which layer owns this"). `--plain` writes it for readers who know the product by its features (planners, PMs) and do not read code, so the page holds no paths and no code names. Confirms its reading of the question with the user before any analysis. Use for /mreq-how.
+argument-hint: "[--plain] <question>"
 disable-model-invocation: true
 ---
 

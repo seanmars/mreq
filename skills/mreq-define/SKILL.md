@@ -1,6 +1,7 @@
 ---
 name: mreq-define
 description: Start a new piece of work. Classify what the user wants (feature, issue, refactor, or another task), interview until the goal is clear, get the user to confirm a restatement, then write a task document under .mreq/ that tracks progress and hands off to the next agent. Use for /mreq-define.
+argument-hint: "<request>"
 disable-model-invocation: true
 ---
 

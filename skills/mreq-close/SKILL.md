@@ -1,6 +1,7 @@
 ---
 name: mreq-close
 description: Finish an mreq task document under .mreq/. Check that the code does what the document agreed, then delete the document. Use for /mreq-close.
+argument-hint: "[<path>]"
 disable-model-invocation: true
 ---
 

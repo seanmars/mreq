@@ -1,6 +1,7 @@
 ---
 name: mreq-apply
 description: Implement an mreq task document under .mreq/ one task at a time, checking off each task, keeping its Handoff section current, and following the document's schema (feature, issue, refactor, task). Use when the user wants to start, continue, or resume work tracked in .mreq/, or after mreq-define or mreq-close hands a document over.
+argument-hint: "[<path>]"
 ---
 
 # mreq-apply
