@@ -29,13 +29,12 @@ Ask with options, so the user picks instead of types:
 
 ## The script
 
-The script is `<mreq-shared directory>/scripts/mreq.py`, where `<mreq-shared directory>` is `../mreq-shared` from this skill's directory. It creates, lists, and touches task documents. It prints JSON. Every document path you show the user is the absolute path the script printed.
+The script is `${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py`. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place. It creates and lists task documents. It prints JSON. Every document path you show the user is the absolute path the script printed.
 
-Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Use the script's absolute path. Run `uv run <script> <command>` first. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python <script> <command>`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
+Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py" <command>` first, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 
 - `new --schema <feature|issue|refactor|task> --slug <kebab-case> --title="<title>" --desc="<one sentence>"`: creates `.mreq/<yyyyMMdd-HHmmss>-<slug>.md` at the git root, from the matching template.
 - `list [--open]`: every document's front matter and checkbox progress under `## Tasks`, most recently updated first. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
-- `update <path> [--status <draft|active|done>]`: sets `updated` to now. It changes no other line.
 
 Never write the front matter dates yourself: the script owns them.
 
@@ -95,18 +94,19 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **Assumptions**: what you inferred and the user never said, each marked as a guess.
    - **Open**: each decision the user deferred. Omit when none.
 
-   Then ask one question (see "Asking the user") with these three options, the first one recommended:
+   Then ask one question (see "Asking the user") with these four options, the first one recommended:
    - **Correct, write the document**: go to step 5, then step 6.
+   - **Correct, write the document, then implement**: go to step 5, then run `mreq-apply` on the document (step 6).
    - **Correct, write the document, then grill it**: go to step 5, then run `mreq-grill` on the document (step 6).
    - **Something is wrong**: ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then ask about each item the user picked as in step 3, and restate again.
 
-   Tell the user that, when something is wrong, they can also type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means something is still hidden: go back to step 3, then restate again. Only the two "Correct" options move on.
+   Tell the user that, when something is wrong, they can also type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means something is still hidden: go back to step 3, then restate again. Only the three "Correct" options move on.
 
    Only an explicit request to skip this confirmation (for example "stop asking, just write the document") skips it. "Just write it" alone, or answering the questions, does not: restate. When the user skips it, go to step 5 without restating: write every assumption in `## Assumptions`, mark the document unconfirmed in `## Handoff`, and name the assumptions in your reply.
 
 5. **Write the document.**
    Run `new`. Then fill the file with Edit, in the language the Language section picks; `--title` and `--desc` use it too:
-   - Change only the body, section by section, with Edit. Never rewrite the whole file and never touch the front matter: `update` owns it.
+   - Change only the body, section by section, with Edit. Never rewrite the whole file and never touch the front matter: the script owns it.
    - Replace every `<!-- -->` hint with content, or delete it when a section does not apply.
    - Keep the `##` headings as they are: other mreq skills look for them.
    - Write `## Tasks` as small steps, each with how to check it. Keep the template's fixed steps for `issue` and `refactor`.
@@ -122,7 +122,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - Leave `status` as `draft`.
 
 6. **Ask for the next step.**
-   When the user picked **Correct, write the document, then grill it** in step 4, do not ask: run the `mreq-grill` skill on this document now (in Claude Code: with the Skill tool).
+   When the user picked **Correct, write the document, then implement** or **Correct, write the document, then grill it** in step 4, do not ask: run the skill they picked on this document now, `mreq-apply` or `mreq-grill` (in Claude Code: with the Skill tool).
 
    Otherwise, ask one question. Recommend the first option unless the plan still feels untested or the document is unconfirmed:
    - **Implement (mreq-apply)**: run the `mreq-apply` skill on this document (in Claude Code: with the Skill tool).
@@ -134,5 +134,5 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Guardrails
 
 - Write only the task document under `.mreq/`. Never edit source code or other files.
-- Never start the next step yourself: the user picks it in step 1 (continue an open document), step 4 (grill) or step 6.
+- Never start the next step yourself: the user picks it in step 1 (continue an open document), step 4 (implement or grill) or step 6.
 - Never skip step 4, even when the request looks clear. The only exception is the user's explicit request to skip the confirmation (step 4), and then the document records it as `Unconfirmed:`.

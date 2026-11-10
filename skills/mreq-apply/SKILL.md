@@ -26,9 +26,9 @@ Ask with options, so the user picks instead of types:
 
 ## The script
 
-The script is `<mreq-shared directory>/scripts/mreq.py`, where `<mreq-shared directory>` is `../mreq-shared` from this skill's directory. Every document path you show the user is the absolute path the script printed.
+The script is `${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py`. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place. Every document path you show the user is the absolute path the script printed.
 
-Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Use the script's absolute path. Run `uv run <script> <command>` first. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python <script> <command>`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
+Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py" <command>` first, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 
 - `list [--open]`: every document with its status, most recently updated first; `--open` leaves out the `done` ones. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
 - `update <path> [--status <draft|active|done>]`: sets `updated` to now. Never write the dates yourself. `update` rewrites the file: read the document again before your next Edit of it.
@@ -48,9 +48,10 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    First learn the status from the `list` output. When step 1 did not run `list`, run it without `--open`: the document may be `done`. Then read the document, before any `update`. Read `## Handoff` first: it says where the last agent stopped. Then run `progress <path>` and show its output (step 3) before any other tool call.
    - When the document still holds only the template's hints (no real goal or tasks), stop before any `update`: say so, and ask once: **Grill it (mreq-grill)** (run the `mreq-grill` skill on the document; in Claude Code: with the Skill tool) or **Stop** (say that `/mreq-define <request>` starts a new document).
    - When `## Handoff` has an `Unconfirmed:` line, the user never confirmed the document: show `## Assumptions` and ask once: **Go on** (drop the line when you next rewrite `## Handoff`) or **Grill first** (run the `mreq-grill` skill on the document; in Claude Code: with the Skill tool).
+   - When it is `done`, every task is checked, and you were handed no findings (see "Findings from mreq-close"), stop before any `update`: say that the work is done, and that `/mreq-close <path>`, with the absolute path filled in, finishes it. `/mreq-close` is user-invoked: do not try to run it.
+   - When it is `draft`, or `done` with an unchecked task, run `update <path> --status active`, then read it again before your first Edit.
 
    After you hand the document to `mreq-grill`, do nothing more in this skill. When that Skill call is denied, give the user `/mreq-grill <path>` and the allow rule `Skill(mreq-grill)`, then stop. Never read another skill's SKILL.md and follow it yourself.
-   - When it is `draft`, run `update <path> --status active`, then read it again before your first Edit.
 
    Then read the code it cites.
    Run `git status` and `git diff`, each on its own and without `-C`, and compare them with `## Handoff`. A change the Handoff does not mention means the last session stopped mid-task: continue from the code, not from the Handoff alone.
@@ -86,7 +87,14 @@ Stop and ask in these cases. Each question is an option question (see "Asking th
 - An error you cannot resolve: offer the next step you would try first, then **Stop**, and say in the question that the user can type what they know about the error.
 - A command that would prove a task done is denied. Leave the task unchecked and do not set `done`; then follow "When a tool call is denied".
 
-**Stopping** (a question, a denied command, a pause, the user stops you, the session ends): make the record with tool calls before you reply; a stop with no Edit and no `update` is never enough. Leave the box unchecked. Under the next unchecked task, write or rewrite one nested bullet, not a checkbox: `  - Resume: <done so far>; <what is left>; <next action>`. Put in everything you know now, including changes that are only in the working tree; write `not started` as the done part when nothing is done. When the user stops you, their words are new: add them to the line (for example `D2: the user decides later`), even when the rest of the record is current. Rewrite `## Handoff` and run `update <path>`. Delete the `Resume:` line when you check the task off. The two step 2 stops before any `update` (a template-only document, and `Unconfirmed:`) change nothing.
+**Stopping** (a question, a denied command, a pause, the user stops you, the session ends): make the record with tool calls before you reply; a stop with no Edit and no `update` is never enough.
+
+1. Leave the box unchecked.
+2. Under the next unchecked task, write or rewrite one nested bullet, not a checkbox: `  - Resume: <done so far>; <what is left>; <next action>`. Put in everything you know now, including changes that are only in the working tree; write `not started` as the done part when nothing is done.
+3. When the user stops you, their words are new: add them to the line (for example `D2: the user decides later`), even when the rest of the record is current.
+4. Rewrite `## Handoff` and run `update <path>`.
+
+Delete the `Resume:` line when you check the task off. The step 2 stops before any `update` (a template-only document, `Unconfirmed:`, and a `done` document with nothing left to do) change nothing.
 
 ## Findings from mreq-close
 

@@ -29,12 +29,12 @@ Ask with options, so the user picks instead of types:
 
 ## The script
 
-The script is `<mreq-shared directory>/scripts/mreq.py`, where `<mreq-shared directory>` is `../mreq-shared` from this skill's directory. Every document path you show the user is the absolute path the script printed.
+The script is `${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py`. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place. Every document path you show the user is the absolute path the script printed.
 
 - `list`: every document, most recently updated first. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
 - `delete <path>`: deletes the document. It refuses any file outside `.mreq/`.
 
-Run each command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Use the script's absolute path. Run `uv run <script> <command>` first. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python <script> <command>`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
+Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py" <command>` first, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 
 ## When a tool call is denied
 
@@ -60,11 +60,17 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
       - A finding is code that contradicts the document or misses something it asked for. Code that adds a detail the document did not mention, without contradicting it, goes in the not-asked-for list.
       - Note anything the code does that the document never asked for.
       - Run no command that executes the project's code or writes a file.
-   2. **Run.** After the audit, run the checks the document names, and only those: its test command (when it names none, the one in the project's README or agent instruction files); for `issue`, the `## Symptom` repro; for `refactor`, the `## Behavior Pin`; and the check a task names. Skip the test command when a checked task's work is to run the related tests (for example the `issue` template's "Run the related tests"): `mreq-apply` ran them to check that task off. Do not look for another test command then. A task that only says how it is checked, or an unchecked one, does not count. This skips only the test command: still run the repro, the Behavior Pin, and each task's own check. Run each command exactly as written: add no `uv run`, and use no `python -c` in its place. When a check needs a script, run it inline. When a check writes or changes files beyond caches (a data file, a database), keep it off the project's real data: point it at a new path the command accepts (for example a `--file` option), or give it to the user to run. That new path is the only change you make to a command. Add no checks of your own, not even to confirm a finding: the audit's `path:line` is the evidence. When any command you ran in this step is denied, do not retry it another way, and do not stop: it goes to **Tests not run** in step 4.
+   2. **Run.** After the audit, run the checks the document names, and only those.
+      - **What to run**: its test command (when it names none, the one in the project's README or agent instruction files); for `issue`, the `## Symptom` repro; for `refactor`, the `## Behavior Pin`; and the check a task names.
+      - **When to skip the test command**: skip it when a checked task's work is to run the related tests (for example the `issue` template's "Run the related tests"): `mreq-apply` ran them to check that task off. Do not look for another test command then. A task that only says how it is checked, or an unchecked one, does not count. This skips only the test command: still run the repro, the Behavior Pin, and each task's own check.
+      - **As written**: run each command exactly as written: add no `uv run`, and use no `python -c` in its place. When a check needs a script, run it inline.
+      - **Off the real data**: when a check writes or changes files beyond caches (a data file, a database), keep it off the project's real data: point it at a new path the command accepts (for example a `--file` option), or give it to the user to run. That new path is the only change you make to a command.
+      - **No checks of your own**: add none, not even to confirm a finding: the audit's `path:line` is the evidence.
+      - **A denied command**: when any command you ran in this step is denied, do not retry it another way, and do not stop: it goes to **Tests not run** in step 4.
 
 4. **Act on the result.**
    - **All done, tests pass**: go to step 5.
-   - **Tests not rerun** (step 3 skipped the test command because a checked task ran it): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: name it in the report with the task number.
+   - **Tests already run by a task** (step 3 skipped the test command because a checked task ran it): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: name it in the report with the task number.
    - **Failing tests**: name each failure, and ask once: **Fix now (mreq-apply)** (hand the document to `mreq-apply` with each failure as a finding; see "Handing over to mreq-apply") or **Stop** (give `/mreq-apply <path>` with the failures, then `/mreq-close <path>` again).
    - **Tests not run** (a command in step 3 was denied, or you found no tests): give the user each command that did not run, exactly as you ran it, with one allow rule for each denied one (see "When a tool call is denied"), and ask once: **Close anyway** or **Keep it**. Never count it as a pass. Close anyway: go on, and name it in the report. Keep it: stop.
    - **A finding** (partly done, done differently, missing): ask one question per finding. Quote the document's line, say what the code does, and offer **Accept the code** or **Fix the code**.
