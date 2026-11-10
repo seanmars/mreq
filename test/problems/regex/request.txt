@@ -1,0 +1,1 @@
+新增 regex_match.py,提供 is_match(s: str, p: str) -> bool,規則和 LeetCode 10 Regular Expression Matching 相同: '.' 比對任一個字元, '*' 比對前一個元素零次或多次,而且要比對整個 s,不是部分. s 只有小寫英文字母, p 只有小寫英文字母, '.' 和 '*',每個 '*' 前面一定有合法字元. 不可以使用 re 模組. 長度到 30 的輸入也要很快完成. 要附上測試.

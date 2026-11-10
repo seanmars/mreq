@@ -1,0 +1,1 @@
+- 完全依照 LeetCode 591 Tag Validator 的規則,就是需求裡寫的那些. 沒有其他偏好.

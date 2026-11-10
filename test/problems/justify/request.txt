@@ -1,0 +1,1 @@
+新增 text_justify.py,提供 full_justify(words: list[str], max_width: int) -> list[str],把單字排成左右對齊的文字行. 規則和 LeetCode 68 Text Justification 相同: 每行用貪婪法放最多的字,字之間至少一個空白; 多出的空白平均分給字之間的空隙,不能平均時左邊的空隙多放; 最後一行,以及只有一個字的行,靠左對齊,字之間只放一個空白,右邊補空白到 max_width. 每個字只含非空白字元,長度在 1 到 max_width 之間. 要附上測試.

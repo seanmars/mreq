@@ -1,0 +1,1 @@
+新增 lfu_cache.py,實作 LeetCode 460 LFU Cache: class LFUCache,建構子 LFUCache(capacity: int),方法 get(key: int) -> int 和 put(key: int, value: int) -> None. get 找不到 key 時回傳 -1. 容量滿了再放新 key 時,先移除使用次數最少的 key; 次數相同時,移除最久沒被使用的那個. get 和 put 都算一次使用. 兩個方法的平均時間複雜度都要是 O(1). 要附上測試.

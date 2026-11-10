@@ -1,0 +1,9 @@
+# 執行時產生的資料
+skills/
+runs/
+logs/
+results/
+simuser/
+report.md
+report.json
+__pycache__/

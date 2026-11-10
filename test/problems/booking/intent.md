@@ -1,0 +1,9 @@
+- book 成功時回傳 int 的預約編號; 和同一間會議室的現有預約重疊時回傳 None,不丟例外.
+- 時段是半開區間 [start, end): 前後相接 (例如 9:00-10:00 和 10:00-11:00) 不算重疊,可以預約.
+- start >= end,或 start < 0,或 end > 1440: book 丟 ValueError.
+- 預約編號從 1 開始,每次成功預約加 1,所有會議室共用同一個序號. 失敗的預約不佔編號. 取消後的編號不會重複使用.
+- cancel 成功取消一筆有效預約時回傳 True; 編號不存在或已經取消過時回傳 False.
+- free_slots 回傳 list[tuple[int, int]],依時間排序,列出 [day_start, day_end) 範圍內沒有被有效預約佔用的時段. 部分超出查詢範圍的預約要裁切到範圍內. 長度為 0 的空檔不列出. 相鄰的預約之間沒有空檔.
+- free_slots 查沒有任何預約的會議室: 回傳 [(day_start, day_end)].
+- free_slots 的 day_start >= day_end: 丟 ValueError.
+- 會議室名稱區分大小寫.

@@ -1,0 +1,1 @@
+新增 sla.py,提供 due_at(created: datetime, hours: float, holidays: set[date] = frozenset()) -> datetime,計算客服工單的 SLA 到期時間. 只算上班時間: 週一到週五 09:00 到 18:00,中午 12:00 到 13:00 午休不算. holidays 裡的日期整天不上班. 要附上測試.

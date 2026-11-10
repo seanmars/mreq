@@ -1,0 +1,1 @@
+新增 checkout.py,提供 total(items: list[dict], coupon: str | None = None) -> int,計算購物車的應付金額. items 每一項有 sku, name, price (單價,整數元), qty (數量), category. 促銷規則: 飲料 (category 是 "drink") 第二件六折; 優惠券 "SAVE100" 滿 1000 折 100; 優惠券 "OFF10" 全館九折. 運費 60 元,滿 499 免運. 要附上測試.

@@ -1,0 +1,1 @@
+新增 booking.py,做一個會議室預約簿 class BookingBook,方法: book(room: str, start: int, end: int) 預約, cancel(booking_id: int) 取消, free_slots(room: str, day_start: int, day_end: int) 查詢空檔. 時間用從當天 00:00 起算的分鐘數. 同一間會議室的預約不能重疊. 要附上測試.
