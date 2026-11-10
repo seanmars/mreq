@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `mreq-close` 不再要求, 也不再建議新的 session. 同一個 session 做過修改時, 不再詢問 "Continue here" 或 "Stop", 直接核對. `mreq-apply` 與 `mreq-close` 提示 `/mreq-close` 時, 不再建議新的 session. 核對仍然只依照現在讀到的文件與程式碼, 不依照對話記憶.
+
 ## 0.13.0
 
 ### Added

@@ -24,7 +24,7 @@ Claude Code 有 `AskUserQuestion` 時, 每個問題都用選項回答. 選項沒
 
 `mreq-apply` 不會自己 commit. `mreq-close` 刪除前不檢查 git 狀態, 也不詢問. 要保留文件內容, 請先 commit, 再執行 `/mreq-close`.
 
-建議在新的 session 執行 `/mreq-close`. 同一個 session 做過修改時, 它的檢查不獨立. 這時 `mreq-close` 會先說明, 並問你要繼續還是停下.
+`/mreq-close` 可以在任何 session 執行, 包括做修改的同一個 session. 它只依照現在讀到的文件與程式碼判斷, 不依照對話記憶.
 
 ## 安裝
 

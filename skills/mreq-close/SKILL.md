@@ -44,7 +44,6 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 1. **Pick the document.**
    Use the path the user gave. Otherwise run `list` and let the user pick, documents with `status` `done` first. Never pick one yourself. Ask one question (see "Asking the user") with one option per document, in that order: its title as the label, and its status, task progress and absolute path in the description. With one document, add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer. Your first message starts with the line `Closing: <absolute path>`, also when the user gave the path: when they gave it, say it before any tool call; otherwise, right after they pick.
-   When this conversation made the changes (for example, it ran `mreq-apply` on this document), the audit is not independent: say so, recommend running `/mreq-close <path>` in a new session, and ask once: **Continue here** or **Stop**. Stop: give `/mreq-close <path>` and stop.
 
 2. **Check the tasks.**
    When a task is unchecked, ask once:
@@ -90,7 +89,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Handing over to mreq-apply
 
 Do this only where a step above says so, and never delete the document then.
-1. Tell the user that after the fixes, `/mreq-close <path>` checks the code again, best in a new session after a commit.
+1. Tell the user that after the fixes, `/mreq-close <path>` checks the code again after a commit.
 2. Run the `mreq-apply` skill (in Claude Code: with the Skill tool). Pass the document's absolute path as its argument, then each finding or failure on its own line: the document's line, what the code does, and its `path:line` or the failing command.
 3. Do nothing more in this skill. When the Skill call is denied, give the user `/mreq-apply <path>` with the findings, and the allow rule `Skill(mreq-apply)`, then stop. Never read another skill's SKILL.md and follow it yourself.
 

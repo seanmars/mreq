@@ -288,7 +288,7 @@ flowchart TD
   GRILL -- "結論寫回文件" --> APPLY
   APPLY -- "全部 task 完成<br>且測試通過" --> DONE[("status: done")]:::doc
   DONE --> COMMIT["commit 程式碼與 .mreq/"]:::user
-  COMMIT --> CLOSE["/mreq-close<br>建議在新的 session"]:::skill
+  COMMIT --> CLOSE["/mreq-close"]:::skill
   CLOSE --> R{"核對結果"}
   R -- "未完成 task, 測試失敗<br>或 Fix the code<br>(選項直接接續)" --> APPLY
   R -- "全部通過<br>或 Accept the code" --> GONE(["mreq.py delete<br>直接刪除文件"]):::stop
@@ -301,7 +301,7 @@ flowchart TD
 
 <section class="block" id="session">
   <h2><span class="stamp sub" aria-hidden="true">序</span>典型 session 時序</h2>
-  <p>下圖是一次順利的流程: 確認一次, 實作全部 task, 在新的 session 收尾. 它畫的是寫文件的流程; 不寫文件的流程在 <code>mreq-define</code> 內結束, 沒有 <code>mreq.py new</code>, <code>mreq-apply</code> 與 <code>mreq-close</code>.</p>
+  <p>下圖是一次順利的流程: 確認一次, 實作全部 task, 用 <code>mreq-close</code> 收尾. 它畫的是寫文件的流程; 不寫文件的流程在 <code>mreq-define</code> 內結束, 沒有 <code>mreq.py new</code>, <code>mreq-apply</code> 與 <code>mreq-close</code>.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 sequenceDiagram
@@ -334,7 +334,7 @@ sequenceDiagram
   AP->>S: update --status done
   AP-->>U: 請執行 /mreq-close
   Note over U: commit 程式碼與 .mreq/
-  U->>CL: /mreq-close (新的 session)
+  U->>CL: /mreq-close
   CL->>F: 完整讀取, 稽核程式碼
   CL->>CL: 執行文件指定的檢查
   Note over CL: 全部通過: 不詢問, 直接刪除
@@ -808,12 +808,8 @@ flowchart TD
   P1 -- 否 --> P2["mreq.py list"]:::script
   P2 --> P3["用選項挑選<br>done 的排前面"]:::user
   P3 --> P4["第一行 Closing: 路徑"]
-  P4 --> I1{"本對話做過修改?<br>例: 跑過 mreq-apply"}
-  P5 --> I1
-  I1 -- 是 --> I2{"稽核不獨立,<br>建議新的 session"}:::user
-  I2 -- Stop --> X1(["給出 /mreq-close<br>停止"]):::stop
-  I2 -- "Continue here" --> K1
-  I1 -- 否 --> K1{"有未勾選的 task?"}
+  P4 --> K1{"有未勾選的 task?"}
+  P5 --> K1
   K1 -- 是 --> K2{"問一次"}:::user
   K2 -- "Continue" --> HA
   K2 -- "Keep it" --> X3(["停止"]):::stop
@@ -858,7 +854,7 @@ flowchart TD
   <h3>Step 5: 刪除文件</h3>
   <p>Step 4 的問題全部回答後, 先收集 <code>## Open</code> 與 <code>## Handoff</code> 的 follow-up, 再執行 <code>mreq.py delete</code>. 不檢查 git, 也不詢問.</p>
   <p>Step 6 報告: 刪除了什麼, 檢查結果, 每個接受的偏離, 未完成的 task 與沒執行的測試, Step 5 的 follow-up, 檢查留下的檔案, 以及程式碼做了但文件沒要求的事.</p>
-  <p>交給 <code>mreq-apply</code> 前, 先告訴使用者: 修正並 commit 後, 在新的 session 執行 <code>/mreq-close &lt;path&gt;</code>. findings 與失敗的測試, 每項一行, 作為 Skill 的參數傳入. finding 的問題一次最多問 4 題.</p>
+  <p>交給 <code>mreq-apply</code> 前, 先告訴使用者: 修正並 commit 後, 再執行 <code>/mreq-close &lt;path&gt;</code>. findings 與失敗的測試, 每項一行, 作為 Skill 的參數傳入. finding 的問題一次最多問 4 題.</p>
   <div class="callout"><strong>規則:</strong> 不改程式碼, 也不改文件; 修正交給 <code>mreq-apply</code>. 只在 Step 5 刪除; 交給 <code>mreq-apply</code> 後不刪除, 而且 Step 1 到 4 的問題都要先回答. 只說 "直接 close" 不會跳過檢查; 只有明確要求跳過檢查才會跳過.</div>
 </section>
 
