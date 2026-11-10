@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.13.0
+
+### Added
+
+- `mreq-define` 新增不寫文件的流程. 需求是 Simple 而且沒有延後的決策時, 確認重述的第二個與第三個選項換成 "Correct, implement now, no document" 與 "Correct, grill it first, no document". 選了直接實作之後, 在同一個 session 實作, 結束時對照重述回報, 不需要 `/mreq-close`. 選了先 grill 之後, `mreq-define` 自己對重述做四象限 grill, 不寫檔案, 然後再重述一次. 使用者也可以在文字欄要求不寫文件; 這時不看需求大小. 工作超出重述的範圍或中途停止時, 會補寫文件, 之後用 `mreq-apply` 接續.
+
+### Changed
+
+- grill 的方法 (四象限, 訪談規則, 限制) 移到 `mreq-shared/GRILL.md`. `mreq-grill` 與 `mreq-define` 都讀這一份. 只安裝部分 skill 時, 必須同時更新 `mreq-shared`.
+
 ## 0.12.0
 
 ### Added

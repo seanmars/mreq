@@ -4,17 +4,19 @@
 
 | Skill | 作用 | 誰能呼叫 |
 |---|---|---|
-| `mreq-define` | 判斷意圖 (feature / issue / refactor / task),訪談,確認後產生文件 | 只有使用者 |
+| `mreq-define` | 判斷意圖 (feature / issue / refactor / task),訪談,確認後產生文件. 小需求可以不寫文件, 直接實作 | 只有使用者 |
 | `mreq-grill` | 用四象限壓力測試文件,把結論寫回文件 | 使用者, agent |
 | `mreq-apply` | 逐項實作文件的 Tasks,更新 checkbox 和 Handoff | 使用者, agent |
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
 | `mreq-how` | 先確認問題的解讀,再產生解說程式碼的離線 HTML,附 Mermaid 圖表與圖例,放在 session root 的 `.mreq/how/`. 加 `--plain` 改寫給企劃, PM 等非程式人員: 用功能名詞, 不放程式碼位置 | 只有使用者 |
 | `mreq-graph` | 先確認描述的解讀,再把描述畫成 Mermaid 圖表,產生附圖例的離線 HTML,放在 session root 的 `.mreq/graph/` | 只有使用者 |
-| `mreq-shared` | 不執行任何任務. 放其他 skill 共用的 script, template, Pele, 與 Mermaid 規則 | 沒有人 |
+| `mreq-shared` | 不執行任何任務. 放其他 skill 共用的 script, template, Pele, grill 方法, 與 Mermaid 規則 | 沒有人 |
 
 「誰能呼叫」只適用 Claude Code. 其他 agent 不讀 `disable-model-invocation`, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
 
 典型流程: `/mreq-define` → (`mreq-grill`) → `mreq-apply` → commit (程式碼和 `.mreq/`) → `/mreq-close`.
+
+小需求流程: `/mreq-define` → 確認重述時選「直接實作, 不寫文件」 → 在同一個 session 實作 → 對照重述回報. 這個流程不產生文件, 也不需要 `/mreq-close`. 實作前也可以選「先 grill, 不寫文件」: `mreq-define` 自己 grill 重述, 然後再重述一次. 需求是 Simple 而且沒有延後的決策時, `mreq-define` 才提供這個選項; 你也可以在文字欄直接要求不寫文件. 工作超出重述的範圍或中途停止時, `mreq-define` 會補寫文件, 之後用 `mreq-apply` 接續.
 
 skill 之間能自動接續的地方, 會用選項問你下一步, 不需要輸入指令: `mreq-define` 可接 `mreq-grill` 或 `mreq-apply`, `mreq-grill` 與 `mreq-apply` 可互相接續, `mreq-close` 發現未完成的 task, 失敗的測試或要修正的 finding 時, 可帶著它們接 `mreq-apply`. 「只有使用者」能呼叫的 skill 不會被自動接續, 這時 skill 會給出完整的指令讓你執行.
 
@@ -65,6 +67,6 @@ skills/
 ├── mreq-close/
 ├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html
 ├── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html
-└── mreq-shared/  # 共用: scripts/mreq.py, scripts/page.py, templates/, scripts/check.mjs, vendor/ (Pele), MERMAID.md
+└── mreq-shared/  # 共用: scripts/mreq.py, scripts/page.py, templates/, scripts/check.mjs, vendor/ (Pele), GRILL.md, MERMAID.md
 tests/            # python -m unittest discover -s tests
 ```

@@ -48,20 +48,8 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    When its `status` is `done`, say so before you read the code, and ask once: **Reopen** (grill it; step 5 sets it back to `active`), **Discuss only** (grill it, but write nothing in step 5), or **New document** (suggest `/mreq-define` and stop).
    When `## Handoff` has an `Unconfirmed:` line, tell the user first: nobody confirmed this document's assumptions and decisions. Grill each of them as a known unknown.
 
-3. **Sweep the four quadrants.** The last two hide the real risk.
-   1. **Known knowns**: the claims the document rests on. Verify each against the code. A false known is the most dangerous kind.
-   2. **Known unknowns**: the open questions. Ask each as an option question (see "Asking the user"): your suggested answer first, with its reason in the description, then the real alternatives, and **Leave it open** last when the decision can wait.
-   3. **Unknown knowns**: the premises nobody said out loud. Name each and confirm it holds.
-   4. **Unknown unknowns**: the blind spots. Ask "what would have to be true for this to fail?" and follow the answers.
-
-   Report the four quadrants separately, in this order. Write "none found" under a quadrant with nothing.
-
-   Interview rules:
-   - Look up facts in the code; ask the user for decisions.
-   - A fact you bring in yourself is a known too: verify it in the code or the docs before you rely on it. A fact you cannot verify goes into the restatement as an assumption, never into a decision's reason.
-   - Ask unrelated questions together. Hold a question that depends on an open one.
-   - Ask what each answer implies that nobody said.
-   - To confirm an unknown known, ask with **It holds** and **It does not hold** as options, and your reason in the description of the one you recommend.
+3. **Sweep the four quadrants.**
+   Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the document. Report the four quadrants separately, in the order it gives.
 
 4. **Restate and get confirmation.**
    In your own words: the claims that held and the ones that fell, the assumptions now explicit, the decisions made (each with its reason and the alternative ruled out), and what is still open.
