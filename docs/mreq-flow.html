@@ -364,7 +364,7 @@ stateDiagram-v2
 
 <section class="block" id="parts">
   <h2><span class="stamp sub" aria-hidden="true">件</span>元件與呼叫權限</h2>
-  <p>共用的檔案都放在 <code>mreq-shared</code>. 它不執行任何任務, 所以使用者與 agent 都不能呼叫它. 四個 skill 共用 <code>mreq-shared/scripts/mreq.py</code>. <code>mreq-how</code> 與 <code>mreq-graph</code> 各自使用自己的 <code>page.py</code> 與 <code>skeleton.html</code>, 但共用 Pele, <code>check.mjs</code>, 與 <code>MERMAID.md</code>. 安裝時一定要包含 <code>mreq-shared</code>.</p>
+  <p>共用的檔案都放在 <code>mreq-shared</code>. 它不執行任何任務, 所以使用者與 agent 都不能呼叫它. 四個 skill 共用 <code>mreq-shared/scripts/mreq.py</code>. <code>mreq-how</code> 與 <code>mreq-graph</code> 共用 <code>mreq-shared/scripts/page.py</code>, Pele, <code>check.mjs</code>, 與 <code>MERMAID.md</code>. 第一個參數 <code>how</code> 或 <code>graph</code> 決定輸出目錄與使用哪一份 <code>skeleton.html</code>; <code>skeleton.html</code> 留在各自的 skill 目錄. 安裝時一定要包含 <code>mreq-shared</code>.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -385,18 +385,18 @@ flowchart TD
     PROG["progress"]:::script
     DELC["delete"]:::script
   end
-  DO --> NEW & LIST & UPD
+  DO --> NEW & LIST
   GRILL --> LIST & UPD
   APPLY --> LIST & UPD & PROG
   CLOSE --> LIST & DELC
   NEW -- "讀取" --> TPL[("templates/<br>feature, issue,<br>refactor, task")]:::doc
   NEW & UPD & DELC --> MREQ[(".mreq/*.md<br>位於 git root")]:::doc
-  HOW --> PAGEPY["mreq-how/page.py<br>new, dir, build"]:::script
-  GRAPH --> GPY["mreq-graph/page.py<br>new, dir, build"]:::script
-  PAGEPY & GPY -- "內嵌" --> PELE[("mreq-shared/vendor/<br>pele.global.js")]:::doc
-  PAGEPY & GPY -- "用 Node 檢查" --> GCHK["mreq-shared/scripts/<br>check.mjs"]:::script
-  PAGEPY -- "輸出" --> OUT[(".mreq/how/*.html<br>位於 session root")]:::doc
-  GPY -- "輸出" --> GOUT[(".mreq/graph/*.html<br>位於 session root")]:::doc
+  HOW -- "how" --> PAGEPY["mreq-shared/scripts/page.py<br>new, build"]:::script
+  GRAPH -- "graph" --> PAGEPY
+  PAGEPY -- "內嵌" --> PELE[("mreq-shared/vendor/<br>pele.global.js")]:::doc
+  PAGEPY -- "用 Node 檢查" --> GCHK["mreq-shared/scripts/<br>check.mjs"]:::script
+  PAGEPY -- "how 的輸出" --> OUT[(".mreq/how/*.html<br>位於 session root")]:::doc
+  PAGEPY -- "graph 的輸出" --> GOUT[(".mreq/graph/*.html<br>位於 session root")]:::doc
     </script>
     <figcaption>skill, script 指令, 與檔案的關係</figcaption>
   </figure>
@@ -405,8 +405,8 @@ flowchart TD
   <table class="cmd">
     <tr><th>指令</th><th>作用</th><th>使用者</th></tr>
     <tr><td><code>new --schema --slug --title --desc</code></td><td>在 git root 建立 <code>.mreq/&lt;yyyyMMdd-HHmmss&gt;-&lt;slug&gt;.md</code>. 內容來自對應的 template. status 是 <code>draft</code>. slug 必須是 kebab-case, 最多 60 字元.</td><td>mreq-define</td></tr>
-    <tr><td><code>list [--open]</code></td><td>列出每份文件的 front matter 與 <code>## Tasks</code> 的勾選進度. 最近更新的排前面. <code>--open</code> 排除 <code>done</code>. 有 <code>warning</code> 或 <code>error</code> 的項目要告知使用者.</td><td>do, grill, apply, close</td></tr>
-    <tr><td><code>update &lt;path&gt; [--status]</code></td><td>把 <code>updated</code> 設為現在. 可以同時改 status. 不改其他行.</td><td>do, grill, apply</td></tr>
+    <tr><td><code>list [--open]</code></td><td>列出每份文件的 front matter 與 <code>## Tasks</code> 的勾選進度. 最近更新的排前面. <code>--open</code> 排除 <code>done</code>. 有 <code>warning</code> 或 <code>error</code> 的項目要告知使用者.</td><td>define, grill, apply, close</td></tr>
+    <tr><td><code>update &lt;path&gt; [--status]</code></td><td>把 <code>updated</code> 設為現在. 可以同時改 status. 不改其他行. 它會重寫檔案, 所以下一次 Edit 前要再讀一次文件.</td><td>grill, apply</td></tr>
     <tr><td><code>progress &lt;path&gt;</code></td><td>印出兩行純文字 (不是 JSON): <code>Using: 絕對路徑</code> 與 <code>schema: N/M tasks done. Next: 第一個未勾選的 task</code>. 全部勾選時 Next 是 <code>none</code>.</td><td>mreq-apply</td></tr>
     <tr><td><code>delete &lt;path&gt;</code></td><td>刪除文件. 拒絕 <code>.mreq/</code> 以外的檔案.</td><td>mreq-close</td></tr>
   </table>
@@ -452,13 +452,15 @@ flowchart TD
   D2 -- "在最下方自由回答<br>輸入修正" --> C2
   D2 -- "Something<br>is wrong" --> C2
   D2 -- "正確, 撰寫文件<br>(推薦)" --> E1["mreq.py new<br>--schema --slug<br>--title --desc"]:::script
+  D2 -- "正確, 撰寫後實作" --> E1
   D2 -- "正確, 撰寫後 grill" --> E1
   D0 -- 是 --> E0["Handoff 加上<br>Unconfirmed: 一行"]:::doc
   E0 --> E1
   E1 --> E2["用 Edit 逐節填寫 body<br>不碰 front matter"]:::doc
-  E2 --> G0{"Step 4 選了<br>撰寫後 grill?"}
-  G0 -- 是 --> GG
-  G0 -- 否 --> G1{"下一步?"}:::user
+  E2 --> G0{"Step 4 選了<br>撰寫後實作<br>或撰寫後 grill?"}
+  G0 -- "撰寫後實作" --> GA
+  G0 -- "撰寫後 grill" --> GG
+  G0 -- 都不是 --> G1{"下一步?"}:::user
   G1 -- "Implement<br>(推薦)" --> GA["mreq-apply"]:::skill
   G1 -- "Pressure-test" --> GG["mreq-grill"]:::skill
   G1 -- "Stop here" --> GS(["給出絕對路徑<br>停止"]):::stop
@@ -644,8 +646,10 @@ flowchart TD
   T1 -- 否 --> T2{"Handoff 有<br>Unconfirmed: ?"}
   T2 -- 是 --> T3{"顯示 Assumptions<br>問一次"}:::user
   T3 -- "Grill first" --> GR
-  T3 -- "Go on" --> T4
-  T2 -- 否 --> T4{"status 是 draft?"}
+  T3 -- "Go on" --> DN
+  T2 -- 否 --> DN{"status 是 done,<br>task 全部勾選,<br>而且沒有 findings?"}
+  DN -- 是 --> XD(["說明已完成<br>給出 /mreq-close #lt;path#gt;<br>停止"]):::stop
+  DN -- 否 --> T4{"status 是 draft, 或<br>done 但有未勾選的 task?"}
   T4 -- 是 --> T5["update --status active<br>再讀一次文件"]:::script
   T4 -- 否 --> C1
   T5 --> C1["讀文件引用的程式碼"]
@@ -735,10 +739,11 @@ flowchart TD
     </div>
     <div>
       <h3>不需要記錄的停止</h3>
-      <p>Step 2 在任何 <code>update</code> 之前的兩種停止, 不改任何東西:</p>
+      <p>Step 2 在任何 <code>update</code> 之前的三種停止, 不改任何東西:</p>
       <ul>
         <li>文件只有 template 的提示.</li>
         <li>使用者對 <code>Unconfirmed:</code> 選 Grill first. 這時交給 <code>mreq-grill</code>.</li>
+        <li>文件是 <code>done</code>, task 全部勾選, 而且沒有 findings. 這時給出 <code>/mreq-close &lt;path&gt;</code>.</li>
       </ul>
     </div>
   </div>
@@ -845,9 +850,9 @@ flowchart TD
   A4 --> A5["整合報告<br>矛盾處自己讀程式碼"]
   A3 --> B1["依 WRITING.md<br>規劃頁面; 先寫 Mermaid,<br>圖例與說明, 再寫文字"]
   A5 --> B1
-  B1 --> B2["page.py new topic-slug"]:::script
+  B1 --> B2["page.py how new topic-slug"]:::script
   B2 --> B3["Write 內容檔:<br>4 行 header, 分隔線,<br>sections"]:::doc
-  B3 --> B4["page.py build 內容檔<br>用 Node 和 Pele 檢查每張圖"]:::script
+  B3 --> B4["page.py how build 內容檔<br>用 Node 和 Pele 檢查每張圖"]:::script
   B4 --> B5{"輸出 ok?"}
   B5 -- "FAIL" --> B6["用 Edit 修內容檔<br>依錯誤的行號修 Mermaid"]:::doc
   B6 --> B4
@@ -905,9 +910,9 @@ flowchart TD
   A0 -- 是 --> A0a["選最可能的解讀<br>寫在報告第一句<br>與第一個假設"]
   A0a --> A1["讀描述指到的<br>檔案或文件"]:::doc
   A1 --> B1["依 WRITING.md 選圖與類型;<br>先寫 Mermaid,<br>再寫圖例與說明"]
-  B1 --> B2["page.py new topic-slug"]:::script
+  B1 --> B2["page.py graph new topic-slug"]:::script
   B2 --> B3["Write 內容檔:<br>4 行 header, 分隔線,<br>sections"]:::doc
-  B3 --> B4["page.py build 內容檔<br>用 Node 和 Pele 檢查每張圖"]:::script
+  B3 --> B4["page.py graph build 內容檔<br>用 Node 和 Pele 檢查每張圖"]:::script
   B4 --> B5{"輸出 ok?"}
   B5 -- "FAIL" --> B6["用 Edit 修內容檔<br>依錯誤的行號修 Mermaid"]:::doc
   B6 --> B4
@@ -970,7 +975,7 @@ flowchart TD
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  A["需要執行 script 指令"] --> B["每個指令單獨執行<br>不用 cd, &&, ||, ;, |, $()<br>使用 script 的絕對路徑"]
+  A["需要執行 script 指令"] --> B["每個指令單獨執行<br>不用 cd, &&, ||, ;, |, $()<br>路徑一律用 /, 不用反斜線<br>script 的路徑加雙引號"]
   B --> C["uv run script 指令"]:::script
   C --> D{"結果"}
   D -- "成功" --> OK(["讀取 JSON 輸出"])

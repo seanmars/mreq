@@ -63,7 +63,8 @@ skills/
 ├── mreq-grill/
 ├── mreq-apply/
 ├── mreq-close/
-├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html, page.py
-├── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html, page.py
-└── mreq-shared/  # 共用: scripts/mreq.py, templates/, scripts/check.mjs, vendor/ (Pele), MERMAID.md
+├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html
+├── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html
+└── mreq-shared/  # 共用: scripts/mreq.py, scripts/page.py, templates/, scripts/check.mjs, vendor/ (Pele), MERMAID.md
+tests/            # python -m unittest discover -s tests
 ```

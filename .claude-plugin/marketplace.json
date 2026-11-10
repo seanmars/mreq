@@ -19,9 +19,9 @@
       "keywords": [
         "mreq",
         "workflow",
-        "principles",
-        "agent-style",
-        "subagents"
+        "task-document",
+        "code-walkthrough",
+        "mermaid"
       ]
     }
   ]

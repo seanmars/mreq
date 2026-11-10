@@ -2,11 +2,10 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""Assemble and check an mreq-how page.
+"""Assemble and check an mreq-how or mreq-graph page.
 
-  page.py dir                     print the folder pages are written to
-  page.py new <topic-slug>        print a new content file path, stamped with the current time
-  page.py build <x.content.html>  assemble <x>.html from skeleton.html and check it
+  page.py <how|graph> new <topic-slug>        print a new content file path, stamped with the current time
+  page.py <how|graph> build <x.content.html>  assemble <x>.html from the skill's skeleton.html and check it
 
 The agent writes only a content file: header lines, "---", then the sections.
 The build inlines the Pele bundle (mreq-shared/vendor/pele.global.js), so the page draws its
@@ -23,15 +22,13 @@ import re
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-# The agent runs every command from the session root (no cd), so the cwd is that root.
-OUTPUT_DIR = Path.cwd() / ".mreq" / "how"
-SKILL_DIR = Path(__file__).resolve().parent
-SKELETON = SKILL_DIR / "skeleton.html"
-# mreq-shared sits beside this skill and holds what mreq-how and mreq-graph share: one Pele, one checker.
-SHARED_DIR = SKILL_DIR.parent / "mreq-shared"
+# mreq-shared holds what mreq-how and mreq-graph share: this script, one Pele, one checker.
+SHARED_DIR = Path(__file__).resolve().parent.parent
+SKILLS_DIR = SHARED_DIR.parent
 PELE = SHARED_DIR / "vendor" / "pele.global.js"
 CHECKER = SHARED_DIR / "scripts" / "check.mjs"
 CONTENT_SUFFIX = ".content.html"
@@ -41,10 +38,47 @@ NODE_TIMEOUT = 60
 CANVAS_WIDTH = 820
 MAX_WIDTH = 1100
 
-PLACEHOLDERS = ("{{LANG}}", "{{TITLE}}", "{{QUESTION}}", "{{META}}", "{{CSP}}", "{{PELE}}", "<!-- CONTENT -->")
-PLACEHOLDER = re.compile("|".join(re.escape(p) for p in PLACEHOLDERS))
-HEADER_KEYS = ("lang", "title", "question", "meta")
-REQUIRED_KEYS = ("lang", "title", "question")
+
+@dataclass(frozen=True)
+class Kind:
+    """What differs between the two skills that build a page."""
+
+    name: str  # "how" or "graph": the output folder, and the skill that holds skeleton.html
+    subject: str  # the header key for what the user asked
+    needs_diagram: bool
+    slug_example: str
+
+    @property
+    def output_dir(self) -> Path:
+        # The agent runs every command from the session root (no cd), so the cwd is that root.
+        return Path.cwd() / ".mreq" / self.name
+
+    @property
+    def skeleton(self) -> Path:
+        return SKILLS_DIR / f"mreq-{self.name}" / "skeleton.html"
+
+    @property
+    def header_keys(self) -> tuple:
+        return ("lang", "title", self.subject, "meta")
+
+    @property
+    def required_keys(self) -> tuple:
+        return ("lang", "title", self.subject)
+
+    @property
+    def subject_placeholder(self) -> str:
+        return "{{" + self.subject.upper() + "}}"
+
+    @property
+    def placeholders(self) -> tuple:
+        return ("{{LANG}}", "{{TITLE}}", self.subject_placeholder, "{{META}}", "{{CSP}}", "{{PELE}}", "<!-- CONTENT -->")
+
+
+KINDS = {
+    # A how page may have no diagram: its WRITING.md skips one when the prose explains the point better.
+    "how": Kind("how", subject="question", needs_diagram=False, slug_example="artifact-status"),
+    "graph": Kind("graph", subject="request", needs_diagram=True, slug_example="order-states"),
+}
 SLUG_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 HEADER_LINE = re.compile(r"^\s*([a-z]+)\s*:\s*(.*)$", re.IGNORECASE)
@@ -66,7 +100,7 @@ EXTERNAL_TAG = re.compile(
     re.IGNORECASE,
 )
 EXTERNAL_CSS = re.compile(r"""url\(\s*["']?(?:https?:)?//""", re.IGNORECASE)
-# WRITING.md's figure. The source ends where the figure goes on, so a "</script>" inside it stays in the source.
+# MERMAID.md's figure. The source ends where the figure goes on, so a "</script>" inside it stays in the source.
 DIAGRAM = re.compile(
     r'<figure class="diagram">\s*<script type="text/x-mermaid">(.*?)</script>(?=\s*(?:<figcaption|</figure>))',
     re.DOTALL,
@@ -80,6 +114,11 @@ FIXED_COLOR = re.compile(r"^\s*(classDef|style|linkStyle)\s|%%\{\s*init", re.MUL
 HTML_ENTITY = re.compile(r"&(?:lt|gt|amp|quot|apos|nbsp|#\d+|#x[0-9a-f]+);", re.IGNORECASE)
 # A script the page runs: no attributes, as the skeleton writes them.
 RUN_SCRIPT = re.compile(r"<script>(.*?)</script>", re.DOTALL)
+
+
+def show(path) -> str:
+    # Every printed path uses "/", as mreq.py does: Git Bash strips unquoted backslashes, Windows tools accept "/".
+    return Path(path).as_posix()
 
 
 def escape_html(text: str) -> str:
@@ -126,13 +165,14 @@ def mermaid_source(raw: str) -> str:
     return re.sub(r"^\s*\n", "", raw).rstrip()
 
 
-def parse_content(text: str) -> tuple[dict, str, list]:
+def parse_content(kind: Kind, text: str) -> tuple[dict, str, list]:
     """Split a content file into header values and body, at the first line that is exactly "---"."""
     lines = re.split(r"\r?\n", text)
     end = next((i for i, line in enumerate(lines) if line.strip() == "---"), -1)
     if end == -1:
         return {}, "", [
-            'no "---" line: start the content file with lang / title / question / meta lines, then "---", then the sections'
+            f'no "---" line: start the content file with {" / ".join(kind.header_keys)} lines,'
+            ' then "---", then the sections'
         ]
     problems = []
     header = {}
@@ -140,11 +180,11 @@ def parse_content(text: str) -> tuple[dict, str, list]:
         if not line.strip():
             continue
         match = HEADER_LINE.match(line)
-        if not match or match.group(1).lower() not in HEADER_KEYS:
-            problems.append(f'unknown header line "{line.strip()}" (expected {", ".join(HEADER_KEYS)})')
+        if not match or match.group(1).lower() not in kind.header_keys:
+            problems.append(f'unknown header line "{line.strip()}" (expected {", ".join(kind.header_keys)})')
             continue
         header[match.group(1).lower()] = match.group(2).strip()
-    for key in REQUIRED_KEYS:
+    for key in kind.required_keys:
         if not header.get(key):
             problems.append(f'header "{key}" is missing or empty')
     body = "\n".join(lines[end + 1:])
@@ -200,11 +240,11 @@ def diagram_problems(body: str) -> tuple[list, list]:
         if fixed:
             problems.append(
                 f'diagram {index}: the source sets fixed colors ("{fixed.group(0).strip()}");'
-                ' drop it and use the color classes (WRITING.md, Colors)'
+                ' drop it and use the color classes (MERMAID.md, Colors)'
             )
         sources.append(source)
     if len(ANY_MERMAID.findall(body)) != len(sources):
-        problems.append('put each Mermaid source first inside <figure class="diagram">, as WRITING.md shows')
+        problems.append('put each Mermaid source first inside <figure class="diagram">, as MERMAID.md shows')
     return sources, problems
 
 
@@ -255,18 +295,19 @@ def script_hashes(html: str) -> str:
     return " ".join(hashes)
 
 
-def assemble(skeleton: str, pele: str, header: dict, body: str) -> str:
+def assemble(kind: Kind, skeleton: str, pele: str, header: dict, body: str) -> str:
     values = {
         "{{LANG}}": escape_html(header.get("lang", "")),
         "{{TITLE}}": escape_html(header.get("title", "")),
-        "{{QUESTION}}": escape_html(header.get("question", "")),
+        kind.subject_placeholder: escape_html(header.get(kind.subject, "")),
         "{{META}}": escape_html(header.get("meta", "")),
         "{{CSP}}": "{{CSP}}",
         "{{PELE}}": pele,
         "<!-- CONTENT -->": body,
     }
     # One pass over the skeleton: a value that holds a placeholder stays as written.
-    html = PLACEHOLDER.sub(lambda match: values[match.group(0)], skeleton)
+    placeholder = re.compile("|".join(re.escape(p) for p in kind.placeholders))
+    html = placeholder.sub(lambda match: values[match.group(0)], skeleton)
     # The HTML parser turns CRLF into LF before the browser hashes a script, so hash and write LF only.
     html = html.replace("\r\n", "\n")
     # The CSP sits before the scripts and holds no script text, so hashing first and filling it after is safe.
@@ -282,78 +323,84 @@ def fail(page: Path, problems: list) -> int:
     return 1
 
 
-def build(content_file: str) -> int:
+def build(kind: Kind, content_file: str) -> int:
     source = Path(content_file)
     # Nothing is deleted before these two pass: a wrong name has no page, and a project file is not ours.
     if not source.name.endswith(CONTENT_SUFFIX):
         print(f"FAIL name the content file <topic>{CONTENT_SUFFIX}")
         return 1
-    if not is_inside(source, OUTPUT_DIR):
-        print(f"FAIL the content file is not under {OUTPUT_DIR}; write it there")
+    if not is_inside(source, kind.output_dir):
+        print(f"FAIL the content file is not under {show(kind.output_dir)}; write it there")
         return 1
     page = source.with_name(source.name[: -len(CONTENT_SUFFIX)] + ".html")
     try:
         text = source.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError:
-        return fail(page, [f"{source}: not UTF-8 text; save the content file as UTF-8"])
+        return fail(page, [f"{show(source)}: not UTF-8 text; save the content file as UTF-8"])
     except OSError as err:
-        return fail(page, [f"{source}: {err.strerror or err}"])
-    header, body, problems = parse_content(text)
+        return fail(page, [f"{show(source)}: {err.strerror or err}"])
+    header, body, problems = parse_content(kind, text)
     if problems:
         return fail(page, problems)
-    # A page may have no diagram: WRITING.md skips one when the prose explains the point better.
     sources, problems = diagram_problems(body)
+    if kind.needs_diagram and not sources:
+        problems.append('no diagrams: add at least one <figure class="diagram">, as MERMAID.md shows')
     if problems:
         return fail(page, problems)
     problems, warning = render_check(sources)
     if problems:
         return fail(page, problems)
 
-    with open(SKELETON, encoding="utf-8", newline="") as file:
+    # The skeleton is no longer beside this script: name the skill to reinstall, not a traceback.
+    if not kind.skeleton.is_file():
+        return fail(page, [f"{show(kind.skeleton)} is missing; reinstall the mreq-{kind.name} skill"])
+    with open(kind.skeleton, encoding="utf-8", newline="") as file:
         skeleton = file.read()
-    missing = [p for p in PLACEHOLDERS if p not in skeleton]
+    missing = [p for p in kind.placeholders if p not in skeleton]
     if missing:
         return fail(page, ["skeleton.html lost its placeholders; reinstall the skill"])
     if not PELE.is_file():
-        return fail(page, [f"{PELE} is missing; install the mreq-shared skill beside this one"])
+        return fail(page, [f"{show(PELE)} is missing; reinstall the mreq-shared skill"])
     pele = PELE.read_text(encoding="utf-8")
-    page.write_text(assemble(skeleton, pele, header, body), encoding="utf-8", newline="")
+    page.write_text(assemble(kind, skeleton, pele, header, body), encoding="utf-8", newline="")
     if warning:
         print(warning)
     checked = "not checked" if warning else "checked with Pele"
     print(f"ok: {len(sources)} diagram(s), {checked}" if sources else "ok: no diagrams")
-    print(page.resolve())
+    print(show(page.resolve()))
     return 0
 
 
-def make_output_dir() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def make_output_dir(kind: Kind) -> None:
+    kind.output_dir.mkdir(parents=True, exist_ok=True)
     # The pages are not project files: keep them out of git status, which mreq-apply compares with its Handoff.
-    ignore = OUTPUT_DIR / ".gitignore"
+    ignore = kind.output_dir / ".gitignore"
     if not ignore.exists():
         ignore.write_text("*\n", encoding="utf-8")
 
 
-def new(slug: str) -> int:
+def new(kind: Kind, slug: str) -> int:
     if not SLUG_RE.fullmatch(slug):
-        print(f"invalid slug {slug!r}: use kebab-case, e.g. artifact-status", file=sys.stderr)
+        print(f"invalid slug {slug!r}: use kebab-case, e.g. {kind.slug_example}", file=sys.stderr)
         return 2
-    make_output_dir()
-    print(OUTPUT_DIR / f"{slug}-{datetime.now().strftime('%Y%m%d-%H%M%S')}{CONTENT_SUFFIX}")
+    make_output_dir(kind)
+    print(show(kind.output_dir / f"{slug}-{datetime.now().strftime('%Y%m%d-%H%M%S')}{CONTENT_SUFFIX}"))
     return 0
 
 
 def main(argv: list) -> int:
     sys.stdout.reconfigure(encoding="utf-8")
-    if argv[:1] == ["dir"]:
-        make_output_dir()
-        print(OUTPUT_DIR)
-        return 0
-    if len(argv) == 2 and argv[0] == "new":
-        return new(argv[1])
-    if len(argv) == 2 and argv[0] == "build":
-        return build(argv[1])
-    print(f"usage: page.py dir | page.py new <topic-slug> | page.py build <topic>{CONTENT_SUFFIX}", file=sys.stderr)
+    kind = KINDS.get(argv[0]) if argv else None
+    command = argv[1:]
+    if kind and len(command) == 2 and command[0] == "new":
+        return new(kind, command[1])
+    if kind and len(command) == 2 and command[0] == "build":
+        return build(kind, command[1])
+    names = "|".join(KINDS)
+    print(
+        f"usage: page.py <{names}> new <topic-slug> | page.py <{names}> build <topic>{CONTENT_SUFFIX}",
+        file=sys.stderr,
+    )
     return 2
 
 
