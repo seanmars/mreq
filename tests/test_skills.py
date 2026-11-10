@@ -56,6 +56,15 @@ class SkillTextTest(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             self.assertIsNone(re.search(r"\b[A-Za-z]:\\|\\[\w.-]+\\", text), path.as_posix())
 
+    def test_the_grill_method_is_written_once(self):
+        # GRILL.md holds the four quadrants; the skills that grill point to it and keep no copy.
+        shared = (SKILLS_DIR / "mreq-shared" / "GRILL.md").read_text(encoding="utf-8")
+        self.assertIn("**Unknown unknowns**", shared)
+        for name in ("grill", "define"):
+            text = skill_text(name)
+            self.assertIn("`GRILL.md` in the `mreq-shared` directory", text, name)
+            self.assertNotIn("**Unknown unknowns**", text, name)
+
     def test_the_page_skills_name_their_own_kind(self):
         for name in ("how", "graph"):
             text = skill_text(name)

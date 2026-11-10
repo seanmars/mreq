@@ -1,6 +1,6 @@
 ---
 name: mreq-define
-description: Start a new piece of work. Classify what the user wants (feature, issue, refactor, or another task), interview until the goal is clear, get the user to confirm a restatement, then write a task document under .mreq/ that tracks progress and hands off to the next agent. Use for /mreq-define.
+description: Start a new piece of work. Classify what the user wants (feature, issue, refactor, or another task), interview until the goal is clear, get the user to confirm a restatement, then write a task document under .mreq/ that tracks progress and hands off to the next agent. For a small request, or when the user asks for no document, implement the confirmed restatement directly instead. Use for /mreq-define.
 argument-hint: "<request>"
 disable-model-invocation: true
 ---
@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 Run only when the user typed `/mreq-define`. If you are reading this file on your own, stop and ask the user to run `/mreq-define <request>`.
 
-Turn a request into one confirmed task document. Do not implement anything: `mreq-apply` does that, after the user chooses it.
+Turn a request into one confirmed task document. Do not implement anything: `mreq-apply` does that, after the user chooses it. The one exception is "Without a document": the user chooses in step 4 to implement the restatement here, with no document.
 
 **Input**: What the user wants: a feature, a bug, a refactor, or any other task. It can be vague.
 
@@ -53,7 +53,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **Simple**: one module, one function, one file. Read the code it touches and its tests yourself.
    - **Complex**: several modules, a cross-cutting change, or code you cannot place yet. Split it into 2-4 distinct angles (for example: the code the request touches and its callers; the tests and how to run them; for a bug, the history of the code the symptom runs through). When you can spawn subagents, spawn one read-only explorer per angle in a single message. Each prompt holds only the request, that explorer's angle, and the instruction to read `EXPLORER.md` at its path in this skill's directory and report in its shape. Never paste the file into the prompt. Otherwise, work the angles yourself, one at a time, with notes in the shape `EXPLORER.md` gives. Then reconcile: merge overlaps, and settle a contradiction by reading the code yourself, not by picking one account.
 
-   When in doubt, take the simple path. Never ask the user what the codebase answers: the facts you found answer it, and the decisions the code cannot settle are step 3's questions.
+   When in doubt, take the simple path. Remember the size: step 4 uses it. Never ask the user what the codebase answers: the facts you found answer it, and the decisions the code cannot settle are step 3's questions.
 
 2. **Classify the request.**
 
@@ -96,11 +96,18 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
    Then ask one question (see "Asking the user") with these four options, the first one recommended:
    - **Correct, write the document**: go to step 5, then step 6.
-   - **Correct, write the document, then implement**: go to step 5, then run `mreq-apply` on the document (step 6).
-   - **Correct, write the document, then grill it**: go to step 5, then run `mreq-grill` on the document (step 6).
+   - The second and third options depend on the request. Offer the no-document pair when the request is simple (step 1) and **Open** is empty, or when the user has already asked for no document. Offer the document pair in every other case.
+     - The no-document pair:
+       - **Correct, implement now, no document**: go to "Without a document"; skip steps 5 and 6.
+       - **Correct, grill it first, no document**: go to "Grill without a document", which comes back to this step.
+     - The document pair:
+       - **Correct, write the document, then implement**: go to step 5, then run `mreq-apply` on the document (step 6).
+       - **Correct, write the document, then grill it**: go to step 5, then run `mreq-grill` on the document (step 6).
    - **Something is wrong**: ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then ask about each item the user picked as in step 3, and restate again.
 
-   Tell the user that, when something is wrong, they can also type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means something is still hidden: go back to step 3, then restate again. Only the three "Correct" options move on.
+   Tell the user that, when something is wrong, they can also type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means something is still hidden: go back to step 3, then restate again. Only a "Correct" option moves on.
+
+   When the free answer asks to implement without a document (for example "no document, just do it") and corrects nothing, it confirms the restatement: go to "Without a document", whatever the size of the request and also when **Open** has items. When it also corrects something, handle the correction first, then offer **Correct, implement now, no document** in the next restatement.
 
    Only an explicit request to skip this confirmation (for example "stop asking, just write the document") skips it. "Just write it" alone, or answering the questions, does not: restate. When the user skips it, go to step 5 without restating: write every assumption in `## Assumptions`, mark the document unconfirmed in `## Handoff`, and name the assumptions in your reply.
 
@@ -131,8 +138,44 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
    When the Skill call is denied, give the user `/mreq-apply <path>` (or `/mreq-grill <path>`) and the allow rule `Skill(mreq-apply)` (or `Skill(mreq-grill)`), then stop. Never read another skill's SKILL.md and follow it yourself.
 
+## Grill without a document
+
+Do this only when step 4 sent you here. Pressure-test the confirmed restatement in this conversation. Write no file, edit no code, and do not run `mreq-grill`: it needs a document.
+
+Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the restatement. Report the four quadrants separately, in the order it gives.
+
+Then go back to step 4 and restate again, with what the grill changed: the claims that fell, the assumptions now explicit, the decisions made, and what is still open. Step 4 picks its options from the new restatement: when the grill left an **Open** item, or showed that the request is not simple, it offers the document pair.
+
+## Without a document
+
+Do this only when step 4 sent you here. Implement the confirmed restatement in this conversation. The restatement is the record: run no `new`, write no file under `.mreq/`, and run no `mreq-apply`. There is nothing for `/mreq-close` to close afterwards.
+
+1. **List the tasks.** In one short message, write the work as small steps, each with how to check it.
+2. **Work the tasks one at a time.** Implement the smallest change that does the task, and follow the schema rules below. Prove it works by running something: a test, the repro, or a command that would fail if you were wrong. Reading the code is not proof. When nothing you can run reaches the behavior, say so in the report.
+3. **Finish.** Run the related tests. Then report against the restatement:
+   - **Goal** and each **Decided** item: done, partly done, done differently, or missing, with `path:line`.
+   - What you ran and its result. Tests that did not run have not passed: say so.
+   - Anything the code now does that the restatement never asked for.
+   - Each **Open** item still open, and each follow-up.
+   - That no document was written, so `/mreq-close` has nothing to check.
+
+**Schema rules:**
+- **`feature`**: build only what the restatement puts in scope. Add no flexibility for later.
+- **`issue`**: reproduce the bug before you change code. Verify the root cause before you fix it, and fix the cause, not the symptom. When two fixes fail, stop: the root cause is probably wrong.
+- **`refactor`**: pin the behavior first with a test or a command, and keep it green after every step. Change no behavior. When you find a bug, name it in the report as a follow-up and do not fix it here.
+- **`task`**: do the task as **Goal** describes it.
+
+**Questions.** When a task is unclear, or an **Open** item decides how to do the next task, ask it as an option question (see "Asking the user") and go on after the answer. A question alone needs no document.
+
+**Switch to a document.** The restatement lives only in this conversation, so write the document when the work stops being small or stops unfinished:
+- **The work outgrows the restatement** (a task needs work outside **Goal** or the scope, or the change turns out to span several modules): name the extra work and ask once: **Write the document, continue with mreq-apply** (recommended), **Do it here**, or **Leave it out** (name it in the report as a follow-up).
+- **The work stops before it is done** (a denied command, an error you cannot resolve, the user stops or pauses you): write the document before you reply, then give the user `/mreq-apply <path>`.
+
+To write it, follow step 5, with these changes: check off (`- [x]`) each task that is done and proven; under the next unchecked task, add one nested bullet `  - Resume: <done so far>; <what is left>; <next action>`, with changes that are only in the working tree; write `## Handoff` as what is done, what you verified and how, and the next task. For **Write the document, continue with mreq-apply**, then run the `mreq-apply` skill on it as in step 6. When the document cannot be written (a denied `new` or Edit), put the same record in your reply.
+
 ## Guardrails
 
-- Write only the task document under `.mreq/`. Never edit source code or other files.
-- Never start the next step yourself: the user picks it in step 1 (continue an open document), step 4 (implement or grill) or step 6.
+- Write only the task document under `.mreq/`. Never edit source code or other files, except in "Without a document".
+- Never start the next step yourself: the user picks it in step 1 (continue an open document), step 4 (implement or grill, each with or without a document) or step 6.
+- In "Without a document": never delete, skip, or weaken a test to get to green. Never run git commands that change the working tree, the index or history unless the user asks. Write scratch files inside the project and remove them before you finish.
 - Never skip step 4, even when the request looks clear. The only exception is the user's explicit request to skip the confirmation (step 4), and then the document records it as `Unconfirmed:`.
