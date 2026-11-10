@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.12.0
+
+### Added
+
+- `mreq-define` 確認重述時, 多一個 "Correct, write the document, then implement" 選項. 選了之後, 寫完文件就直接接 `mreq-apply`, 不再多問一次下一步.
+- `tests/`: `mreq.py` 與 `page.py` 的單元測試, 各 SKILL.md 共用段落的一致性檢查, 版本號檢查. 執行 `python -m unittest discover -s tests`.
+
+### Changed
+
+- `mreq-how` 與 `mreq-graph` 共用 `mreq-shared/scripts/page.py`. 第一個參數是 `how` 或 `graph`, 例如 `page.py how new <slug>`. 各 skill 目錄下的 `page.py` 已移除. 只安裝部分 skill 時, 必須同時更新 `mreq-shared`.
+- 每個 skill 都用 `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/<script>"` 執行 script. script 的路徑一律加雙引號. 所有路徑都用 `/`, Windows 也一樣.
+- `mreq-apply`: 文件是 `done`, task 全部勾選, 而且沒有 findings 時, 說明已完成並給出 `/mreq-close <path>`, 然後停止. `done` 但還有未勾選的 task 時, 先設回 `active` 再繼續.
+- `mreq-close`: "Tests not rerun" 改名為 "Tests already run by a task", 避免和 "Tests not run" 混淆.
+- `page.py` 移除沒有 skill 使用的 `dir` 指令.
+
+### Fixed
+
+- `page.py` 在 Windows 印出的路徑改用 `/`. 原本的反斜線路徑沒加引號貼進 Git Bash 時, 反斜線會消失.
+- `page.py` 的錯誤訊息改指向 `MERMAID.md`. figure 與顏色的規則在那裡, 不在 `WRITING.md`.
+- `mreq-grill`: 補上 `update` 之後要再讀一次文件, 和 `mreq-apply` 相同.
+- `plugin.json` 補上 description, 並修正 keywords.
+
 ## 0.11.1
 
 ### Added
