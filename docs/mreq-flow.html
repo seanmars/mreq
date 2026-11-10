@@ -317,7 +317,7 @@ sequenceDiagram
   Note over DO: 讀 README, 讀程式碼, 分類 schema
   DO->>U: 訪談問題 (選項, 建議答案排第一)
   U-->>DO: 回答
-  DO->>U: 重述 Type, Goal, Problem ...<br>選項: 正確, 撰寫文件 / 正確, 撰寫後 grill
+  DO->>U: 重述 Type, Goal, Problem ...<br>選項: 撰寫文件 / 實作 / grill / 有誤
   U-->>DO: 正確, 撰寫文件
   DO->>S: new --schema --slug --title --desc
   S->>F: 從 template 建立, status draft
@@ -359,6 +359,7 @@ stateDiagram-v2
   done --> active : mreq-grill Reopen<br>或 apply 處理 close findings
   done --> [*] : mreq-close<br>Delete
   active --> [*] : mreq-close<br>Close anyway 後 Delete
+  draft --> [*] : mreq-close<br>Close anyway 後 Delete
     </script>
     <figcaption>status 的轉換與觸發者</figcaption>
   </figure>
@@ -879,7 +880,7 @@ flowchart TD
   A2 -- "Simple<br>一個模組或函式" --> A3["自己探索"]
   A2 -- "Complex<br>子系統, 跨檔案" --> A4["拆成 2-4 個角度<br>平行 explorer<br>(同 mreq-define)"]
   A4 --> A5["整合報告<br>矛盾處自己讀程式碼"]
-  A3 --> B1["依 WRITING.md<br>規劃頁面; 先寫 Mermaid,<br>圖例與說明, 再寫文字"]
+  A3 --> B1["依 WRITING.md 與 MERMAID.md<br>規劃頁面; 先寫 Mermaid,<br>圖例與說明, 再寫文字"]
   A5 --> B1
   B1 --> B2["page.py how new topic-slug"]:::script
   B2 --> B3["Write 內容檔:<br>4 行 header, 分隔線,<br>sections"]:::doc
@@ -940,7 +941,7 @@ flowchart TD
   C2 -- "選了一種解讀" --> A1
   A0 -- 是 --> A0a["選最可能的解讀<br>寫在報告第一句<br>與第一個假設"]
   A0a --> A1["讀描述指到的<br>檔案或文件"]:::doc
-  A1 --> B1["依 WRITING.md 選圖與類型;<br>先寫 Mermaid,<br>再寫圖例與說明"]
+  A1 --> B1["依 WRITING.md 與 MERMAID.md<br>選圖與類型;<br>先寫 Mermaid,<br>再寫圖例與說明"]
   B1 --> B2["page.py graph new topic-slug"]:::script
   B2 --> B3["Write 內容檔:<br>4 行 header, 分隔線,<br>sections"]:::doc
   B3 --> B4["page.py graph build 內容檔<br>用 Node 和 Pele 檢查每張圖"]:::script
@@ -1010,7 +1011,7 @@ flowchart TD
   B --> C["uv run script 指令"]:::script
   C --> D{"結果"}
   D -- "成功" --> OK(["讀取 JSON 輸出"])
-  D -- "uv 找不到" --> E["python script 指令"]:::script
+  D -- "uv 找不到, 或<br>uv 自己出錯" --> E["python script 指令<br>python 找不到時用 python3"]:::script
   E --> D2{"結果"}
   D2 -- 成功 --> OK
   D -- "被拒絕" --> F["不換方式重試:<br>不換 shell, 路徑,<br>或指令寫法"]
