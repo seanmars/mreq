@@ -291,7 +291,7 @@ flowchart TD
   COMMIT --> CLOSE["/mreq-close"]:::skill
   CLOSE --> R{"核對結果"}
   R -- "未完成 task, 測試失敗<br>或 Fix the code<br>(選項直接接續)" --> APPLY
-  R -- "全部通過<br>或 Accept the code" --> GONE(["mreq.py delete<br>直接刪除文件"]):::stop
+  R -- "全部通過, Accept the code<br>或 Close anyway" --> GONE(["mreq.py delete<br>直接刪除文件"]):::stop
     </script>
     <figcaption>從需求到刪除文件的主流程</figcaption>
   </figure>
@@ -443,15 +443,19 @@ flowchart TD
   A2 -- 否 --> X1(["請使用者從 git root<br>啟動 agent, 停止"]):::stop
   A2 -- "是 (或非 git:<br>用目前目錄)" --> A3["mreq.py list --open"]:::script
   A3 --> A4{"已有開啟的文件<br>涵蓋這個需求?"}
-  A4 -- "Continue it" --> GA
-  A4 -- "沒有, 或開新的" --> A5["讀 README 與<br>agent 指示檔"]
+  A4 -- 是 --> A4q{"問一次"}:::user
+  A4q -- "Continue it" --> GA
+  A4q -- "Start a new<br>document" --> A5
+  A4 -- 否 --> A5["讀 README 與<br>agent 指示檔"]
   A5 --> A6{"需求大小?"}
   A6 -- "Simple<br>一個模組或檔案" --> A7["自己讀相關程式碼<br>與測試"]
   A6 -- "Complex<br>跨模組" --> A8["拆成 2-4 個角度<br>平行 explorer<br>(見平行探索)"]
   A7 --> B1{"只是問程式碼<br>怎麼運作?"}
   A8 --> B1
-  B1 -- "Explain it" --> X3(["給出 /mreq-how 問題<br>停止"]):::stop
-  B1 -- "否, 或<br>當成 task" --> B2["分類 schema:<br>feature, issue,<br>refactor, task"]
+  B1 -- 是 --> B1q{"問一次"}:::user
+  B1q -- "Explain it" --> X3(["給出 /mreq-how 問題<br>停止"]):::stop
+  B1q -- "Treat it<br>as a task" --> B2
+  B1 -- 否 --> B2["分類 schema:<br>feature, issue,<br>refactor, task"]
   B2 --> C1{"需求或程式碼<br>已回答所有問題?"}
   C1 -- 否 --> C2["訪談: 選項式提問<br>建議答案排第一;<br>可選 Decide later"]:::user
   C2 --> C1
@@ -602,8 +606,8 @@ flowchart TD
   U1 -- 否 --> Q1
   U2 --> Q1
   subgraph SWEEP["四象限掃描, 依序分開報告"]
-    Q1["1 Known knowns<br>對照程式碼驗證主張"] --> Q2["2 Known unknowns<br>選項式提問<br>建議答案排第一"]
-    Q2 --> Q3["3 Unknown knowns<br>點出沒說出口的前提"]
+    Q1["1 Known knowns<br>對照程式碼驗證主張"] --> Q2["2 Known unknowns<br>選項式提問<br>建議答案排第一"]:::user
+    Q2 --> Q3["3 Unknown knowns<br>點出沒說出口的前提<br>It holds / It does not hold"]:::user
     Q3 --> Q4["4 Unknown unknowns<br>怎樣才會失敗?"]
   end
   Q4 --> RS["重述:<br>成立與推翻的主張<br>明確的假設, 決策<br>仍未決的事"]
@@ -611,10 +615,10 @@ flowchart TD
   C1 -- "在最下方自由回答<br>輸入修正" --> Q1
   C1 -- "Something is wrong" --> C2["多選: 哪幾項有誤"]:::user
   C2 --> Q1
-  C1 -- "正確, 寫回文件<br>(推薦)" --> W0{"選了 Discuss only?"}
-  C1 -- "正確, 寫回後實作" --> W0
-  W0 -- 是 --> NX
-  W0 -- 否 --> W1["Edit 逐節寫回<br>(見下表)"]:::doc
+  C1 -- "正確, 寫回文件<br>(推薦)" --> W1["Edit 逐節寫回<br>(見下表)"]:::doc
+  C1 -- "正確, 寫回後實作" --> W1
+  C1 -- "Discuss only:<br>正確, 到此為止" --> X3
+  C1 -- "Discuss only:<br>Grill more" --> Q1
   W1 --> W2["刪除 Handoff 的<br>Unconfirmed: 行"]:::doc
   W2 --> W3{"Reopen 的<br>done 文件?"}
   W3 -- 是 --> W4["update --status active"]:::script
@@ -627,7 +631,7 @@ flowchart TD
   NX -- "Grill more" --> Q1
   NX -- "Stop here" --> X3(["給出絕對路徑<br>停止"]):::stop
     </script>
-    <figcaption>mreq-grill 的流程. 用完問題不算確認, 只有使用者選了 "正確" 的選項才算. Discuss only 時, 選項改為 "正確, 到此為止", "Grill more" 與 "Something is wrong"</figcaption>
+    <figcaption>mreq-grill 的流程. 用完問題不算確認, 只有使用者選了 "正確" 的選項才算. Discuss only 時, 選項改為 "正確, 到此為止", "Grill more" 與 "Something is wrong"; "正確, 到此為止" 不寫回文件, 也不再問下一步</figcaption>
   </figure>
 
   <h3>四象限</h3>
@@ -662,7 +666,9 @@ flowchart TD
 flowchart TD
   S(["mreq-apply [path 或 findings]"]):::user --> P1{"有指定路徑, 或<br>本對話只談一份文件?"}
   P1 -- 否 --> P2["mreq.py list --open"]:::script
-  P2 --> P3["用選項挑選<br>不自己猜"]:::user
+  P2 --> P0{"有開啟中的文件?"}
+  P0 -- 否 --> X0(["建議 /mreq-define<br>停止"]):::stop
+  P0 -- 是 --> P3["用選項挑選<br>不自己猜"]:::user
   P1 -- 是 --> P4["mreq.py list<br>不加 --open<br>文件可能是 done"]:::script
   P3 --> R1["讀完整文件<br>先讀 Handoff"]:::doc
   P4 --> R1
@@ -806,7 +812,9 @@ flowchart TD
   S(["/mreq-close [path]"]):::user --> P1{"有指定路徑?"}
   P1 -- 是 --> P5["第一行 Closing: 路徑<br>在任何 tool call 之前"]
   P1 -- 否 --> P2["mreq.py list"]:::script
-  P2 --> P3["用選項挑選<br>done 的排前面"]:::user
+  P2 --> P0{"有任何文件?"}
+  P0 -- 否 --> X0(["沒有可 close 的文件<br>停止"]):::stop
+  P0 -- 是 --> P3["用選項挑選<br>done 的排前面"]:::user
   P3 --> P4["第一行 Closing: 路徑"]
   P4 --> K1{"有未勾選的 task?"}
   P5 --> K1
@@ -818,15 +826,12 @@ flowchart TD
   A1 --> A2["逐項檢查 Goal,<br>每個 Dn, 每個<br>已勾選的 task:<br>done, partly done,<br>done differently,<br>missing, 附 path:line"]
   A2 --> A3["Run: 只跑文件<br>指定的檢查:<br>測試指令,<br>issue 的 repro,<br>refactor 的<br>Behavior Pin.<br>已勾選的 task<br>跑過的測試指令<br>不重跑"]:::script
   A3 --> RS{"結果"}
-  RS -- "測試失敗" --> T1{"Fix now<br>或 Stop"}:::user
-  T1 -- "Fix now" --> HA
-  T1 -- "Stop" --> X4(["給出 /mreq-apply<br>再 /mreq-close"]):::stop
-  RS -- "測試沒執行" --> N1{"Close anyway<br>或 Keep it"}:::user
-  N1 -- "Keep it" --> X5(["停止"]):::stop
-  N1 -- "Close anyway" --> G1
-  RS -- "有 finding" --> F1{"每個 finding 一題:<br>Accept 或 Fix the code"}:::user
-  F1 -- "任一 Fix" --> HA["帶 findings 交給<br>mreq-apply<br>不刪除文件"]:::skill
-  F1 -- "全部 Accept" --> G1
+  RS -- "測試失敗, 測試沒執行<br>或有 finding" --> Q["一起問, 測試的問題排前面<br>一次最多 4 題<br>測試失敗: Fix now, Close anyway, Stop<br>測試沒執行: Close anyway, Keep it<br>每個 finding: Accept, Fix the code"]:::user
+  Q --> J1{"任一 Stop<br>或 Keep it?"}
+  J1 -- 是 --> X4(["不刪除, 停止<br>有要修的項目時, 給出<br>/mreq-apply 再 /mreq-close"]):::stop
+  J1 -- 否 --> J2{"任一 Fix now<br>或 Fix the code?"}
+  J2 -- 是 --> HA["帶要修的 failures 與<br>findings 交給 mreq-apply<br>不刪除文件"]:::skill
+  J2 -- "否, 全部 Close anyway<br>或 Accept" --> G1
   RS -- "全部完成<br>測試通過" --> G1["收集會遺失的項目:<br>Open, follow-up,<br>Unconfirmed:"]
   G1 --> G7["mreq.py delete"]:::script
   G7 --> RP(["報告"]):::stop
@@ -853,8 +858,8 @@ flowchart TD
 
   <h3>Step 5: 刪除文件</h3>
   <p>Step 4 的問題全部回答後, 先收集 <code>## Open</code> 與 <code>## Handoff</code> 的 follow-up, 再執行 <code>mreq.py delete</code>. 不檢查 git, 也不詢問.</p>
-  <p>Step 6 報告: 刪除了什麼, 檢查結果, 每個接受的偏離, 未完成的 task 與沒執行的測試, Step 5 的 follow-up, 檢查留下的檔案, 以及程式碼做了但文件沒要求的事.</p>
-  <p>交給 <code>mreq-apply</code> 前, 先告訴使用者: 修正並 commit 後, 再執行 <code>/mreq-close &lt;path&gt;</code>. findings 與失敗的測試, 每項一行, 作為 Skill 的參數傳入. finding 的問題一次最多問 4 題.</p>
+  <p>Step 6 報告: 刪除了什麼, 檢查結果, 每個接受的偏離, 未完成的 task, 選了 Close anyway 的失敗測試, 與沒執行的測試, Step 5 的 follow-up, 檢查留下的檔案, 以及程式碼做了但文件沒要求的事.</p>
+  <p>交給 <code>mreq-apply</code> 前, 先告訴使用者: 修正並 commit 後, 再執行 <code>/mreq-close &lt;path&gt;</code>. findings 與失敗的測試, 每項一行, 作為 Skill 的參數傳入. Step 4 的問題 (測試失敗, 測試沒執行, finding) 一起問, 測試的問題排前面, 一次最多問 4 題. 使用者選了 Stop 或 Keep it 後, 不再問剩下的問題.</p>
   <div class="callout"><strong>規則:</strong> 不改程式碼, 也不改文件; 修正交給 <code>mreq-apply</code>. 只在 Step 5 刪除; 交給 <code>mreq-apply</code> 後不刪除, 而且 Step 1 到 4 的問題都要先回答. 只說 "直接 close" 不會跳過檢查; 只有明確要求跳過檢查才會跳過.</div>
 </section>
 
@@ -890,7 +895,7 @@ flowchart TD
   R2 -- 是 --> R3(["開啟頁面"]):::stop
   R2 -- 否 --> R4(["結束"]):::stop
     </script>
-    <figcaption>mreq-how 的 7 個步驟. 新問題的追問從確認重新開始; 修改頁面的追問只重走 page.py 的步驟</figcaption>
+    <figcaption>mreq-how 的 7 個步驟. 新問題的追問從確認重新開始; 修改頁面的追問只重走 page.py 的步驟. 第一個字是 --xxx 但不是已知的 style 時, 確認解讀的同一次詢問也問讀者: Plain 或 Engineer</figcaption>
   </figure>
 
   <div class="grid2">

@@ -44,6 +44,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 1. **Pick the document.**
    Use the path the user gave. Otherwise run `list` and let the user pick, documents with `status` `done` first. Never pick one yourself. Ask one question (see "Asking the user") with one option per document, in that order: its title as the label, and its status, task progress and absolute path in the description. With one document, add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer. Your first message starts with the line `Closing: <absolute path>`, also when the user gave the path: when they gave it, say it before any tool call; otherwise, right after they pick.
+   When `list` shows no document, say so, with no `Closing:` line, and stop: there is nothing to close.
 
 2. **Check the tasks.**
    When a task is unchecked, ask once:
@@ -70,13 +71,14 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 4. **Act on the result.**
    - **All done, tests pass**: go to step 5.
    - **Tests already run by a task** (step 3 skipped the test command because a checked task ran it): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: name it in the report with the task number.
-   - **Failing tests**: name each failure, and ask once: **Fix now (mreq-apply)** (hand the document to `mreq-apply` with each failure as a finding; see "Handing over to mreq-apply") or **Stop** (give `/mreq-apply <path>` with the failures, then `/mreq-close <path>` again).
-   - **Tests not run** (a command in step 3 was denied, or you found no tests): give the user each command that did not run, exactly as you ran it, with one allow rule for each denied one (see "When a tool call is denied"), and ask once: **Close anyway** or **Keep it**. Never count it as a pass. Close anyway: go on, and name it in the report. Keep it: stop.
+   - **Failing tests**: name each failure, and ask once: **Fix now (mreq-apply)**, **Close anyway**, or **Stop**.
+   - **Tests not run** (a command in step 3 was denied, or you found no tests): give the user each command that did not run, exactly as you ran it, with one allow rule for each denied one (see "When a tool call is denied"), and ask once: **Close anyway** or **Keep it**. Never count it as a pass.
    - **A finding** (partly done, done differently, missing): ask one question per finding. Quote the document's line, say what the code does, and offer **Accept the code** or **Fix the code**.
-     - Any **Fix the code**: hand the document to `mreq-apply` with those findings, and any failing test (see "Handing over to mreq-apply").
-     - All **Accept the code**: go to step 5, and name each finding in the report as an accepted departure.
 
-   Ask the finding questions up to 4 at a time; when there are more, ask the next ones after the user answers.
+   Ask every question this step needs together, the test questions first, up to 4 at a time; when there are more, ask the next ones after the user answers. A **Stop** or **Keep it** ends the questions: ask no more of them. Then act on all the answers, with the first rule that applies:
+   1. Any **Stop** or **Keep it**: stop, and delete nothing. Give `/mreq-apply <path>` with each failure the user did not close anyway, each finding marked **Fix the code**, and each finding not yet asked, then `/mreq-close <path>` again. When there is none, only stop.
+   2. Any **Fix now** or **Fix the code**: hand the document to `mreq-apply` with each failure (when the user picked **Fix now**) and each finding marked **Fix the code** (see "Handing over to mreq-apply").
+   3. Otherwise: go to step 5. Name in the report each failing test closed anyway, each command that did not run, and each accepted finding as an accepted departure.
 
 5. **Delete the document.**
    Do this only after every step 4 question is answered.
@@ -84,7 +86,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Run `delete <path>`; never delete with another command. Do not check git, and do not ask before the delete.
 
 6. **Report.**
-   What was deleted, what the check found, each accepted departure, unfinished tasks and tests not run if any, the test command not rerun and the task that ran it, the follow-ups from step 5, every file a check left behind (other than caches), and anything the code does that the document never asked for.
+   What was deleted, what the check found, each accepted departure, unfinished tasks, failing tests closed anyway, and tests not run if any, the test command not rerun and the task that ran it, the follow-ups from step 5, every file a check left behind (other than caches), and anything the code does that the document never asked for.
 
 ## Handing over to mreq-apply
 

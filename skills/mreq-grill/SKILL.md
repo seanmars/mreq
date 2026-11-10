@@ -59,7 +59,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **Correct, write it into the document, then implement**: go to step 5, then run `mreq-apply` on the document (step 6).
    - **Something is wrong**: ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then grill each item the user picked, and restate again.
 
-   When the user picked **Discuss only** in step 2, step 5 writes nothing: offer **Correct, stop here** (go to step 6), **Grill more** (go back to step 3) and **Something is wrong** instead.
+   When the user picked **Discuss only** in step 2, step 5 writes nothing: offer **Correct, stop here** (give the document's absolute path and stop; skip steps 5 and 6), **Grill more** (go back to step 3) and **Something is wrong** instead.
 
    Tell the user that, when something is wrong, they can type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means keep grilling, then restate again. Running out of questions is not confirmation; only the user's pick of a "Correct" option is.
 

@@ -43,6 +43,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 1. **Pick the document.**
    Use the path the user gave, or the one document this conversation is about. Otherwise run `list --open` and let the user pick, even when only one exists. Never guess.
    Ask one question (see "Asking the user") with one option per document, in the order `list` gives: its title as the label, and its status, task progress and absolute path in the description. With one document, add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer.
+   When there is no open document, say so and stop: `/mreq-define <request>` starts new work. Do not invent a subject.
 
 2. **Read it in full.**
    First learn the status from the `list` output. When step 1 did not run `list`, run it without `--open`: the document may be `done`. Then read the document, before any `update`. Read `## Handoff` first: it says where the last agent stopped. Then run `progress <path>` and show its output (step 3) before any other tool call.

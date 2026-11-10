@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `mreq-apply` 與 `mreq-close` 找不到文件時, 說明後停止. `mreq-apply` 建議用 `/mreq-define` 開始新工作.
+- `mreq-grill` 選了 Discuss only 之後, "Correct, stop here" 直接給出文件路徑並停止, 不再問下一步.
+- `mreq-close` 測試失敗時, 多一個 "Close anyway" 選項. 測試失敗, 測試沒執行與 finding 的問題一起問, 測試的問題排前面. 選了 Stop 或 Keep it 之後, 不再問剩下的問題. 依序處理答案: 任一 Stop 或 Keep it 就停止; 否則任一 Fix 就交給 `mreq-apply`; 否則刪除文件. 失敗的測試只在選了 Fix now 時才交給 `mreq-apply`.
+- 流程頁補上漏畫的詢問點: `mreq-define` 的 "Continue it" 與 "Explain it", `mreq-grill` 象限 2 與 3 的提問, `mreq-how` 對未知 `--xxx` 的讀者詢問.
+
 ## 0.14.0
 
 ### Changed
