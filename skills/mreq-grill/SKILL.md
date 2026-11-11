@@ -40,8 +40,8 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Steps
 
 1. **Pick the document.**
-   Use the path the user gave, or the one document this conversation is about. Otherwise run `list --open` and let the user pick, even when only one exists. Never pick one yourself.
-   Ask one question (see "Asking the user") with one option per document, in the order `list` gives: its title as the label, and its status, task progress and absolute path in the description. With one document, add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer.
+   Use the path the user gave, or the one document this conversation is about. Otherwise run `list --open`. When it gives exactly one document, and that item has no `warning` or `error`, use it without asking: first tell the user its title and absolute path. Otherwise let the user pick. Never pick one yourself.
+   Ask one question (see "Asking the user") with one option per document, in the order `list` gives: its title as the label, and its status, task progress and absolute path in the description. With one document (it has a `warning` or `error`), add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer.
    When there is no open document, say so and suggest `/mreq-define`. Do not invent a subject.
 
 2. **Read it and the code it cites.**

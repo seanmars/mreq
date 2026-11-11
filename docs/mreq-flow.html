@@ -593,7 +593,10 @@ flowchart TD
   P1 -- 否 --> P2["mreq.py list --open"]:::script
   P2 --> P3{"有開啟中的文件?"}
   P3 -- 否 --> X1(["建議 /mreq-define<br>停止"]):::stop
-  P3 -- 是 --> P4["用選項挑選<br>只有一份也要問<br>(加 Stop 選項)"]:::user
+  P3 -- 是 --> P5{"只有一份,<br>而且沒有 warning<br>或 error?"}
+  P5 -- 是 --> P6["說明標題與絕對路徑"]
+  P6 --> RD
+  P5 -- 否 --> P4["用選項挑選<br>不自己猜"]:::user
   P1 -- 是 --> RD["讀文件"]:::doc
   P4 --> RD
   RD --> D1{"status 是 done?"}
@@ -997,7 +1000,7 @@ flowchart TD
     <li>有 <code>AskUserQuestion</code> tool 時使用它: 一次最多 4 個獨立問題, 推薦選項放第一個, 標示 "(Recommended)".</li>
     <li>沒有時, 用純文字編號清單提問, 推薦選項放第一個, 然後等待回答.</li>
     <li>用選項讓使用者選, 不讓使用者打字: 每題 2 到 4 個選項, label 1 到 5 個字, header 最多 12 個字元. 不加 "Other": 每題下方都有自由回答欄.</li>
-    <li>選文件時每份文件一個選項. 只有一份時加 "Stop"; 超過 4 份時列前 4 份, 其他文件的路徑在自由回答欄輸入. <code>mreq-apply</code> 只有一份開啟中的文件, 而且沒有 warning 或 error 時, 不詢問, 直接使用.</li>
+    <li>選文件時每份文件一個選項. 只有一份時加 "Stop"; 超過 4 份時列前 4 份, 其他文件的路徑在自由回答欄輸入. <code>mreq-apply</code> 與 <code>mreq-grill</code> 只有一份開啟中的文件, 而且沒有 warning 或 error 時, 不詢問, 直接使用.</li>
     <li>只有選項放不下的答案 (例: 只有使用者看過的錯誤訊息) 才請使用者輸入. 能猜時, 仍把猜測列為選項.</li>
     <li>skill 自己能執行的指令, 不叫使用者輸入. 只有「只有使用者能呼叫」的 skill 會給出完整指令.</li>
     <li>skill 之間的交接用 Skill tool. 不讀其他 skill 的 SKILL.md 自己照做.</li>

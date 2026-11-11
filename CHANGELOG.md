@@ -5,6 +5,7 @@
 ### Changed
 
 - `mreq-apply` 沒有指定文件時, 如果 `list --open` 只有一份文件, 而且沒有 `warning` 或 `error`, 直接實作那份文件, 不再詢問. 文件路徑由 `progress` 的 `Using:` 行顯示.
+- `mreq-grill` 沒有指定文件時, 適用同樣的規則: 只有一份開啟中的文件時直接 grill, 不再詢問. 開始前先說明文件的標題與絕對路徑.
 
 ## 0.14.1
 
