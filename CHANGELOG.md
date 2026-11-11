@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `mreq-apply` 沒有指定文件時, 如果 `list --open` 只有一份文件, 而且沒有 `warning` 或 `error`, 直接實作那份文件, 不再詢問. 文件路徑由 `progress` 的 `Using:` 行顯示.
+
 ## 0.14.1
 
 ### Changed
