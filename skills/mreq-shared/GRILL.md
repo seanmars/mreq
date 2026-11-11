@@ -15,7 +15,18 @@ Sweep them in this order. The last two hide the real risk.
 3. **Unknown knowns**: the premises nobody said out loud. Name each and confirm it holds.
 4. **Unknown unknowns**: the blind spots. Ask "what would have to be true for this to fail?" and follow the answers.
 
-Report the four quadrants separately, in this order. Write "none found" under a quadrant with nothing.
+Report the four quadrants separately, in this order. Write "none found" under a quadrant with nothing. A later round sweeps and reports less: see "A later round".
+
+## A later round
+
+A round is one sweep and the restatement after it. When this conversation already grilled this subject, the next round is a later round. Grill only what is new:
+
+- Sweep only three things: what the last round changed, what is still open, and the focus the user named.
+- Do not verify again a claim that held, and do not confirm again a premise the user confirmed. Check one again only when a change since the last round touches it.
+- Report only the quadrants with a new finding, in the same order. When no quadrant has one, say so in one line.
+- Change the four lists (see "What the grill produces") only where this round changed them.
+
+When the user asks for a full sweep, do a full one. A new conversation always starts with a full sweep.
 
 ## Interview rules
 

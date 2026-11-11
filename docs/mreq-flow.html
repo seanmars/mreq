@@ -607,25 +607,28 @@ flowchart TD
     Q2 --> Q3["3 Unknown knowns<br>點出沒說出口的前提<br>It holds / It does not hold"]:::user
     Q3 --> Q4["4 Unknown unknowns<br>怎樣才會失敗?"]
   end
-  Q4 --> RS["重述:<br>成立與推翻的主張<br>明確的假設, 決策<br>仍未決的事"]
+  Q4 --> RS["重述:<br>成立與推翻的主張<br>明確的假設, 決策<br>仍未決的事<br>(文件還沒有的全部內容)"]
   RS --> C1{"使用者回應"}:::user
-  C1 -- "在最下方自由回答<br>輸入修正" --> Q1
-  C1 -- "Something is wrong" --> C2["多選: 哪幾項有誤"]:::user
-  C2 --> Q1
+  C1 -- "在最下方自由回答<br>輸入修正" --> LR
+  C1 -- "Something is wrong<br>(不寫回)" --> C2["多選: 哪幾項有誤"]:::user
+  C2 --> LR["後續輪次: 只掃<br>上一輪的變更, 仍未決的事<br>與指定的焦點"]
+  LR --> Q1
   C1 -- "正確, 寫回後實作<br>(推薦)" --> W1["Edit 逐節寫回<br>(見下表)"]:::doc
   C1 -- "正確, 寫回後停止" --> W1
-  C1 -- "Grill more<br>(先不寫回)" --> Q1
+  C1 -- "正確, 寫回後<br>繼續 grill" --> W1
   C1 -- "Discuss only:<br>正確, 到此為止" --> X3
+  C1 -- "Discuss only:<br>正確, 繼續 grill" --> LR
   W1 --> W2["刪除 Handoff 的<br>Unconfirmed: 行"]:::doc
   W2 --> W3{"Reopen 的<br>done 文件?"}
   W3 -- 是 --> W4["update --status active"]:::script
   W3 -- 否 --> W5["update"]:::script
-  W4 --> WA{"Step 4 選了<br>寫回後實作?"}
+  W4 --> WA{"Step 4 選的<br>下一步?<br>(Step 6 不詢問)"}
   W5 --> WA
-  WA -- 是 --> AP["mreq-apply"]:::skill
-  WA -- "否: 寫回後停止<br>(Step 6 不詢問)" --> X3(["給出絕對路徑<br>停止"]):::stop
+  WA -- "寫回後實作" --> AP["mreq-apply"]:::skill
+  WA -- "寫回後繼續 grill:<br>給出絕對路徑" --> LR
+  WA -- "寫回後停止" --> X3(["給出絕對路徑<br>停止"]):::stop
     </script>
-    <figcaption>mreq-grill 的流程. 用完問題不算確認, 只有使用者選了 "正確" 的選項才算. 確認題同時選下一步, 所以寫回後不再詢問. Discuss only 時, 選項改為 "正確, 到此為止", "Grill more" 與 "Something is wrong"; "正確, 到此為止" 不寫回文件</figcaption>
+    <figcaption>mreq-grill 的流程. 用完問題不算確認, 只有使用者選了 "正確" 的選項才算. 確認題同時選下一步, 所以寫回後不再詢問. 每次重述都包含文件還沒有的全部內容, 所以 "正確" 只確認最後一次重述. 要繼續 grill, 一定先寫回. Discuss only 不寫回文件, 選項改為 "正確, 到此為止", "正確, 繼續 grill" 與 "Something is wrong"</figcaption>
   </figure>
 
   <h3>四象限</h3>
@@ -639,6 +642,18 @@ flowchart TD
   <p>四象限與訪談規則寫在 <code>mreq-shared/GRILL.md</code>. <code>mreq-grill</code> 用它 grill 文件; <code>mreq-define</code> 的 "先 grill, 不寫文件" 用它 grill 重述, 結論不寫回文件, 而是帶進下一次重述.</p>
   <p>agent 自己帶進來的事實也算 known: 先在程式碼或文件驗證. 無法驗證的事實列為假設, 不能當決策的理由.</p>
 
+  <h3>後續輪次</h3>
+  <p>一輪是一次掃描加上之後的重述. 同一個對話再 grill 同一個對象時, 就是後續輪次. 這個規則也寫在 <code>mreq-shared/GRILL.md</code>, 所以 <code>mreq-define</code> 的 "先 grill, 不寫文件" 也適用.</p>
+  <table>
+    <tr><th>項目</th><th>第一輪</th><th>後續輪次</th></tr>
+    <tr><td>掃描範圍</td><td>四個象限全部</td><td>上一輪改變的項目, 仍未決的項目, 使用者指定的焦點</td></tr>
+    <tr><td>已成立的主張, 已確認的前提</td><td>逐一驗證與確認</td><td>不重做. 之後的變更影響到它時才再檢查</td></tr>
+    <tr><td>回報</td><td>四個象限分開, 沒有發現寫 "none found"</td><td>只回報有新發現的象限. 都沒有時用一行說明</td></tr>
+    <tr><td>重述</td><td>完整重述</td><td>重述文件還沒有的全部內容. 寫回之後, 只剩之後各輪的變更, 並用一行說明其餘已在文件裡. 還沒寫回時, 仍然完整重述</td></tr>
+    <tr><td>讀程式碼</td><td>文件引用的程式碼</td><td>重讀文件, 只重讀有變更的程式碼</td></tr>
+  </table>
+  <p>要繼續 grill, 一定先寫回. "正確, 寫回後繼續 grill" 先把已確認的結論寫回文件, 然後自動開始下一輪, 所以已確認的結論不會只留在對話裡. "Something is wrong" 是唯一不寫回的路徑, 因為重述還沒有被確認: 它用多選問哪幾項有誤, 只 grill 那幾項, 然後完整重述尚未寫回的內容. 使用者要求時仍然做完整的掃描. 新的對話一律從完整的掃描開始.</p>
+
   <h3>Step 5: 寫回對應</h3>
   <table>
     <tr><th>重述內容</th><th>寫到</th></tr>
@@ -648,7 +663,7 @@ flowchart TD
     <tr><td>仍未決的事</td><td><code>## Open</code> 的 <code>- Open:</code>; 發現的後續工作寫 <code>- Follow-up:</code></td></tr>
     <tr><td>改變工作內容的決策</td><td>修改 <code>## Tasks</code>. 不取消勾選, 不改寫已完成的 task; 修正放新 task 或 Open</td></tr>
   </table>
-  <div class="callout"><strong>規則:</strong> 只寫被 grill 的文件. 不改程式碼. 不建立任何檔案, 包括暫存檔; 需要量測時, 寫成 task 或 <code>Open:</code>. 使用者確認重述前, 什麼都不寫.</div>
+  <div class="callout"><strong>規則:</strong> 只寫被 grill 的文件. 不改程式碼. 不建立任何檔案, 包括暫存檔; 需要量測時, 寫成 task 或 <code>Open:</code>. 使用者確認重述前, 什麼都不寫. 寫回後繼續 grill 時, 只寫回文件還沒有的內容.</div>
 </section>
 
 <!-- ============================== 4 ============================== -->

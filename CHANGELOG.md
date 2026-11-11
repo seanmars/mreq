@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `mreq-grill` 確認重述的選項改為: "Correct, write it into the document, then implement" (推薦), "stop here", "then keep grilling", "Something is wrong". "then keep grilling" 取代 "Grill more": 先把已確認的結論寫回文件, 再自動開始下一輪, 不需要重新執行 `/mreq-grill`. 要繼續 grill, 一定先寫回, 所以已確認的結論不會只留在對話裡. Discuss only 不寫回文件, 選項是 "Correct, stop here", "Correct, keep grilling" 與 "Something is wrong".
+- `mreq-grill` 每次重述都包含文件還沒有的全部內容. 寫回之後, 只重述之後各輪的變更. 還沒寫回時 (例: 選了 "Something is wrong" 之後), 仍然完整重述. 所以選 "Correct" 只確認最後一次重述, 寫回的內容就是那一次重述.
+- 同一個對話再 grill 同一個對象時, 只做差異 (`mreq-shared/GRILL.md` 的 "A later round"). 只掃上一輪改變的項目, 仍未決的項目與使用者指定的焦點. 已成立的主張與已確認的前提不重新驗證. 只回報有新發現的象限. `mreq-define` 的 "先 grill, 不寫文件" 適用同樣的規則. 使用者要求時仍然做完整的掃描; 新的對話一律從完整的掃描開始.
+- `mreq-grill` 在同一個對話再次處理同一份文件時, 重讀文件, 但只重讀有變更的程式碼.
+
 ## 0.16.0
 
 ### Changed

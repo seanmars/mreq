@@ -47,22 +47,24 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 2. **Read it and the code it cites.**
    When its `status` is `done`, say so before you read the code, and ask once: **Reopen** (grill it; step 5 sets it back to `active`), **Discuss only** (grill it, but write nothing in step 5), or **New document** (suggest `/mreq-define` and stop).
    When `## Handoff` has an `Unconfirmed:` line, tell the user first: nobody confirmed this document's assumptions and decisions. Grill each of them as a known unknown.
+   When this conversation already grilled this document, read the document again, but read again only the code that changed since then.
 
 3. **Sweep the four quadrants.**
-   Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the document. Report the four quadrants separately, in the order it gives.
+   Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the document. Report the four quadrants separately, in the order it gives. When this conversation already grilled this subject, follow its "A later round" section instead.
 
 4. **Restate and get confirmation.**
    In your own words: the claims that held and the ones that fell, the assumptions now explicit, the decisions made (each with its reason and the alternative ruled out), and what is still open.
+   Restate everything the document does not hold yet. When step 5 already wrote the earlier rounds into the document, that is only what the rounds since then changed: say in one line that the rest is in the document. When nothing was written yet, restate in full, after a later round too. When a later round changed nothing, say that in one line.
 
    Then ask one question (see "Asking the user") with these four options, the first one recommended. The same answer confirms the restatement and picks the next step, so step 6 asks nothing.
    - **Correct, write it into the document, then implement**: go to step 5, then run `mreq-apply` on the document (step 6).
    - **Correct, write it into the document, stop here**: go to step 5, then stop (step 6).
-   - **Grill more**: write nothing yet. Go back to step 3, then restate again.
-   - **Something is wrong**: ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then grill each item the user picked, and restate again.
+   - **Correct, write it into the document, then keep grilling**: go to step 5, then go back to step 3 for a later round (step 6).
+   - **Something is wrong**: write nothing. Ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then go back to step 3 for a later round on each item the user picked, and restate again.
 
-   When the user picked **Discuss only** in step 2, step 5 writes nothing: offer **Correct, stop here** (give the document's absolute path and stop; skip steps 5 and 6), **Grill more** (go back to step 3) and **Something is wrong** instead.
+   When the user picked **Discuss only** in step 2, step 5 writes nothing: offer **Correct, stop here** (give the document's absolute path and stop; skip steps 5 and 6), **Correct, keep grilling** (go back to step 3 for a later round) and **Something is wrong** instead.
 
-   Word the options in your own words each time; keep their meaning. A free answer that corrects something is a correction. A correction means keep grilling, then restate again. Running out of questions is not confirmation; only the user's pick of a "Correct" option is.
+   Word the options in your own words each time; keep their meaning. A free answer that corrects something is a correction. A correction means keep grilling, then restate again. Running out of questions is not confirmation; only the user's pick of a "Correct" option is. A "Correct" pick confirms the last restatement, and step 5 writes exactly that.
 
 5. **Write the outcome into the document.**
    - Change only the body, section by section, with Edit. Never rewrite the whole file and never touch the front matter: `update` owns it.
@@ -79,6 +81,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Ask nothing here: the user picked the next step in step 4.
    - **Correct, write it into the document, then implement**: run the `mreq-apply` skill on this document now (in Claude Code: with the Skill tool).
    - **Correct, write it into the document, stop here**: give the document's absolute path, and stop.
+   - **Correct, write it into the document, then keep grilling**: give the document's absolute path, then go back to step 3 for a later round.
 
    When the Skill call is denied, give the user `/mreq-apply <path>` and the allow rule `Skill(mreq-apply)`, then stop. Never read another skill's SKILL.md and follow it yourself.
 

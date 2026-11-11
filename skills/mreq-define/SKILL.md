@@ -144,7 +144,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 Do this only when step 4 sent you here. Pressure-test the confirmed restatement in this conversation. Write no file, edit no code, and do not run `mreq-grill`: it needs a document.
 
-Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the restatement. Report the four quadrants separately, in the order it gives.
+Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the restatement. Report the four quadrants separately, in the order it gives. When this conversation already grilled this subject, follow its "A later round" section instead.
 
 Then go back to step 4 and restate again, with what the grill changed: the claims that fell, the assumptions now explicit, the decisions made, and what is still open. Step 4 picks its options from the new restatement: when the grill left an **Open** item, or showed that the request is not simple, it offers the document set.
 
