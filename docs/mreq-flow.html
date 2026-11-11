@@ -706,7 +706,7 @@ flowchart TD
   L0 -- 否 --> F1{"相關測試<br>有執行且通過?"}
   F1 -- 否 --> X3(["不設 done<br>依停止規則<br>記錄並停止"]):::stop
   F1 -- 是 --> F2["update --status done<br>Handoff 寫完成<br>與驗證方式"]:::script
-  F2 --> F3(["告訴使用者:<br>commit 後執行<br>/mreq-close #lt;path#gt;"]):::stop
+  F2 --> F3(["告訴使用者:<br>/mreq-close #lt;path#gt;<br>完成工作"]):::stop
     </script>
     <figcaption>mreq-apply 的主流程 (Step 1-5)</figcaption>
   </figure>

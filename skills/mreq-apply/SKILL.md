@@ -68,7 +68,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    4. Check the task off (`- [ ]` → `- [x]`), rewrite `## Handoff`, run `update <path>`; only then take the next task. Two check-offs always have a Handoff rewrite and an `update` between them. One task per edit: a task whose only work is running the tests still gets its own check-off. The Handoff says in a few lines what is done, what you verified and how, and the next task. Never move or remove items in `## Open` when you rewrite `## Handoff`.
 
 5. **Finish.**
-   When every task is checked off and the related tests pass, run `update <path> --status done`. Tests that did not run have not passed: then do not set `done`. Write `## Handoff` as done, with how it was verified. Tell the user that `/mreq-close <path>`, with the absolute path filled in, finishes the work after they commit. `/mreq-close` is user-invoked: do not try to run it.
+   When every task is checked off and the related tests pass, run `update <path> --status done`. Tests that did not run have not passed: then do not set `done`. Write `## Handoff` as done, with how it was verified. Tell the user that `/mreq-close <path>`, with the absolute path filled in, finishes the work. `/mreq-close` is user-invoked: do not try to run it.
 
 ## Schema rules
 

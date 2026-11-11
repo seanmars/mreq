@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `mreq-apply` 完成所有 task 後, 只提示 `/mreq-close <path>`, 不再提醒先 commit.
+
 ## 0.15.0
 
 ### Changed
