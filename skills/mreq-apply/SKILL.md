@@ -58,7 +58,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Run `git status` and `git diff`, each on its own and without `-C`, and compare them with `## Handoff`. A change the Handoff does not mention means the last session stopped mid-task: continue from the code, not from the Handoff alone.
 
 3. **Show progress.**
-   As soon as `progress` prints, write a message, before your next tool call, also when you stop in step 2. It starts with the two lines `progress` printed, copied unchanged, then one short sentence on what you do next, in the language from Language. Your final reply does not replace this message. A later turn that goes on with the work (the user answered a question or agreed to a change) does the same: run `progress <path>` first and show its two lines before any other tool call. Every message from here on is in the language from Language, also the short notes between tool calls.
+   As soon as `progress` prints, write a message, before your next tool call, also when you stop in step 2. It starts with the two lines `progress` printed, copied unchanged, then one short sentence on what you do next, in the language from Language. Your final reply does not replace this message. Show it once in each run of this skill: a later turn that goes on with the work (the user answered a question or agreed to a change) does not run `progress` again. Every message from here on is in the language from Language, also the short notes between tool calls.
 
 4. **Work the tasks one at a time.**
    Take the next unchecked task. When it has a `Resume:` line, check what that line says is done against the code, then continue from it.

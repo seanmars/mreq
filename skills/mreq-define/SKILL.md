@@ -94,18 +94,23 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **Assumptions**: what you inferred and the user never said, each marked as a guess.
    - **Open**: each decision the user deferred. Omit when none.
 
-   Then ask one question (see "Asking the user") with these four options, the first one recommended:
-   - **Correct, write the document**: go to step 5, then step 6.
-   - The second and third options depend on the request. Offer the no-document pair when the request is simple (step 1) and **Open** is empty, or when the user has already asked for no document. Offer the document pair in every other case.
-     - The no-document pair:
-       - **Correct, implement now, no document**: go to "Without a document"; skip steps 5 and 6.
-       - **Correct, grill it first, no document**: go to "Grill without a document", which comes back to this step.
-     - The document pair:
+   Then ask one question (see "Asking the user") with four options. The same answer confirms the restatement and picks the next step, so step 6 asks nothing.
+   - The first three options depend on the request. Offer the no-document set when the request is simple (step 1) and **Open** is empty, or when the user has already asked for no document. Offer the document set in every other case.
+     - The document set:
        - **Correct, write the document, then implement**: go to step 5, then run `mreq-apply` on the document (step 6).
        - **Correct, write the document, then grill it**: go to step 5, then run `mreq-grill` on the document (step 6).
-   - **Something is wrong**: ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then ask about each item the user picked as in step 3, and restate again.
+       - **Correct, write the document only**: go to step 5, then stop (step 6).
+     - The no-document set:
+       - **Correct, implement now, no document**: go to "Without a document"; skip steps 5 and 6.
+       - **Correct, grill it first, no document**: go to "Grill without a document", which comes back to this step.
+       - **Correct, write the document, then implement**: go to step 5, then run `mreq-apply` on the document (step 6).
+   - **Something is wrong**: always the last option. Ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then ask about each item the user picked as in step 3, and restate again.
 
-   Tell the user that, when something is wrong, they can also type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means something is still hidden: go back to step 3, then restate again. Only a "Correct" option moves on.
+   Recommend the first option of the set you offer: **Correct, write the document, then implement** in the document set, **Correct, implement now, no document** in the no-document set. In the document set, when the plan still feels untested, recommend **Correct, write the document, then grill it** and put that one first.
+
+   Word the options in your own words each time; keep their meaning. A free answer that corrects something is a correction. A correction means something is still hidden: go back to step 3, then restate again. Only a "Correct" option moves on.
+
+   When the free answer confirms and names a next step that no option holds (for example "write the document only" in the no-document set), it confirms the restatement: do that step.
 
    When the free answer asks to implement without a document (for example "no document, just do it") and corrects nothing, it confirms the restatement: go to "Without a document", whatever the size of the request and also when **Open** has items. When it also corrects something, handle the correction first, then offer **Correct, implement now, no document** in the next restatement.
 
@@ -128,13 +133,10 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - Write `## Handoff` as: not started; the first task to take. When the user skipped step 4's confirmation, add a line `Unconfirmed: the user did not confirm a restatement; check ## Assumptions and ## Decisions with the user first.`
    - Leave `status` as `draft`.
 
-6. **Ask for the next step.**
-   When the user picked **Correct, write the document, then implement** or **Correct, write the document, then grill it** in step 4, do not ask: run the skill they picked on this document now, `mreq-apply` or `mreq-grill` (in Claude Code: with the Skill tool).
-
-   Otherwise, ask one question. Recommend the first option unless the plan still feels untested or the document is unconfirmed:
-   - **Implement (mreq-apply)**: run the `mreq-apply` skill on this document (in Claude Code: with the Skill tool).
-   - **Pressure-test first (mreq-grill)**: run the `mreq-grill` skill on this document (in Claude Code: with the Skill tool).
-   - **Stop here**: give the absolute path the script printed and say `/mreq-apply <path>` continues it later.
+6. **Go on to the next step.**
+   Ask nothing here: the user picked the next step in step 4.
+   - **Correct, write the document, then implement** or **Correct, write the document, then grill it**: run the skill they picked on this document now, `mreq-apply` or `mreq-grill` (in Claude Code: with the Skill tool).
+   - **Correct, write the document only**, or the user skipped step 4's confirmation: give the absolute path the script printed, and stop.
 
    When the Skill call is denied, give the user `/mreq-apply <path>` (or `/mreq-grill <path>`) and the allow rule `Skill(mreq-apply)` (or `Skill(mreq-grill)`), then stop. Never read another skill's SKILL.md and follow it yourself.
 
@@ -144,7 +146,7 @@ Do this only when step 4 sent you here. Pressure-test the confirmed restatement 
 
 Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the restatement. Report the four quadrants separately, in the order it gives.
 
-Then go back to step 4 and restate again, with what the grill changed: the claims that fell, the assumptions now explicit, the decisions made, and what is still open. Step 4 picks its options from the new restatement: when the grill left an **Open** item, or showed that the request is not simple, it offers the document pair.
+Then go back to step 4 and restate again, with what the grill changed: the claims that fell, the assumptions now explicit, the decisions made, and what is still open. Step 4 picks its options from the new restatement: when the grill left an **Open** item, or showed that the request is not simple, it offers the document set.
 
 ## Without a document
 
@@ -157,7 +159,6 @@ Do this only when step 4 sent you here. Implement the confirmed restatement in t
    - What you ran and its result. Tests that did not run have not passed: say so.
    - Anything the code now does that the restatement never asked for.
    - Each **Open** item still open, and each follow-up.
-   - That no document was written, so `/mreq-close` has nothing to check.
 
 **Schema rules:**
 - **`feature`**: build only what the restatement puts in scope. Add no flexibility for later.
@@ -176,6 +177,6 @@ To write it, follow step 5, with these changes: check off (`- [x]`) each task th
 ## Guardrails
 
 - Write only the task document under `.mreq/`. Never edit source code or other files, except in "Without a document".
-- Never start the next step yourself: the user picks it in step 1 (continue an open document), step 4 (implement or grill, each with or without a document) or step 6.
+- Never start the next step yourself: the user picks it in step 1 (continue an open document) or step 4 (implement or grill, each with or without a document, or the document only).
 - In "Without a document": never delete, skip, or weaken a test to get to green. Never run git commands that change the working tree, the index or history unless the user asks. Write scratch files inside the project and remove them before you finish.
 - Never skip step 4, even when the request looks clear. The only exception is the user's explicit request to skip the confirmation (step 4), and then the document records it as `Unconfirmed:`.

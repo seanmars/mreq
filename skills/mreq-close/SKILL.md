@@ -43,7 +43,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Steps
 
 1. **Pick the document.**
-   Use the path the user gave. Otherwise run `list` and let the user pick, documents with `status` `done` first. Never pick one yourself. Ask one question (see "Asking the user") with one option per document, in that order: its title as the label, and its status, task progress and absolute path in the description. With one document, add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer. Your first message starts with the line `Closing: <absolute path>`, also when the user gave the path: when they gave it, say it before any tool call; otherwise, right after they pick.
+   Use the path the user gave. Otherwise run `list`. When exactly one document has `status` `done`, and that item has no `warning` or `error`, use it without asking. Otherwise let the user pick, documents with `status` `done` first. Never guess. Ask one question (see "Asking the user") with one option per document, in that order: its title as the label, and its status, task progress and absolute path in the description. With one document, add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer. Your first message starts with the line `Closing: <absolute path>`, also when the user gave the path: when they gave it, say it before any tool call; when you used the only `done` document, right after `list`; otherwise, right after they pick.
    When `list` shows no document, say so, with no `Closing:` line, and stop: there is nothing to close.
 
 2. **Check the tasks.**
@@ -72,11 +72,12 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **All done, tests pass**: go to step 5.
    - **Tests already run by a task** (step 3 skipped the test command because a checked task ran it): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: name it in the report with the task number.
    - **Failing tests**: name each failure, and ask once: **Fix now (mreq-apply)**, **Close anyway**, or **Stop**.
-   - **Tests not run** (a command in step 3 was denied, or you found no tests): give the user each command that did not run, exactly as you ran it, with one allow rule for each denied one (see "When a tool call is denied"), and ask once: **Close anyway** or **Keep it**. Never count it as a pass.
+   - **Tests not run** (a command in step 3 was denied): give the user each command that did not run, exactly as you ran it, with one allow rule for each (see "When a tool call is denied"), and ask once: **Close anyway** or **Keep it**. Never count it as a pass.
+   - **No test command found** (neither the document, the README nor the agent instruction files give one): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: say in the report that no test command was found and none ran.
    - **A finding** (partly done, done differently, missing): ask one question per finding. Quote the document's line, say what the code does, and offer **Accept the code** or **Fix the code**.
 
    Ask every question this step needs together, the test questions first, up to 4 at a time; when there are more, ask the next ones after the user answers. A **Stop** or **Keep it** ends the questions: ask no more of them. Then act on all the answers, with the first rule that applies:
-   1. Any **Stop** or **Keep it**: stop, and delete nothing. Give `/mreq-apply <path>` with each failure the user did not close anyway, each finding marked **Fix the code**, and each finding not yet asked, then `/mreq-close <path>` again. When there is none, only stop.
+   1. Any **Stop** or **Keep it**: stop, and delete nothing. Give `/mreq-apply <path>` with each failure the user did not close anyway, each finding marked **Fix the code**, and each finding not yet asked. When there is none, only stop.
    2. Any **Fix now** or **Fix the code**: hand the document to `mreq-apply` with each failure (when the user picked **Fix now**) and each finding marked **Fix the code** (see "Handing over to mreq-apply").
    3. Otherwise: go to step 5. Name in the report each failing test closed anyway, each command that did not run, and each accepted finding as an accepted departure.
 
@@ -86,14 +87,13 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Run `delete <path>`; never delete with another command. Do not check git, and do not ask before the delete.
 
 6. **Report.**
-   What was deleted, what the check found, each accepted departure, unfinished tasks, failing tests closed anyway, and tests not run if any, the test command not rerun and the task that ran it, the follow-ups from step 5, every file a check left behind (other than caches), and anything the code does that the document never asked for.
+   What was deleted, what the check found, each accepted departure, unfinished tasks, failing tests closed anyway, and tests not run if any, that no test command was found, the test command not rerun and the task that ran it, the follow-ups from step 5, every file a check left behind (other than caches), and anything the code does that the document never asked for.
 
 ## Handing over to mreq-apply
 
 Do this only where a step above says so, and never delete the document then.
-1. Tell the user that after the fixes, `/mreq-close <path>` checks the code again after a commit.
-2. Run the `mreq-apply` skill (in Claude Code: with the Skill tool). Pass the document's absolute path as its argument, then each finding or failure on its own line: the document's line, what the code does, and its `path:line` or the failing command.
-3. Do nothing more in this skill. When the Skill call is denied, give the user `/mreq-apply <path>` with the findings, and the allow rule `Skill(mreq-apply)`, then stop. Never read another skill's SKILL.md and follow it yourself.
+1. Run the `mreq-apply` skill (in Claude Code: with the Skill tool). Pass the document's absolute path as its argument, then each finding or failure on its own line: the document's line, what the code does, and its `path:line` or the failing command.
+2. Do nothing more in this skill. When the Skill call is denied, give the user `/mreq-apply <path>` with the findings, and the allow rule `Skill(mreq-apply)`, then stop. Never read another skill's SKILL.md and follow it yourself.
 
 ## Guardrails
 

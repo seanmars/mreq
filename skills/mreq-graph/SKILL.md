@@ -55,7 +55,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - When the description can be read more than one way, or two diagram types fit, give each as an option, the most likely one first, with its diagrams in the description. Picking one confirms it.
    - Otherwise, offer **Correct, draw it** first, then **Correct, also draw <X>**, where X is the diagram the user most likely wants too. When there is no such diagram, offer **Stop** as the second option.
 
-   Say in the question that the user can type a correction in the free-text answer. A correction means you read it wrong: restate again. Only a pick that confirms a reading moves on.
+   A free answer that corrects something is a correction. A correction means you read it wrong: restate again. Only a pick that confirms a reading moves on.
 
    Before the yes, read only what you need to name the subject: the files the user pointed at, by name. Do not draw, and do not run `page.py`.
 
@@ -78,9 +78,8 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Reply with exactly this shape, nothing else:
    1. What the page shows, in at most 3 sentences, with no lists or headings. Start with your interpretation when the user skipped the confirmation (see step 1). When a diagram leaves out something the user may expect, say what in one of the sentences. When the build printed a `WARN` line, say in one of the sentences that the diagrams were not checked.
    2. The page's absolute path.
-   3. One question (see "Asking the user") with **Open it** (in the default browser) and **Don't open**, which says the user can type a follow-up in the free-text answer.
 
-   Do not repeat the page's captions or assumptions in the chat, and do not show the Mermaid source. Open the page only when the user says so.
+   Ask no question here. Do not repeat the page's captions or assumptions in the chat, and do not show the Mermaid source. Open the page (in the default browser) only when the user asks.
 
    A follow-up that asks for a new subject starts again at step 1. A follow-up that changes the page goes through step 4 again; the 3 sentences then say what changed. When a Write, Edit or command is denied before the page is built, reply with only the denied path or command and its allow rule (see "When a tool call is denied"), then stop.
 

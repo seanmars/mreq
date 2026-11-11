@@ -54,14 +54,15 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 4. **Restate and get confirmation.**
    In your own words: the claims that held and the ones that fell, the assumptions now explicit, the decisions made (each with its reason and the alternative ruled out), and what is still open.
 
-   Then ask one question (see "Asking the user") with these three options, the first one recommended:
-   - **Correct, write it into the document**: go to step 5, then step 6.
+   Then ask one question (see "Asking the user") with these four options, the first one recommended. The same answer confirms the restatement and picks the next step, so step 6 asks nothing.
    - **Correct, write it into the document, then implement**: go to step 5, then run `mreq-apply` on the document (step 6).
+   - **Correct, write it into the document, stop here**: go to step 5, then stop (step 6).
+   - **Grill more**: write nothing yet. Go back to step 3, then restate again.
    - **Something is wrong**: ask one multi-select question (`multiSelect`) that lists up to 4 restated items most likely to be wrong, assumptions first, each as an option. Then grill each item the user picked, and restate again.
 
    When the user picked **Discuss only** in step 2, step 5 writes nothing: offer **Correct, stop here** (give the document's absolute path and stop; skip steps 5 and 6), **Grill more** (go back to step 3) and **Something is wrong** instead.
 
-   Tell the user that, when something is wrong, they can type the correction as a free answer: with `AskUserQuestion`, in the free-text option at the bottom of the question; in plain text, as a reply in place of a number. Word the options and this hint in your own words each time; keep their meaning. A correction means keep grilling, then restate again. Running out of questions is not confirmation; only the user's pick of a "Correct" option is.
+   Word the options in your own words each time; keep their meaning. A free answer that corrects something is a correction. A correction means keep grilling, then restate again. Running out of questions is not confirmation; only the user's pick of a "Correct" option is.
 
 5. **Write the outcome into the document.**
    - Change only the body, section by section, with Edit. Never rewrite the whole file and never touch the front matter: `update` owns it.
@@ -74,13 +75,10 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - Delete an `Unconfirmed:` line in `## Handoff`: the user has now confirmed a restatement.
    - Run `update <path>`. For a reopened `done` document, run `update <path> --status active`.
 
-6. **Ask for the next step.**
-   When the user picked **Correct, write it into the document, then implement** in step 4, do not ask: run the `mreq-apply` skill on this document now (in Claude Code: with the Skill tool).
-
-   Otherwise, ask one question (see "Asking the user"), the first option recommended:
-   - **Implement (mreq-apply)**: run the `mreq-apply` skill on this document (in Claude Code: with the Skill tool).
-   - **Grill more**: go back to step 3.
-   - **Stop here**: give the document's absolute path.
+6. **Go on to the next step.**
+   Ask nothing here: the user picked the next step in step 4.
+   - **Correct, write it into the document, then implement**: run the `mreq-apply` skill on this document now (in Claude Code: with the Skill tool).
+   - **Correct, write it into the document, stop here**: give the document's absolute path, and stop.
 
    When the Skill call is denied, give the user `/mreq-apply <path>` and the allow rule `Skill(mreq-apply)`, then stop. Never read another skill's SKILL.md and follow it yourself.
 

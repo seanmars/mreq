@@ -16,13 +16,13 @@
 
 典型流程: `/mreq-define` → (`mreq-grill`) → `mreq-apply` → commit (程式碼和 `.mreq/`) → `/mreq-close`.
 
-小需求流程: `/mreq-define` → 確認重述時選「直接實作, 不寫文件」 → 在同一個 session 實作 → 對照重述回報. 這個流程不產生文件, 也不需要 `/mreq-close`. 實作前也可以選「先 grill, 不寫文件」: `mreq-define` 自己 grill 重述, 然後再重述一次. 需求是 Simple 而且沒有延後的決策時, `mreq-define` 才提供這個選項; 你也可以在文字欄直接要求不寫文件. 工作超出重述的範圍或中途停止時, `mreq-define` 會補寫文件, 之後用 `mreq-apply` 接續.
+小需求流程: `/mreq-define` → 確認重述時選「直接實作, 不寫文件」(小需求的推薦選項) → 在同一個 session 實作 → 對照重述回報. 這個流程不產生文件, 也不需要 `/mreq-close`. 實作前也可以選「先 grill, 不寫文件」: `mreq-define` 自己 grill 重述, 然後再重述一次. 需求是 Simple 而且沒有延後的決策時, `mreq-define` 才提供這個選項; 你也可以在文字欄直接要求不寫文件. 工作超出重述的範圍或中途停止時, `mreq-define` 會補寫文件, 之後用 `mreq-apply` 接續.
 
-skill 之間能自動接續的地方, 會用選項問你下一步, 不需要輸入指令: `mreq-define` 可接 `mreq-grill` 或 `mreq-apply`, `mreq-grill` 與 `mreq-apply` 可互相接續, `mreq-close` 發現未完成的 task, 失敗的測試或要修正的 finding 時, 可帶著它們接 `mreq-apply`. 「只有使用者」能呼叫的 skill 不會被自動接續, 這時 skill 會給出完整的指令讓你執行.
+skill 之間能自動接續的地方, 不需要輸入指令. `mreq-define` 與 `mreq-grill` 確認重述的那一題同時選下一步, 寫完文件後不再多問一次: `mreq-define` 可接 `mreq-grill` 或 `mreq-apply`, `mreq-grill` 與 `mreq-apply` 可互相接續, `mreq-close` 發現未完成的 task, 失敗的測試或要修正的 finding 時, 可帶著它們接 `mreq-apply`. 「只有使用者」能呼叫的 skill 不會被自動接續, 這時 skill 會給出完整的指令讓你執行.
 
 Claude Code 有 `AskUserQuestion` 時, 每個問題都用選項回答. 選項沒有你要的答案時, 在選項下方的文字欄輸入.
 
-`mreq-apply` 不會自己 commit. `mreq-close` 刪除前不檢查 git 狀態, 也不詢問. 要保留文件內容, 請先 commit, 再執行 `/mreq-close`.
+`mreq-apply` 不會自己 commit. `mreq-close` 刪除前不檢查 git 狀態, 也不詢問. 沒有指定路徑, 而且只有一份 `done` 的文件時, `/mreq-close` 直接核對那一份. 要保留文件內容, 請先 commit, 再執行 `/mreq-close`.
 
 `/mreq-close` 可以在任何 session 執行, 包括做修改的同一個 session. 它只依照現在讀到的文件與程式碼判斷, 不依照對話記憶.
 

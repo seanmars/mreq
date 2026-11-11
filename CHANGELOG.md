@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `mreq-define` 確認重述的那一題同時選下一步, 寫完文件後不再問 "Implement / Pressure-test / Stop here". 一般需求的選項: "Correct, write the document, then implement" (推薦), "then grill it", "write the document only", "Something is wrong". 計畫還沒被檢驗時, 推薦 "then grill it". 選項沒有的下一步在文字欄輸入.
+- `mreq-define` 遇到小需求 (Simple 而且沒有延後的決策) 時, 推薦 "Correct, implement now, no document". 選項順序: "implement now, no document", "grill it first, no document", "write the document, then implement", "Something is wrong".
+- `mreq-define` 在使用者明確要求跳過確認時, 寫完文件就給出路徑並停止, 不再問下一步.
+- `mreq-grill` 確認重述的那一題同時選下一步, 寫回文件後不再詢問. 選項: "Correct, write it into the document, then implement" (推薦), "stop here", "Grill more", "Something is wrong". "Grill more" 在寫回文件之前繼續 grill.
+- `mreq-close` 沒有指定路徑時, 如果只有一份 `done` 的文件, 而且沒有 `warning` 或 `error`, 直接核對那一份, 不再詢問.
+- `mreq-close` 找不到測試指令 (文件, README 與 agent 指示檔都沒有) 時不再詢問 "Close anyway / Keep it", 只在報告寫出沒有執行測試. 這不算通過. 指令被拒絕時仍然詢問.
+- `mreq-close` 交給 `mreq-apply` 前, 不再提醒修正並 commit 後再執行 `/mreq-close`. 選了 Stop 或 Keep it 時, 只給出 `/mreq-apply <path>` 與要修的項目.
+- `mreq-apply` 的進度兩行每次執行只顯示一次. 使用者回答問題後繼續工作的回合, 不再執行 `progress`.
+- `mreq-how` 與 `mreq-graph` 的報告不再詢問 "Open it / Don't open", 只給出頁面路徑. 使用者要求時才開啟頁面.
+- `mreq-define`, `mreq-grill`, `mreq-how`, `mreq-graph` 確認時, 不再提示可以在文字欄輸入修正. 在文字欄輸入的修正仍然照常處理.
+- `mreq-define` 只寫文件後停止時, 只給出文件路徑. 不寫文件的報告, 不再說明沒有文件可以 close.
+
 ## 0.15.1
 
 ### Changed
