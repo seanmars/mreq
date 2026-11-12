@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "mreq",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Track one piece of work in a .mreq/ task document: interview, pressure-test, implement, and audit it, plus offline HTML walkthroughs of the code and Mermaid diagrams from a description.",
   "author": {
     "name": "Sean Mars"
