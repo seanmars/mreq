@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `mreq-close` 讓使用者挑選文件時, 每個選項的 label 開頭用方括號標示文件的 status, 例: `[done] add login retry`. `done` 的文件排前面, 其他文件依 `list` 順序排在後面.
+
 ## 0.17.0
 
 ### Changed

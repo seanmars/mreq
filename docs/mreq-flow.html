@@ -1042,7 +1042,7 @@ flowchart TD
   P2 --> P0{"文件"}
   P0 -- "沒有任何文件" --> X0(["說明沒有文件可以 close<br>不寫 Closing: 行, 停止"]):::stop
   P0 -- "剛好一份 done,<br>沒有 warning 或 error" --> P4["不詢問<br>list 之後寫<br>Closing: 絕對路徑"]
-  P0 -- "其他情況" --> P3{"用選項挑選<br>done 的排前面"}:::user
+  P0 -- "其他情況" --> P3{"用選項挑選<br>done 的排前面<br>label 前標示 status"}:::user
   P3 -- "Stop" --> XS(["停止"]):::stop
   P3 -- "選了一份" --> P6["選完後寫<br>Closing: 絕對路徑"]
   P4 --> K1{"有未勾選的 task?"}
@@ -1061,7 +1061,7 @@ flowchart TD
   </figure>
   <ul>
     <li>第一則訊息的開頭是 <code>Closing: &lt;絕對路徑&gt;</code>. 沒有任何文件時不寫這一行.</li>
-    <li>挑選文件時, 每份文件一個選項, <code>done</code> 的排前面. 只有一份時, 第二個選項是 <code>Stop</code>. 超過 4 份時列前 4 份, 其他文件的路徑在自由回答輸入.</li>
+    <li>挑選文件時, 每份文件一個選項, <code>done</code> 的排前面, 其他的依 <code>list</code> 順序排在後面. 每個選項的 label 開頭是方括號標示的 status, 例: <code>[done] add login retry</code>, <code>[active] fix cache key</code>. 只有一份時, 第二個選項是 <code>Stop</code>. 超過 4 份時列前 4 份, 其他文件的路徑在自由回答輸入.</li>
     <li><code>Close anyway</code>: 繼續核對, 並在報告列出未完成的 task.</li>
   </ul>
 
