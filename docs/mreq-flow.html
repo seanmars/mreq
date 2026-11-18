@@ -1080,6 +1080,7 @@ flowchart TD
       <p><strong>Run</strong></p>
       <ul>
         <li>執行: 文件的測試指令 (文件沒有時, 用 README 或 agent 指示檔的); issue 的 <code>## Symptom</code> repro; refactor 的 <code>## Behavior Pin</code>; task 自己指定的檢查.</li>
+        <li>文件的 status 是 <code>done</code>, 而且 <code>## Handoff</code> 寫了驗證方式時, 不跑測試指令, 也不跑 task 自己的檢查; <code>mreq-apply</code> 只在 task 全部勾選而且相關測試通過時才設定 <code>done</code>. 這時不找其他測試指令. Handoff 只寫完成, 沒寫怎麼驗證時, 不算. repro 與 Behavior Pin 仍要跑: 它們直接證明目標達成.</li>
         <li>已勾選的 task 的工作就是跑相關測試時, 不重跑測試指令, 也不找其他測試指令. repro, Behavior Pin 與 task 自己的檢查仍要跑.</li>
         <li>指令照文件原樣執行. 不加 <code>uv run</code>, 不用 <code>python -c</code> 代替.</li>
         <li>會寫入資料的檢查, 指向新的路徑 (例: <code>--file</code>), 或交給使用者執行. 這是唯一能改指令的地方.</li>
@@ -1113,6 +1114,7 @@ flowchart TD
   <table>
     <tr><th>結果</th><th>詢問</th><th>選項</th><th>報告</th></tr>
     <tr><td>全部完成, 測試通過</td><td>不詢問</td><td></td><td>檢查結果</td></tr>
+    <tr><td>檢查已由 mreq-apply 執行 (文件是 done, Handoff 寫了驗證方式, Step 3 跳過測試指令與 task 的檢查)</td><td>不詢問</td><td></td><td>沒重跑的檢查與 Handoff 寫的驗證方式. 不算通過</td></tr>
     <tr><td>測試指令已由 task 執行 (Step 3 跳過)</td><td>不詢問</td><td></td><td>沒重跑的指令與 task 編號. 不算通過</td></tr>
     <tr><td>找不到測試指令 (文件, README, agent 指示檔都沒有)</td><td>不詢問</td><td></td><td>找不到測試指令, 沒有執行. 不算通過</td></tr>
     <tr><td>測試失敗</td><td>列出每個失敗, 問一次</td><td><code>Fix now</code> / <code>Close anyway</code> / <code>Stop</code></td><td>選了 Close anyway 的失敗測試</td></tr>
@@ -1129,7 +1131,7 @@ flowchart TD
   <h3>Step 5: 刪除與 Step 6: 報告</h3>
   <ul>
     <li>刪除前, 先收集 <code>## Open</code> 的項目, 與 <code>## Handoff</code> 裡的 follow-up, <code>Open:</code> 或 <code>Unconfirmed:</code> 行. 檔案刪除後沒有東西保留它們, 所以它們寫進報告.</li>
-    <li>報告: 刪除了什麼, 檢查結果, 每個 accepted departure, 未完成的 task, 選了 Close anyway 的失敗測試, 沒執行的測試, 找不到測試指令, 沒重跑的測試指令與執行它的 task, Step 5 的 follow-up, 檢查留下的檔案 (cache 除外), 以及程式碼做了但文件沒要求的事.</li>
+    <li>報告: 刪除了什麼, 檢查結果, 每個 accepted departure, 未完成的 task, 選了 Close anyway 的失敗測試, 沒執行的測試, 找不到測試指令, 沒重跑的測試指令與執行它的 task, 文件是 done 而沒重跑的檢查與 Handoff 寫的驗證方式, Step 5 的 follow-up, 檢查留下的檔案 (cache 除外), 以及程式碼做了但文件沒要求的事.</li>
     <li>交給 <code>mreq-apply</code> 時: 文件的絕對路徑是參數, 每個 finding 或 failure 各一行 (文件的那一行, 程式碼做了什麼, <code>path:line</code> 或失敗的指令). 交接後不刪除文件.</li>
   </ul>
   <div class="callout"><strong>規則:</strong> 不改程式碼, 也不改文件; 修正交給 <code>mreq-apply</code>. 自己不建立檔案; 測試留下的 cache 與檢查需要的新資料路徑可以. 只在 Step 5 刪除, 而且 Step 1 到 4 的問題都要先回答. 只說 "直接 close" 不會跳過 Step 3 的檢查; 只有明確要求跳過檢查才會跳過.</div>

@@ -68,6 +68,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
       - Run no command that executes the project's code or writes a file.
    2. **Run.** After the audit, run the checks the document names, and only those.
       - **What to run**: its test command (when it names none, the one in the project's README or agent instruction files); for `issue`, the `## Symptom` repro; for `refactor`, the `## Behavior Pin`; and the check a task names.
+      - **When mreq-apply already verified the work**: when the document's front matter `status` is `done` and `## Handoff` says how the work was verified (the tests or commands it ran), skip the test command and each task's own check: `mreq-apply` sets `done` only after every task is checked and the related tests pass. Do not look for another test command then. A Handoff that says the work is done but not how it was verified does not count. Still run the `issue` Repro and the `refactor` Behavior Pin: they prove the goal itself.
       - **When to skip the test command**: skip it when a checked task's work is to run the related tests (for example the `issue` template's "Run the related tests"): `mreq-apply` ran them to check that task off. Do not look for another test command then. A task that only says how it is checked, or an unchecked one, does not count. This skips only the test command: still run the repro, the Behavior Pin, and each task's own check.
       - **As written**: run each command exactly as written: add no `uv run`, and use no `python -c` in its place. When a check needs a script, run it inline.
       - **Off the real data**: when a check writes or changes files beyond caches (a data file, a database), keep it off the project's real data: point it at a new path the command accepts (for example a `--file` option), or give it to the user to run. That new path is the only change you make to a command.
@@ -76,6 +77,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 4. **Act on the result.**
    - **All done, tests pass**: go to step 5.
+   - **Checks already run by mreq-apply** (step 3 skipped the test command and the task checks because the document is `done` and its Handoff says how it was verified): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: name it in the report, with the verification the Handoff gives.
    - **Tests already run by a task** (step 3 skipped the test command because a checked task ran it): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: name it in the report with the task number.
    - **Failing tests**: name each failure, and ask once: **Fix now (mreq-apply)**, **Close anyway**, or **Stop**.
    - **Tests not run** (a command in step 3 was denied): give the user each command that did not run, exactly as you ran it, with one allow rule for each (see "When a tool call is denied"), and ask once: **Close anyway** or **Keep it**. Never count it as a pass.
@@ -100,6 +102,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - Each command that did not run.
    - That no test command was found and none ran.
    - The test command not rerun, and the task that ran it.
+   - The test command and task checks not rerun because the document is `done`, and the verification its Handoff gives.
    - The follow-ups from step 5.
    - Every file a check left behind (other than caches).
    - Anything the code does that the document never asked for.
