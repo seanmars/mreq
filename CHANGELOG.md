@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.20.0
+
+### Changed
+
+- `mreq-close` 核對 `done` 的文件時, 如果 `## Handoff` 寫了驗證方式, 不再重跑測試指令與 task 自己的檢查, 也不從 README 或 agent 指示檔找測試指令. `mreq-apply` 只在 task 全部勾選而且相關測試通過時才設定 `done`. Handoff 只寫完成, 沒寫怎麼驗證時, 不適用. `issue` 的 repro 與 `refactor` 的 Behavior Pin 仍會執行. 報告會寫出沒重跑的檢查與 Handoff 寫的驗證方式, 不算通過.
+
 ## 0.19.0
 
 ### Added
