@@ -45,6 +45,9 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Steps
 
 1. **Read before you ask.**
+   When the request reads only as a question about how the code works, ask one question (see "Asking the user") first, before you run any command or read any code. Judge it from the request's words alone:
+   - **Explain it (/mreq-how)**: give the user `/mreq-how <the question>`, with the question filled in so they can copy it, and stop. `/mreq-how` is user-invoked, so it does not appear in your skill list; do not say it is missing, and do not try to run it.
+   - **Treat it as a task**: go on with this step.
    Find the git root: run `git rev-parse --show-toplevel` on its own, without `-C`. When it fails (not a git repository), use the current directory. When the git root is not the directory the agent was started in, say so in your first reply, before any `new`: the document goes to `<git root>/.mreq/`, and the agent cannot read or edit it from here in later turns. Ask the user to start the agent from the git root, then stop.
    Run `list --open`. When an open document already covers this request, ask one question (see "Asking the user"), with the document's title and absolute path in the question:
    - **Continue it (mreq-apply)**: run the `mreq-apply` skill on that document (in Claude Code: with the Skill tool), and do nothing more in this skill. When the Skill call is denied, follow step 6.
@@ -65,9 +68,6 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    | `task` | anything else | docs, config, CI, dependency bumps, scripts |
 
    When two fit, pick the one whose done state the user cares about most, and name the choice in step 4.
-   When the request reads only as a question about how the code works, ask one question:
-   - **Explain it (/mreq-how)**: give the user `/mreq-how <the question>`, with the question filled in so they can copy it, and stop. `/mreq-how` is user-invoked, so it does not appear in your skill list; do not say it is missing, and do not try to run it.
-   - **Treat it as a task**: go on with this step.
 
 3. **Interview until the goal is clear.**
    Skip every question the request or the code already answers. A clear request goes straight to step 4.

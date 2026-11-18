@@ -332,7 +332,7 @@ flowchart TD
     <tr><th>從</th><th>到</th><th>何時</th><th>方式</th></tr>
     <tr><td>mreq-define</td><td>mreq-apply</td><td>Step 1 選 <code>Continue it</code>; Step 4 選 "撰寫後實作"; 不寫文件的流程選 <code>Write the document, continue with mreq-apply</code></td><td>Skill tool</td></tr>
     <tr><td>mreq-define</td><td>mreq-grill</td><td>Step 4 選 "撰寫後 grill"</td><td>Skill tool</td></tr>
-    <tr><td>mreq-define</td><td>mreq-how</td><td>Step 2 選 <code>Explain it</code></td><td>給出 <code>/mreq-how &lt;問題&gt;</code>, 停止</td></tr>
+    <tr><td>mreq-define</td><td>mreq-how</td><td>Step 1 選 <code>Explain it</code></td><td>給出 <code>/mreq-how &lt;問題&gt;</code>, 停止</td></tr>
     <tr><td>mreq-define</td><td>mreq-apply</td><td>不寫文件的流程中途停止</td><td>先補寫文件, 再給出 <code>/mreq-apply &lt;path&gt;</code></td></tr>
     <tr><td>mreq-grill</td><td>mreq-apply</td><td>Step 4 選 "寫回後實作"</td><td>Skill tool</td></tr>
     <tr><td>mreq-grill</td><td>mreq-define</td><td>沒有開啟中的文件; <code>done</code> 文件選 <code>New document</code></td><td>建議 <code>/mreq-define</code>, 停止</td></tr>
@@ -531,7 +531,11 @@ flowchart TD
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  S(["/mreq-define 需求"]):::user --> A1["git rev-parse<br>--show-toplevel"]:::script
+  S(["/mreq-define 需求"]):::user --> B1{"只是問程式碼<br>怎麼運作?"}
+  B1 -- 是 --> B1q{"問一次"}:::user
+  B1q -- "Explain it" --> X3(["給出 /mreq-how 問題<br>停止"]):::stop
+  B1q -- "Treat it<br>as a task" --> A1
+  B1 -- 否 --> A1["git rev-parse<br>--show-toplevel"]:::script
   A1 --> A2{"git root 等於<br>agent 啟動目錄?"}
   A2 -- 否 --> X1(["請使用者從 git root<br>啟動 agent, 停止"]):::stop
   A2 -- "是 (不是 git 時:<br>用目前目錄)" --> A3["mreq.py list --open"]:::script
@@ -543,12 +547,8 @@ flowchart TD
   A5 --> A6{"需求大小?"}
   A6 -- "Simple:<br>一個模組或檔案" --> A7["自己讀相關的<br>程式碼與測試"]
   A6 -- "Complex:<br>跨模組" --> A8["拆成 2-4 個角度<br>平行 explorer<br>再整合"]
-  A7 --> B1{"只是問程式碼<br>怎麼運作?"}
-  A8 --> B1
-  B1 -- 是 --> B1q{"問一次"}:::user
-  B1q -- "Explain it" --> X3(["給出 /mreq-how 問題<br>停止"]):::stop
-  B1q -- "Treat it<br>as a task" --> B2
-  B1 -- 否 --> B2["分類 schema:<br>feature, issue,<br>refactor, task"]
+  A7 --> B2["分類 schema:<br>feature, issue,<br>refactor, task"]
+  A8 --> B2
   B2 --> C1{"還有需求與程式碼<br>沒回答的決策?"}
   C1 -- 是 --> C2["訪談: 選項式提問<br>建議答案排第一<br>可加 Decide later"]:::user
   C2 --> C1
@@ -559,6 +559,7 @@ flowchart TD
 
   <h3>Step 1: 先讀再問</h3>
   <ul>
+    <li>需求讀起來只是在問程式碼怎麼運作時, 在執行任何指令或讀任何程式碼之前先問一次: <code>Explain it</code> 或 <code>Treat it as a task</code>. 只依照需求的文字判斷. <code>/mreq-how</code> 只有使用者能呼叫, 所以 agent 只給出填好問題的指令, 不嘗試執行.</li>
     <li><code>git rev-parse --show-toplevel</code> 單獨執行, 不加 <code>-C</code>. git root 不是 agent 的啟動目錄時, 文件會寫到 <code>&lt;git root&gt;/.mreq/</code>, agent 之後讀不到也改不了它. 所以在任何 <code>new</code> 之前就說明並停止.</li>
     <li>已有開啟中的文件涵蓋需求時, 問題裡寫出文件的標題與絕對路徑. 選 <code>Continue it</code> 後, <code>mreq-define</code> 不再做任何事.</li>
     <li>程式碼能回答的事, 不問使用者. 程式碼不能決定的決策, 留到 Step 3 問.</li>
@@ -573,7 +574,7 @@ flowchart TD
     <tr><td><code>refactor</code></td><td>改結構, 保持行為</td><td>"clean up", "extract", "rename", "split", "simplify"</td><td>不能改變的行為與證明方式 → 目標形狀 → 不做什麼</td></tr>
     <tr><td><code>task</code></td><td>其他工作</td><td>docs, config, CI, 相依套件升級, scripts</td><td>完成狀態 → 限制 → 不做什麼</td></tr>
   </table>
-  <p>兩種都符合時, 選使用者最在意的完成狀態, 並在重述時說明. 需求讀起來只是在問程式碼怎麼運作時, 問一次: <code>Explain it</code> 或 <code>Treat it as a task</code>. <code>/mreq-how</code> 只有使用者能呼叫, 所以 agent 只給出填好問題的指令, 不嘗試執行.</p>
+  <p>兩種都符合時, 選使用者最在意的完成狀態, 並在重述時說明.</p>
 
   <h3>訪談規則</h3>
   <ul>
