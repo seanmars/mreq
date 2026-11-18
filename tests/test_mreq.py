@@ -69,6 +69,15 @@ class MreqTest(unittest.TestCase):
         lines = self.run_mreq("progress", str(path)).stdout.splitlines()
         self.assertEqual(lines[0], f"Using: {path.as_posix()}")
         self.assertEqual(lines[1], "issue: 1/4 tasks done. Next: 2. Confirm the root cause")
+        self.assertEqual(lines[2:], ["Status: draft"])
+
+    def test_progress_warns_about_a_status_it_does_not_know(self):
+        path = Path(self.new_document()["path"])
+        text = path.read_text(encoding="utf-8")
+        path.write_text(text.replace('status: "draft"', 'status: "finished"'), encoding="utf-8")
+        lines = self.run_mreq("progress", str(path)).stdout.splitlines()
+        self.assertEqual(lines[2], "Status: finished")
+        self.assertEqual(lines[3], "Warning: status 'finished' is not one of draft, active, done")
 
     def test_delete_refuses_a_file_outside_the_documents_folder(self):
         other = self.root / "notes.md"

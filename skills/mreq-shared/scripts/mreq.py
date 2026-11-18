@@ -284,14 +284,18 @@ def cmd_update(args: argparse.Namespace) -> dict:
 
 
 def cmd_progress(args: argparse.Namespace) -> str:
-    # Plain text, not JSON: the agent shows these two lines to the user as they are.
+    # Plain text, not JSON: the agent shows these lines to the user as they are.
+    # The status and the warnings are here so the agent needs no "list" for a path it was given.
     path = document_path("progress", args.path)
-    _, body, meta = read_document("progress", path)
+    lines, body, meta = read_document("progress", path)
     tasks = task_progress(body)
-    return (
-        f"Using: {show(path)}\n"
-        f"{meta['schema']}: {tasks['done']}/{tasks['total']} tasks done. Next: {next_task(body)}"
-    )
+    out = [
+        f"Using: {show(path)}",
+        f"{meta['schema']}: {tasks['done']}/{tasks['total']} tasks done. Next: {next_task(body)}",
+        f"Status: {meta.get('status') or 'none'}",
+    ]
+    out.extend(f"Warning: {found}" for found in warnings(meta, lines))
+    return "\n".join(out)
 
 
 def cmd_delete(args: argparse.Namespace) -> dict:
@@ -325,7 +329,7 @@ def main() -> None:
     upd.add_argument("--status", choices=STATUSES)
     upd.set_defaults(run=cmd_update)
 
-    prog = sub.add_parser("progress", help="print the two progress lines: Using, and tasks done / next")
+    prog = sub.add_parser("progress", help="print the progress lines: Using, tasks done / next, and Status")
     prog.add_argument("path")
     prog.set_defaults(run=cmd_progress)
 

@@ -30,9 +30,9 @@ The script is `${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py`. `${CLAUDE_SK
 
 Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py" <command>` first, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 
-- `list [--open]`: every document with its status, most recently updated first; `--open` leaves out the `done` ones. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
+- `list --open`: open documents, most recently updated first. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
 - `update <path> [--status <draft|active|done>]`: sets `updated` to now. Never write the dates yourself. `update` rewrites the file: read the document again before your next Edit of it.
-- `progress <path>`: prints two lines of plain text, not JSON: `Using: <absolute path>` and `<schema>: N/M tasks done. Next: <first unchecked task>`.
+- `progress <path>`: prints three lines of plain text, not JSON: `Using: <absolute path>`, `<schema>: N/M tasks done. Next: <first unchecked task>` and `Status: <draft|active|done>`. A `Warning:` line after them means the script cannot trust the file's front matter.
 
 ## When a tool call is denied
 
@@ -46,7 +46,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    When there is no open document, say so and stop: `/mreq-define <request>` starts new work. Do not invent a subject.
 
 2. **Read it in full.**
-   First learn the status from the `list` output. When step 1 did not run `list`, run it without `--open`: the document may be `done`. Then read the document, before any `update`. Read `## Handoff` first: it says where the last agent stopped. Then run `progress <path>` and show its output (step 3) before any other tool call.
+   Read the document, before any `update`. Read `## Handoff` first: it says where the last agent stopped. Then run `progress <path>` and show its output (step 3) before any other tool call. Its `Status:` line gives the status: a document whose path you were given may be `done`. Run no `list` to learn it. When `progress` prints a `Warning:` line, name it to the user in that message.
    - When the document still holds only the template's hints (no real goal or tasks), stop before any `update`: say so, and ask once: **Grill it (mreq-grill)** (run the `mreq-grill` skill on the document; in Claude Code: with the Skill tool) or **Stop** (say that `/mreq-define <request>` starts a new document).
    - When `## Handoff` has an `Unconfirmed:` line, the user never confirmed the document: show `## Assumptions` and ask once: **Go on** (drop the line when you next rewrite `## Handoff`) or **Grill first** (run the `mreq-grill` skill on the document; in Claude Code: with the Skill tool).
    - When it is `done`, every task is checked, and you were handed no findings (see "Findings from mreq-close"), stop before any `update`: say that the work is done, and that `/mreq-close <path>`, with the absolute path filled in, finishes it. `/mreq-close` is user-invoked: do not try to run it.
@@ -58,7 +58,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Run `git status` and `git diff`, each on its own and without `-C`, and compare them with `## Handoff`. A change the Handoff does not mention means the last session stopped mid-task: continue from the code, not from the Handoff alone.
 
 3. **Show progress.**
-   As soon as `progress` prints, write a message, before your next tool call, also when you stop in step 2. It starts with the two lines `progress` printed, copied unchanged, then one short sentence on what you do next, in the language from Language. Your final reply does not replace this message. Show it once in each run of this skill: a later turn that goes on with the work (the user answered a question or agreed to a change) does not run `progress` again. Every message from here on is in the language from Language, also the short notes between tool calls.
+   As soon as `progress` prints, write a message, before your next tool call, also when you stop in step 2. It starts with the lines `progress` printed, copied unchanged, then one short sentence on what you do next, in the language from Language. Your final reply does not replace this message. Show it once in each run of this skill: a later turn that goes on with the work (the user answered a question or agreed to a change) does not run `progress` again. Every message from here on is in the language from Language, also the short notes between tool calls.
 
 4. **Work the tasks one at a time.**
    Take the next unchecked task. When it has a `Resume:` line, check what that line says is done against the code, then continue from it.
