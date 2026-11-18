@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.19.0
+
+### Added
+
+- `mreq-grill` 第一輪可以指定焦點: `/mreq-grill [<path>] [<focus>]`, 例: `/mreq-grill <path> 錯誤處理`. 四象限仍然全部掃描. 每個象限先處理焦點, 問得更深, 並先回報焦點的發現. 第一個字是 `.mreq/` 底下的檔案路徑時, 它是文件路徑, 其餘是焦點; 否則整段輸入都是焦點. 規則寫在 `mreq-shared/GRILL.md` 的 "A focus", 所以 `mreq-define` 的 "先 grill, 不寫文件" 也適用.
+
+### Changed
+
+- `mreq.py progress` 多印一行 `Status: <status>`. front matter 的 `status` 或 `schema` 不合法時, 再多印 `Warning:` 行. 只安裝部分 skill 時, 必須同時更新 `mreq-shared`.
+- `mreq-apply` 從 `progress` 的 `Status:` 行取得 status. 使用者給路徑時, 不再另外執行 `list`. `progress` 印出 `Warning:` 行時, 在進度訊息裡告訴使用者.
+- `mreq-define` 把 "需求只是在問程式碼怎麼運作" 的詢問 (`Explain it` 或 `Treat it as a task`) 從 Step 2 移到 Step 1 的開頭. 它在執行任何指令或讀任何程式碼之前發生, 只依照需求的文字判斷.
+- `mreq-close` 的 Step 1 與報告, `mreq-how` 的報告改為清單格式. 規則內容不變.
+- 用詞統一: 挑選文件時一律寫 "Never pick one yourself"; `mreq-how` 與 `mreq-graph` 的 "Before the yes" 改為 "Before the user confirms".
+
+### Fixed
+
+- `mreq-define` 寫 `feature` 文件時, 補上 `## Scope` 的 `In:` 要寫什麼. 原本只有 `Out:` 的規則, 但 `mreq-apply` 只實作 `In:` 列入的範圍.
+- `mreq-define` 不寫文件的流程: `issue` 兩次修正失敗後, 補上 "先說明並重新驗證 root cause, 再做第三次修正", 與 `mreq-apply` 一致.
+- `mreq-how` 的 explorer 補上不可執行專案的程式碼, 與 `mreq-how` 的 Guardrails 一致.
+- `mreq-apply` 的 description 補上 `mreq-grill` 的交接; `mreq-grill` 的 description 補上 `mreq-apply` 的交接.
+
 ## 0.18.0
 
 ### Changed
