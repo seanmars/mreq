@@ -31,10 +31,10 @@ Ask with options, so the user picks instead of types:
 
 The script is `${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py`. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place. Every document path you show the user is the absolute path the script printed.
 
+Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py" <command>` first, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
+
 - `list`: every document, most recently updated first. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
 - `delete <path>`: deletes the document. It refuses any file outside `.mreq/`.
-
-Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py" <command>` first, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 
 ## When a tool call is denied
 
@@ -43,7 +43,13 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Steps
 
 1. **Pick the document.**
-   Use the path the user gave. Otherwise run `list`. When exactly one document has `status` `done`, and that item has no `warning` or `error`, use it without asking. Otherwise let the user pick. Never guess. Ask one question (see "Asking the user") with one option per document: every document with `status` `done` first, then the others, each group in `list` order. Start every label with the document's `status` in brackets, then its title, for example `[done] add login retry` or `[active] fix cache key`: the user sees each status before picking. Put its task progress and absolute path in the description. With one document, add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer. Your first message starts with the line `Closing: <absolute path>`, also when the user gave the path: when they gave it, say it before any tool call; when you used the only `done` document, right after `list`; otherwise, right after they pick.
+   Use the path the user gave. Otherwise run `list`. When exactly one document has `status` `done`, and that item has no `warning` or `error`, use it without asking. Otherwise let the user pick. Never pick one yourself.
+   Ask one question (see "Asking the user") with one option per document: every document with `status` `done` first, then the others, each group in `list` order. Start every label with the document's `status` in brackets, then its title, for example `[done] add login retry` or `[active] fix cache key`: the user sees each status before picking. Put its task progress and absolute path in the description. With one document, add **Stop** as the second option. With more than 4, offer the first 4 and say in the question that the user can type another document's path in the free-text answer.
+   Your first message starts with the line `Closing: <absolute path>`, also when the user gave the path:
+   - The user gave the path: say it before any tool call.
+   - You used the only `done` document: say it right after `list`.
+   - Otherwise: say it right after the user picks.
+
    When `list` shows no document, say so, with no `Closing:` line, and stop: there is nothing to close.
 
 2. **Check the tasks.**
@@ -87,7 +93,16 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    Run `delete <path>`; never delete with another command. Do not check git, and do not ask before the delete.
 
 6. **Report.**
-   What was deleted, what the check found, each accepted departure, unfinished tasks, failing tests closed anyway, and tests not run if any, that no test command was found, the test command not rerun and the task that ran it, the follow-ups from step 5, every file a check left behind (other than caches), and anything the code does that the document never asked for.
+   Always say what was deleted and what the check found. Then name each of these that applies:
+   - Each accepted departure.
+   - Each unfinished task.
+   - Each failing test closed anyway.
+   - Each command that did not run.
+   - That no test command was found and none ran.
+   - The test command not rerun, and the task that ran it.
+   - The follow-ups from step 5.
+   - Every file a check left behind (other than caches).
+   - Anything the code does that the document never asked for.
 
 ## Handing over to mreq-apply
 

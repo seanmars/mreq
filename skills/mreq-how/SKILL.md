@@ -71,7 +71,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
    A free answer that corrects something is a correction. A correction means you read it wrong: restate again. Only a pick that confirms a reading moves on.
 
-   Before the yes, read only what you need to name the scope (file and directory names). Do not explore the code, spawn explorers, or run `page.py`.
+   Before the user confirms, read only what you need to name the scope (file and directory names). Do not explore the code, spawn explorers, or run `page.py`.
 
    Only an explicit request to skip this confirmation (for example "don't ask, just explain") skips it. Then pick the most likely reading and go on, and state it in the first sentence of the report and of the Overview, for example: "I read X as Y; ask again if you meant Z."
 
@@ -96,7 +96,17 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    3. Build the page: `page.py how build <content file>`. It checks the page and every diagram, and writes `<same name>.html` beside the content file only when it prints `ok`. Fix every FAIL line in the content file with Edit (or Write for a rewrite) and build again. A FAIL line from Pele gives the line inside the Mermaid source. When the same Pele error is still there after 3 builds, stop: give the user Pele's error and the content file's absolute path, and ask once: **Simplify the diagram** (rewrite it as "Keep it readable" in `WRITING.md` says, then build up to 3 more times), **Use prose instead** (remove the diagram, explain that part in the text, and say so under Open Questions), or **Stop**. Between builds, change the content only with Edit or Write; never run `python`, a heredoc, `cd`, or any other script to generate or patch it. Never edit the built page: the next build overwrites it.
 
 7. **Report.**
-   Reply with exactly this shape, nothing else: the answer in at most 4 sentences (the gist of the Overview), with no lists or headings, starting with your interpretation when the user skipped the confirmation (see step 1); then the page's absolute path. Ask no question here. The page is the explanation, so do not repeat it in the chat: give each sentence one point, never join clauses with a semicolon to fit more in, and list no inputs, cases or files (the page has them). With `--plain`, write the sentences in the reader's words too, as "Plain style" in `WRITING.md` says: no path in the code and no code name. When a build limit or anything else kept you from doing part of the request, say so in one of the 4 sentences. When the build printed a `WARN` line, say in one of the 4 sentences that the diagrams were not checked. Never go past 4 sentences: any other caveat, such as a layout you could not check, goes on the page under Open Questions. Open the page (in the default browser) only when the user asks.
+   Reply with exactly this shape, nothing else:
+   1. The answer in at most 4 sentences (the gist of the Overview), with no lists or headings.
+   2. The page's absolute path.
+
+   Ask no question here. Open the page (in the default browser) only when the user asks. The page is the explanation, so do not repeat it in the chat. The 4 sentences follow these rules:
+   - Give each sentence one point. Never join clauses with a semicolon to fit more in, and list no inputs, cases or files (the page has them).
+   - Start with your interpretation when the user skipped the confirmation (see step 1).
+   - With `--plain`, write the sentences in the reader's words too, as "Plain style" in `WRITING.md` says: no path in the code and no code name.
+   - When a build limit or anything else kept you from doing part of the request, say so in one of the 4 sentences.
+   - When the build printed a `WARN` line, say in one of the 4 sentences that the diagrams were not checked.
+   - Never go past 4 sentences: any other caveat, such as a layout you could not check, goes on the page under Open Questions.
 
    A follow-up that asks a new question starts again at step 1. A follow-up that changes the page goes through step 6 again. Both end with this same reply. After a change to the page, the 4 sentences say what changed on the page, not what the new part explains; never list the added content. When a Write, Edit or command is denied before the page is built, reply with only the denied path or command and its allow rule (see "When a tool call is denied"), then stop. Do not answer the question in the chat.
 

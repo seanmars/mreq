@@ -57,7 +57,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
    A free answer that corrects something is a correction. A correction means you read it wrong: restate again. Only a pick that confirms a reading moves on.
 
-   Before the yes, read only what you need to name the subject: the files the user pointed at, by name. Do not draw, and do not run `page.py`.
+   Before the user confirms, read only what you need to name the subject: the files the user pointed at, by name. Do not draw, and do not run `page.py`.
 
    Only an explicit request to skip this confirmation (for example "don't ask, just draw") skips it. Then pick the most likely reading and go on, and state it in the first sentence of the report and as the first assumption on the page (see `WRITING.md`).
 
