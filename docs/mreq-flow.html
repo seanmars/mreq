@@ -435,7 +435,7 @@ stateDiagram-v2
   <table>
     <tr><th>skill</th><th>輸入</th><th>使用者</th><th>agent</th><th>front matter</th></tr>
     <tr><td><code>mreq-define</code></td><td><code>&lt;request&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
-    <tr><td><code>mreq-grill</code></td><td><code>[&lt;path&gt;]</code></td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
+    <tr><td><code>mreq-grill</code></td><td><code>[&lt;path&gt;] [&lt;focus&gt;]</code></td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
     <tr><td><code>mreq-apply</code></td><td><code>[&lt;path&gt;]</code>, 或 findings</td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
     <tr><td><code>mreq-close</code></td><td><code>[&lt;path&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-how</code></td><td><code>[--plain] &lt;question&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
@@ -846,7 +846,7 @@ flowchart TD
   <p>一輪是一次掃描加上之後的重述. 同一個對話再 grill 同一個對象時, 就是後續輪次. 這個規則寫在 <code>GRILL.md</code>, 所以 <code>mreq-define</code> 的 "先 grill, 不寫文件" 也適用.</p>
   <table>
     <tr><th>項目</th><th>第一輪</th><th>後續輪次</th></tr>
-    <tr><td>掃描範圍</td><td>四個象限全部</td><td>上一輪改變的項目, 仍未決的項目, 使用者指定的焦點</td></tr>
+    <tr><td>掃描範圍</td><td>四個象限全部. 使用者指定焦點時, 範圍不縮小: 每個象限先處理焦點, 問得更深, 並先回報焦點的發現</td><td>上一輪改變的項目, 仍未決的項目, 使用者指定的焦點</td></tr>
     <tr><td>已成立的主張, 已確認的前提</td><td>逐一驗證與確認</td><td>不重做. 之後的變更影響到它時才再檢查</td></tr>
     <tr><td>回報</td><td>四個象限分開, 沒有發現寫 "none found"</td><td>只回報有新發現的象限. 都沒有時用一行說明</td></tr>
     <tr><td>重述 (mreq-grill)</td><td>完整重述</td><td>已經寫回時, 只重述之後各輪的變更, 並用一行說明其餘已在文件裡. 還沒寫回時, 仍然完整重述. 沒有變更時用一行說明</td></tr>

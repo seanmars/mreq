@@ -17,6 +17,13 @@ Sweep them in this order. The last two hide the real risk.
 
 Report the four quadrants separately, in this order. Write "none found" under a quadrant with nothing. A later round sweeps and reports less: see "A later round".
 
+## A focus
+
+The user can name a focus: a part of the subject to grill deepest. A focus adds depth; it does not narrow the sweep. In a first round, still sweep all four quadrants:
+
+- In each quadrant, take the focus first and go deeper there: verify every claim it rests on, and follow each answer one question further.
+- Report the findings on the focus first in each quadrant.
+
 ## A later round
 
 A round is one sweep and the restatement after it. When this conversation already grilled this subject, the next round is a later round. Grill only what is new:

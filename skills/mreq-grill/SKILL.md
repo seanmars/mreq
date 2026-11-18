@@ -1,14 +1,14 @@
 ---
 name: mreq-grill
-argument-hint: "[<path>]"
 description: Pressure-test an mreq task document under .mreq/ with a four-quadrant Known/Unknown interview, then write what it settles back into the document's Decisions, Tasks, Assumptions, and Open sections. Use when the user says "grill", "grill me", or wants to find unspoken assumptions and blind spots in a plan, or after mreq-define or mreq-apply hands a document over.
+argument-hint: "[<path>] [<focus>]"
 ---
 
 # mreq-grill
 
 Stress-test one `.mreq/` document until every assumption is named and every open question is answered or parked. Then write the outcome into the document.
 
-**Input**: Optional. A document path.
+**Input**: Optional. A document path, then a focus: the part of the plan to grill deepest, for example `error handling`. When the first word is the path of a file under `.mreq/`, it is the document path and the rest is the focus. Otherwise the whole input is the focus.
 
 ## Language
 
@@ -50,7 +50,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    When this conversation already grilled this document, read the document again, but read again only the code that changed since then.
 
 3. **Sweep the four quadrants.**
-   Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the document. Report the four quadrants separately, in the order it gives. When this conversation already grilled this subject, follow its "A later round" section instead.
+   Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the document. Report the four quadrants separately, in the order it gives. When the user named a focus, follow its "A focus" section too. When this conversation already grilled this subject, follow its "A later round" section instead.
 
 4. **Restate and get confirmation.**
    In your own words: the claims that held and the ones that fell, the assumptions now explicit, the decisions made (each with its reason and the alternative ruled out), and what is still open.
