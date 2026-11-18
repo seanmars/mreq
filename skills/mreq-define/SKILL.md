@@ -127,7 +127,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
      - **Goal**: `## Goal`.
      - **Problem**: `## Symptom` for `issue`, `## Goal` for `refactor`, `## Context` otherwise.
      - **Decided**: `## Decisions`, one `### Dn:` each.
-     - **Out of scope**: `## Scope`, under `Out:`. Write `None` when there is none.
+     - **Out of scope**: `## Scope`, under `Out:`. Write `None` when there is none. For `feature`, also write under `In:` what **Goal** and **Decided** put in scope: `mreq-apply` builds only that.
      - **Assumptions**: `## Assumptions`, each still marked as a guess. Never turn an assumption into a decision.
      - **Open**: `## Open`, one `- Open: <question>` bullet each. Delete the hint and leave the section empty when there is none.
    - Write `## Handoff` as: not started; the first task to take. When the user skipped step 4's confirmation, add a line `Unconfirmed: the user did not confirm a restatement; check ## Assumptions and ## Decisions with the user first.`
@@ -162,7 +162,7 @@ Do this only when step 4 sent you here. Implement the confirmed restatement in t
 
 **Schema rules:**
 - **`feature`**: build only what the restatement puts in scope. Add no flexibility for later.
-- **`issue`**: reproduce the bug before you change code. Verify the root cause before you fix it, and fix the cause, not the symptom. When two fixes fail, stop: the root cause is probably wrong.
+- **`issue`**: reproduce the bug before you change code. Verify the root cause before you fix it, and fix the cause, not the symptom. When two fixes fail, stop: the root cause is probably wrong. Say so and verify it again before a third fix.
 - **`refactor`**: pin the behavior first with a test or a command, and keep it green after every step. Change no behavior. When you find a bug, name it in the report as a follow-up and do not fix it here.
 - **`task`**: do the task as **Goal** describes it.
 

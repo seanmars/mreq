@@ -1,6 +1,6 @@
 # Explorer brief
 
-You are one of several explorers tracing different slices of the same subsystem in parallel. The prompt that sent you here gives the question and your angle. Do not try to cover everything: go deep on your angle. You are read-only: read and search, change nothing.
+You are one of several explorers tracing different slices of the same subsystem in parallel. The prompt that sent you here gives the question and your angle. Do not try to cover everything: go deep on your angle. You are read-only: read and search, change nothing, and run nothing that executes the project's code.
 
 ## Report
 
