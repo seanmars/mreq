@@ -10,6 +10,7 @@
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
 | `mreq-how` | 先確認問題的解讀,再產生解說程式碼的離線 HTML,附 Mermaid 圖表與圖例,放在 session root 的 `.mreq/how/`. 加 `--plain` 改寫給企劃, PM 等非程式人員: 用功能名詞, 不放程式碼位置 | 只有使用者 |
 | `mreq-graph` | 先確認描述的解讀,再把描述畫成 Mermaid 圖表,產生附圖例的離線 HTML,放在 session root 的 `.mreq/graph/` | 只有使用者 |
+| `mreq-pro` | 改寫 prompt, 要求頂尖專家的做法: 更深, 不是更大. 先回答關鍵難點, 原始資料, 方法與工具, 外部驗證, 再給出可複製的新 prompt. 沒有給 prompt 時, 改寫最近一次的需求 | 只有使用者 |
 | `mreq-shared` | 不執行任何任務. 放其他 skill 共用的 script, template, Pele, grill 方法, 與 Mermaid 規則 | 沒有人 |
 
 「誰能呼叫」只適用 Claude Code. 其他 agent 不讀 `disable-model-invocation`, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
@@ -67,6 +68,7 @@ skills/
 ├── mreq-close/
 ├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html
 ├── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html
+├── mreq-pro/
 └── mreq-shared/  # 共用: scripts/mreq.py, scripts/page.py, templates/, scripts/check.mjs, vendor/ (Pele), GRILL.md, MERMAID.md
 tests/            # python -m unittest discover -s tests
 ```

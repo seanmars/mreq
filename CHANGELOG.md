@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `mreq-pro`: 改寫 prompt, 要求頂尖專家的做法: 更深, 不是更大. 先簡短回答四個問題: 關鍵難點, 原始資料, 方法與工具, 事先定義的外部驗證. 不了解領域時, 詢問使用者, 不猜測. 再把新 prompt 放在一個 code block. 新 prompt 的範圍不大於原本的 prompt, 要求 agent 用實驗決定能實驗的選擇, 並把產品或偏好的選擇列為問題. 最後逐行列出刪除或縮小的部分與原因. 只有使用者能呼叫: `/mreq-pro [<prompt>]`.
+
 ## 0.20.0
 
 ### Changed
