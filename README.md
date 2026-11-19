@@ -4,7 +4,7 @@
 
 | Skill | 作用 | 誰能呼叫 |
 |---|---|---|
-| `mreq-define` | 判斷意圖 (feature / issue / refactor / task),訪談,確認後產生文件. 小需求可以不寫文件, 直接實作 | 只有使用者 |
+| `mreq-define` | 判斷意圖 (feature / issue / refactor / task),訪談,確認後產生文件. 小需求可以不寫文件, 直接實作,  Request for Proposal(RFP) | 只有使用者 |
 | `mreq-grill` | 用四象限壓力測試文件,把結論寫回文件 | 使用者, agent |
 | `mreq-apply` | 逐項實作文件的 Tasks,更新 checkbox 和 Handoff | 使用者, agent |
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
