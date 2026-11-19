@@ -236,6 +236,7 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
     <li class="sub"><a href="#close-act"><span class="stamp sub" aria-hidden="true">決</span>處理結果與刪除</a></li>
     <li><a href="#how"><span class="stamp" aria-hidden="true">解</span>mreq-how</a></li>
     <li><a href="#graph"><span class="stamp" aria-hidden="true">圖</span>mreq-graph</a></li>
+    <li><a href="#pro"><span class="stamp" aria-hidden="true">深</span>mreq-pro</a></li>
     <li><a href="#common"><span class="stamp" aria-hidden="true">通</span>共通規則</a></li>
     <li class="sub"><a href="#common-script"><span class="stamp sub" aria-hidden="true">令</span>執行 script 與被拒絕</a></li>
     <li class="sub"><a href="#common-lang"><span class="stamp sub" aria-hidden="true">語</span>回覆語言</a></li>
@@ -278,6 +279,8 @@ flowchart TD
   HOW --> PAGE[("解說頁面<br>.mreq/how/")]:::doc
   Q -- "把描述<br>畫成圖" --> GRAPH["/mreq-graph"]:::skill
   GRAPH --> GPAGE[("圖表頁面<br>.mreq/graph/")]:::doc
+  Q -- "改寫 prompt" --> PRO["/mreq-pro"]:::skill
+  PRO --> NEWP(["新 prompt<br>在對話裡"]):::stop
   Q -- "要做一件工作" --> DEF["/mreq-define<br>分類, 訪談, 重述"]:::skill
   DEF --> C{"確認重述時<br>選的下一步"}:::user
   C -- "直接實作, 不寫文件<br>(小需求時推薦)" --> DIRECT["在 mreq-define 內<br>實作"]
@@ -440,9 +443,10 @@ stateDiagram-v2
     <tr><td><code>mreq-close</code></td><td><code>[&lt;path&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-how</code></td><td><code>[--plain] &lt;question&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-graph</code></td><td><code>&lt;description&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
+    <tr><td><code>mreq-pro</code></td><td><code>[&lt;prompt&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-shared</code></td><td>沒有</td><td>不行</td><td>不行</td><td><code>disable-model-invocation: true</code>, <code>user-invocable: false</code></td></tr>
   </table>
-  <p>這些限制只適用 Claude Code. 其他 agent 不讀 <code>disable-model-invocation</code>. 所以「只有使用者能呼叫」的 skill 都在開頭寫明: agent 自己讀到這個檔案時, 停下來, 請使用者輸入指令. <code>mreq-shared</code> 不是任務: agent 讀到它時, 告訴使用者哪一個 mreq skill 適合.</p>
+  <p>這些限制只適用 Claude Code. 其他 agent 不讀 <code>disable-model-invocation</code>. 所以「只有使用者能呼叫」的 skill 都在開頭寫明: agent 自己讀到這個檔案時, 停下來, 請使用者輸入指令. <code>mreq-pro</code> 是例外: 它只用 description 寫明 "Use only when invoked as /mreq-pro". <code>mreq-shared</code> 不是任務: agent 讀到它時, 告訴使用者哪一個 mreq skill 適合.</p>
 
   <h3>任務文件的 skill 與 mreq.py</h3>
   <figure class="diagram">
@@ -1320,9 +1324,53 @@ flowchart TD
 </section>
 
 <!-- ============================== 8 ============================== -->
+<section class="block" id="pro">
+  <h2><span class="stamp" aria-hidden="true">深</span>mreq-pro</h2>
+  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 結果只在對話裡, 不寫檔案, 也不使用 <code>mreq-shared</code>. 只有使用者輸入 <code>/mreq-pro</code> 才會執行.</p>
+  <figure class="diagram">
+    <script type="text/x-mermaid">
+flowchart TD
+  S(["/mreq-pro prompt"]):::user --> A{"有給 prompt?"}
+  A -- "否" --> A1["使用最近一次的需求"]
+  A -- "是" --> B
+  A1 --> B["簡短回答四題<br>每題 2 到 4 行"]
+  B --> K{"懂這個領域,<br>能回答每一題?"}
+  K -- "否" --> ASK["說明不懂的部分<br>詢問使用者, 不猜測"]:::user
+  ASK --> B
+  K -- "是" --> C["在一個 code block<br>寫出新 prompt"]
+  C --> D(["逐行列出刪除或縮小的<br>部分與原因"]):::stop
+    </script>
+    <figcaption>mreq-pro 的步驟. 四題的答案, 新 prompt 與刪除清單都在同一則回覆</figcaption>
+  </figure>
+
+  <div class="grid2">
+    <div>
+      <h3>四題</h3>
+      <table>
+        <tr><th>題目</th><th>回答的內容</th></tr>
+        <tr><td>The crux</td><td>決定結果好壞的一個難點. 頂尖專家會怎麼處理, 而原本的 prompt 沒有要求. 新手會在哪裡出錯.</td></tr>
+        <tr><td>Raw material</td><td>專家會從哪個原始來源開始 (原始資料, 原始文件, 原始碼, 直接量測), 不用整理過的版本.</td></tr>
+        <tr><td>Methods and tools</td><td>具體的方法, 工具或標準, 寫出名稱. 不給一般建議.</td></tr>
+        <tr><td>Outside check</td><td>與使用者和 agent 無關的證據: 測試, benchmark, 原始來源, 量測. 寫成開始前就定義好的 pass/fail 條件.</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>新 prompt 的條件</h3>
+      <ul>
+        <li>要求上面四項: crux, 原始資料, 方法, 外部驗證.</li>
+        <li>範圍與原本相同, 或更小. 刪除不增加深度的內容. 比原本長時, 每一行新增的內容都要有理由.</li>
+        <li>要求 agent 用 prototype 決定實驗能決定的選擇, 並依照觀察結果推薦一個選項.</li>
+        <li>實驗不能決定的產品或偏好選擇, 列成問使用者的問題, 不自己決定.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><strong>規則:</strong> 不懂領域時, 說明並詢問使用者, 不猜測. 新 prompt 只放在一個 code block, 讓使用者可以複製. <code>SKILL.md</code> 沒有 "Asking the user" 與 "When a tool call is denied" 兩節, 所以下面的共通規則不適用.</div>
+</section>
+
+<!-- ============================== 9 ============================== -->
 <section class="block" id="common">
   <h2><span class="stamp" aria-hidden="true">通</span>共通規則</h2>
-  <p class="lede">每個 skill 都遵守下面的規則. "Asking the user" 與 "When a tool call is denied" 兩節在六個 <code>SKILL.md</code> 裡一字不差; <code>tests/test_skills.py</code> 檢查這一點.</p>
+  <p class="lede">除了 <code>mreq-pro</code>, 每個 skill 都遵守下面的規則. "Asking the user" 與 "When a tool call is denied" 兩節在六個 <code>SKILL.md</code> 裡一字不差; <code>tests/test_skills.py</code> 檢查這一點.</p>
   <h3>問使用者</h3>
   <ul>
     <li>有 <code>AskUserQuestion</code> tool 時使用它: 一次最多 4 個獨立問題, 推薦選項放第一個, 標示 "(Recommended)".</li>
