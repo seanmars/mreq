@@ -31,7 +31,7 @@ Ask with options, so the user picks instead of types:
 
 ## The script
 
-`${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/page.py` builds and checks the page. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place. Its first argument is always `graph`: it picks this skill's output folder and `skeleton.html`. In the steps below, `page.py graph <command>` stands for the full command.
+`${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/page.py` builds and checks the page. `${CLAUDE_SKILL_DIR}` is the directory that holds this SKILL.md. Claude Code fills in its absolute path; other agents may leave the variable as written. Then put the absolute path of this SKILL.md's directory in its place yourself, before the first command or file read that uses it: the directory of the path you loaded this file from (Codex gives it in the skill's `<path>`, Grok in the skill list's `Absolute path`). Never run a command or read a path that still holds `${`: the shell reads it as an empty variable, and the command or read fails. An error that names a path starting with `/../mreq-shared` means the variable was empty: put the path in its place and run the same command again. Its first argument is always `graph`: it picks this skill's output folder and `skeleton.html`. In the steps below, `page.py graph <command>` stands for the full command.
 
 Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/page.py" graph <command>`, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is the project rule `Bash(uv run *page.py*)` or `PowerShell(uv run *page.py*)` (`python` or `python3` in place of `uv run` when you ran it), not one with the path written out.
 
@@ -67,7 +67,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    When the description points at files, code or documents, read them, and draw what they say. When code and a document disagree, draw the code and say so on the page. When the description alone is the source, draw only what it says and the assumptions the user confirmed. Do not invent steps, names or numbers: what is missing goes under Assumptions. When a diagram cannot be drawn without a fact that no source gives (for example, which side opens a link in a sequence diagram), pick the usual answer and list it under Assumptions.
 
 3. **Plan the page.**
-   Follow `WRITING.md` in this skill's directory and `MERMAID.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory): pick the diagrams and their types, then write each diagram's Mermaid source, then its legend and caption.
+   Follow `${CLAUDE_SKILL_DIR}/WRITING.md` and `${CLAUDE_SKILL_DIR}/../mreq-shared/MERMAID.md`: pick the diagrams and their types, then write each diagram's Mermaid source, then its legend and caption.
 
 4. **Write the page.**
    1. Get the content file's path: `page.py graph new <topic-slug>`. It creates the output folder and stamps the name with the current time; never make up the time. Use the path as printed, with its `/`.

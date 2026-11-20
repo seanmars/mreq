@@ -26,7 +26,7 @@ Ask with options, so the user picks instead of types:
 
 ## The script
 
-The script is `${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py`. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place. Every document path you show the user is the absolute path the script printed.
+The script is `${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py`. `${CLAUDE_SKILL_DIR}` is the directory that holds this SKILL.md. Claude Code fills in its absolute path; other agents may leave the variable as written. Then put the absolute path of this SKILL.md's directory in its place yourself, before the first command or file read that uses it: the directory of the path you loaded this file from (Codex gives it in the skill's `<path>`, Grok in the skill list's `Absolute path`). Never run a command or read a path that still holds `${`: the shell reads it as an empty variable, and the command or read fails. An error that names a path starting with `/../mreq-shared` means the variable was empty: put the path in its place and run the same command again. Every document path you show the user is the absolute path the script printed.
 
 Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py" <command>` first, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 
@@ -60,7 +60,7 @@ When you give the user a command to type, write it the way their agent runs a sk
    When this conversation already grilled this document, read the document again, but read again only the code that changed since then.
 
 3. **Sweep the four quadrants.**
-   Read `GRILL.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory) and follow it. The subject is the document. Report the four quadrants separately, in the order it gives. When the user named a focus, follow its "A focus" section too. When this conversation already grilled this subject, follow its "A later round" section instead.
+   Read `GRILL.md` in the `mreq-shared` directory (`${CLAUDE_SKILL_DIR}/../mreq-shared/GRILL.md`) and follow it. The subject is the document. Report the four quadrants separately, in the order it gives. When the user named a focus, follow its "A focus" section too. When this conversation already grilled this subject, follow its "A later round" section instead.
 
 4. **Restate and get confirmation.**
    In your own words: the claims that held and the ones that fell, the assumptions now explicit, the decisions made (each with its reason and the alternative ruled out), and what is still open.

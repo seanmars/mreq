@@ -78,6 +78,19 @@ class SkillTextTest(unittest.TestCase):
             # Agents without a skill tool can only read the file; only a denied call forbids that.
             self.assertNotIn("Never read another skill's SKILL.md", skill_text(name), name)
 
+    def test_a_skill_directory_left_as_written_is_never_run(self):
+        # Only Claude Code fills in ${CLAUDE_SKILL_DIR}; elsewhere the shell reads it as empty.
+        for name in SCRIPTS:
+            text = section(skill_text(name), "## The script")
+            self.assertIn("Never run a command or read a path that still holds `${`", text, name)
+
+    def test_shared_files_are_named_by_the_skill_directory(self):
+        # A bare "../mreq-shared" leaves the agent to guess the start; it often takes the project root.
+        for path in SKILLS_DIR.rglob("*.md"):
+            self.assertNotIn("from this skill's directory", path.read_text(encoding="utf-8"), path.as_posix())
+        for name, shared in (("define", "GRILL.md"), ("grill", "GRILL.md"), ("how", "MERMAID.md"), ("graph", "MERMAID.md")):
+            self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/../mreq-shared/{shared}`", skill_text(name), name)
+
     def test_the_user_only_guard_takes_every_agents_invocation(self):
         for name in ("define", "close", "how", "graph"):
             text = skill_text(name)

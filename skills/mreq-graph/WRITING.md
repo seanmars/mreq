@@ -1,6 +1,6 @@
 # Writing the page
 
-Read this file and `MERMAID.md` in the `mreq-shared` directory (`../mreq-shared` from this skill's directory). This file says what goes on the page; `MERMAID.md` says how to write each diagram figure, its colors and its legend.
+Read this file and `MERMAID.md`, at the paths this skill's `SKILL.md` gives. This file says what goes on the page; `MERMAID.md` says how to write each diagram figure, its colors and its legend.
 
 ## The content file
 
