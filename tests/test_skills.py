@@ -83,6 +83,8 @@ class SkillTextTest(unittest.TestCase):
         for name in SCRIPTS:
             text = section(skill_text(name), "## The script")
             self.assertIn("Never run a command or read a path that still holds `${`", text, name)
+            # An empty variable makes uv fail too; switching to python would only repeat the bad path.
+            self.assertIn("neither is a script path that does not exist", text, name)
 
     def test_shared_files_are_named_by_the_skill_directory(self):
         # A bare "../mreq-shared" leaves the agent to guess the start; it often takes the project root.
