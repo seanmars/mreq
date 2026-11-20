@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # mreq-close
 
-Run only when the user typed `/mreq-close`. If you are reading this file on your own, stop and ask the user to run `/mreq-close <path>`.
+Run only when the user invoked this skill: typed `/mreq-close` (`/mreq:mreq-close` with the Claude Code plugin, `$mreq-close` in Codex), or asked for it by name. If you are reading this file on your own, stop and ask the user to run `/mreq-close <path>`.
 
 Check the code against one `.mreq/` document, then delete the document. The code is the record of what was done.
 
@@ -19,26 +19,38 @@ Write and reply in the language the agent instruction files (`AGENTS.md`, `CLAUD
 
 ## Asking the user
 
-When the `AskUserQuestion` tool is available, ask with it: up to 4 independent questions at once, the recommended option first and labelled "(Recommended)". Otherwise, ask in plain text as a numbered list, the recommended option first, and wait for the answer.
+When your agent has a tool that asks the user option questions, ask with it: `AskUserQuestion` in Claude Code, `ask_user_question` in Grok, `ask_question` in Antigravity, `request_user_input` in Codex. Ask up to 4 independent questions at once, or as many as the tool takes, the recommended option first and labelled "(Recommended)". When a question has more options than the tool takes, ask that question in plain text. When the tool returns an error (Codex allows it only in Plan mode), ask in plain text for the rest of this conversation. Without such a tool, ask in plain text as a numbered list, the recommended option first, and wait for the answer.
 
 Ask with options, so the user picks instead of types:
 - Give every question 2 to 4 options. Keep each label short (1 to 5 words) and put the detail in its description. Keep each `header` to 12 characters or fewer.
-- Never add an "Other" option: `AskUserQuestion` adds a free-text answer to every question. When an answer may need a value no option holds (a path, a correction), say in the question that the user can type it there.
+- Never add an "Other" option: these tools add a free-text answer to every question. When an answer may need a value no option holds (a path, a correction), say in the question that the user can type it there.
 - Ask for a typed answer only when no option can hold it, such as an error message only the user has seen. When you can guess the answer, offer the guess as an option.
 - Never ask the user to type a command that this skill's steps say to run for them.
 
 ## The script
 
-The script is `${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py`. `${CLAUDE_SKILL_DIR}` is this skill's directory; when it still reads as a variable, put the directory's absolute path in its place. Every document path you show the user is the absolute path the script printed.
+The script is `${CLAUDE_SKILL_DIR}/scripts/mreq.py`. `${CLAUDE_SKILL_DIR}` is the directory that holds this SKILL.md. Claude Code fills in its absolute path; other agents may leave the variable as written. Then put the absolute path of this SKILL.md's directory in its place yourself, before the first command or file read that uses it: the directory of the path you loaded this file from (Codex gives it in the skill's `<path>`, Grok in the skill list's `Absolute path`). Never run a command or read a path that still holds `${`: the shell reads it as an empty variable, and the command or read fails. An error that names a path starting with `/scripts/` means the variable was empty: put the path in its place and run the same command again. Every document path you show the user is the absolute path the script printed.
 
-Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/../mreq-shared/scripts/mreq.py" <command>` first, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create), run `python` in place of `uv run`; when `python` is not found, run `python3`. An error the script prints is not a reason to switch, and neither is a denied command: follow "When a tool call is denied". The allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
+Write every path with `/`, never with `\`, on Windows too: the script prints its paths that way, and a shell can drop a `\`. Run `uv run "${CLAUDE_SKILL_DIR}/scripts/mreq.py" <command>` first, with the script's path always in double quotes. When `uv` fails before the script starts (`uv` is not found, or `uv` prints its own error, for example a cache directory it cannot create or a download a sandbox blocks), run `python` in place of `uv run`; when `python` is not found, run `python3`. On Windows, a `python` or `python3` that prints nothing, or only a Microsoft Store hint, is not found. Once one of them starts the script, run every later script command in this conversation with it, and do not try `uv run` again. An error the script prints is not a reason to switch, and neither is a script path that does not exist (`Failed to spawn`, `can't open file`): fix the path instead. A denied command is not a reason either: follow "When a tool call is denied". In Claude Code, the allow rule for a denied script command is `Bash(uv run *mreq.py*)` or `PowerShell(uv run *mreq.py*)` (`python` or `python3` in place of `uv run` when you ran it).
 
 - `list`: every document, most recently updated first. An item with `warning` or `error` is a file the script cannot trust: name it to the user.
 - `delete <path>`: deletes the document. It refuses any file outside `.mreq/`.
 
 ## When a tool call is denied
 
-Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any command, Write, or Edit is denied, do not retry it another way: no other shell, no other path, no other form of the command. Show the user each denied command or path exactly as you ran it, with one allow rule for each. Use the rule this file gives for it; otherwise, for a command, write the tool you ran it in and the exact command, with no `*`, for example `Bash(python -m unittest discover -s tests)`. Never merge two denied commands into one rule, and never suggest a broader rule. Then stop.
+Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any command, Write, or Edit is denied, do not retry it another way: no other shell, no other path, no other form of the command. Show the user each denied command or path exactly as you ran it. In Claude Code, add one allow rule for each: use the rule this file gives for it; otherwise, for a command, write the tool you ran it in and the exact command, with no `*`, for example `Bash(python -m unittest discover -s tests)`. Never merge two denied commands into one rule, and never suggest a broader rule. Other agents write their rules in other forms: give only the command or path. Then stop.
+
+## Running another mreq skill
+
+When a step says to run another mreq skill (`mreq-apply` or `mreq-grill`), start it the way your agent allows, with the arguments the step gives:
+- **With a skill tool** (Claude Code: the Skill tool): call it by the name your skill list shows: `mreq:mreq-apply` when mreq is installed as the Claude Code plugin, `mreq-apply` otherwise. When the call fails with `Unknown skill` and names the skill to use (`Did you mean ...`), call that name once: this is not a denied call.
+- **Without one** (Codex, Grok, Antigravity): read that skill's SKILL.md in full, for example `${CLAUDE_SKILL_DIR}/../mreq-apply/SKILL.md`, and follow it from its first step, with the arguments as its input. In that file, the skill-directory variable means that skill's directory, not this one.
+
+When the skill is not installed (the skill tool knows no such skill and names no other, or its SKILL.md does not exist), tell the user which skill to install, and stop.
+
+When the call is denied, give the user the command that runs it, for example `/mreq-apply <path>`, and the Claude Code allow rule for the name you called, for example `Skill(mreq:mreq-apply)`, then stop. After a denied call, never read the skill's SKILL.md and follow it yourself: the user decides.
+
+When you give the user a command to type, write it the way their agent runs a skill: `/mreq-close <path>` in Claude Code, Grok and Antigravity (`/mreq:mreq-close <path>` also works with the plugin), `$mreq-close <path>` in Codex.
 
 ## Steps
 
@@ -110,8 +122,8 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Handing over to mreq-apply
 
 Do this only where a step above says so, and never delete the document then.
-1. Run the `mreq-apply` skill (in Claude Code: with the Skill tool). Pass the document's absolute path as its argument, then each finding or failure on its own line: the document's line, what the code does, and its `path:line` or the failing command.
-2. Do nothing more in this skill. When the Skill call is denied, give the user `/mreq-apply <path>` with the findings, and the allow rule `Skill(mreq-apply)`, then stop. Never read another skill's SKILL.md and follow it yourself.
+1. Run the `mreq-apply` skill (see "Running another mreq skill"). Pass the document's absolute path as its argument, then each finding or failure on its own line: the document's line, what the code does, and its `path:line` or the failing command.
+2. Do nothing more in this skill. When the call is denied, give the user the findings with the command.
 
 ## Guardrails
 

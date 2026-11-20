@@ -1,4 +1,4 @@
-"""page.py: one script builds the pages of mreq-how and mreq-graph."""
+"""page.py: mreq-how and mreq-graph each hold a copy, and run it with their own kind."""
 
 import subprocess
 import sys
@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGE = ROOT / "skills" / "mreq-shared" / "scripts" / "page.py"
+PAGES = {kind: ROOT / "skills" / f"mreq-{kind}" / "scripts" / "page.py" for kind in ("how", "graph")}
 
 SECTION = '<section id="overview"><h2>Overview</h2><p>Text.</p></section>\n'
 FIGURE = """<figure class="diagram">
@@ -29,9 +29,11 @@ class PageTest(unittest.TestCase):
         # The script writes under the directory it runs in, so each test gets its own.
         self.root = Path(tmp.name)
 
-    def run_page(self, *args):
+    def run_page(self, *args, skill=None):
+        # Each kind runs the script of its own skill, as the skill does.
+        page = PAGES[skill or (args[0] if args and args[0] in PAGES else "how")]
         return subprocess.run(
-            [sys.executable, str(PAGE), *args], cwd=self.root, capture_output=True, text=True, encoding="utf-8"
+            [sys.executable, str(page), *args], cwd=self.root, capture_output=True, text=True, encoding="utf-8"
         )
 
     def content_file(self, kind, text):
@@ -86,6 +88,15 @@ class PageTest(unittest.TestCase):
         self.assertEqual(run.returncode, 1)
         self.assertIn("is not under", run.stdout)
 
+    def test_the_other_skills_script_refuses_to_build(self):
+        # mreq-how's script has mreq-how's skeleton beside it, so it cannot build a graph page.
+        content = self.content_file("graph", GRAPH)
+        run = self.run_page("graph", "build", str(content), skill="how")
+        self.assertEqual(run.returncode, 1)
+        self.assertIn("is not the mreq-graph skeleton", run.stdout)
+        self.assertIn("run the page.py in the mreq-graph skill", run.stdout)
+        self.assertFalse(self.built_page(content).exists())
+
     def test_fixed_colors_fail_the_build(self):
         content = self.content_file("graph", GRAPH.replace("a[Start] --> b[End]", "a[Start] --> b[End]\n  style a fill:#f00"))
         run = self.run_page("graph", "build", str(content))
@@ -93,8 +104,8 @@ class PageTest(unittest.TestCase):
         self.assertIn("fixed colors", run.stdout)
 
     def test_messages_name_the_file_that_holds_the_rule(self):
-        # The figure and the colors are in mreq-shared/MERMAID.md, not in a skill's WRITING.md.
-        mermaid = (ROOT / "skills" / "mreq-shared" / "MERMAID.md").read_text(encoding="utf-8")
+        # The figure and the colors are in MERMAID.md, not in a skill's WRITING.md.
+        mermaid = (ROOT / "shared" / "MERMAID.md").read_text(encoding="utf-8")
         self.assertIn("## Colors", mermaid)
         self.assertIn("## The figure", mermaid)
         colors = GRAPH.replace("a[Start] --> b[End]", "a[Start] --> b[End]\n  style a fill:#f00")

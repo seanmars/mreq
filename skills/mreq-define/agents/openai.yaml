@@ -1,0 +1,6 @@
+interface:
+  display_name: "mreq-define"
+  short_description: "Start new work: interview, confirm a restatement, then write a .mreq/ task document."
+
+policy:
+  allow_implicit_invocation: false

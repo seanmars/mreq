@@ -1,5 +1,52 @@
 # Changelog
 
+## 0.23.0
+
+### Changed
+
+- 每個 skill 都帶著自己需要的檔案, 不再讀取其他 skill 的目錄. 可以只安裝部分 skill.
+  - `mreq-define`, `mreq-grill`, `mreq-apply`, `mreq-close` 各有一份 `scripts/mreq.py`. `mreq-define` 另有 `templates/`. `mreq-define` 與 `mreq-grill` 各有一份 `GRILL.md`.
+  - `mreq-how` 與 `mreq-graph` 各有一份 `scripts/page.py`, `scripts/check.mjs`, `vendor/` (Pele) 與 `MERMAID.md`.
+  - script 的路徑是 `${CLAUDE_SKILL_DIR}/scripts/<script>`, 不再有 `/../mreq-shared`. `page.py` 的第一個參數仍然是 `how` 或 `graph`.
+- `page.py` 只讀自己 skill 的 `skeleton.html`. 參數與 skill 不符時 (例: 用 `mreq-how` 的 `page.py` 執行 `graph build`), build 失敗, 並指出要用哪一個 skill 的 `page.py`.
+- 只有 `mreq-define` 的 `mreq.py` 能執行 `new`. 其他 skill 的 `mreq.py` 沒有 `templates/`, 執行 `new` 時會指出要用 `mreq-define` 的 script.
+- 交接的目標 skill 沒有安裝時, skill 告知使用者要安裝哪一個 skill, 然後停止.
+- 多個 skill 使用的檔案放在 repository 的 `shared/`. `tools/sync.py` 把它們複製到各 skill; `tools/sync.py --check` 與測試會檢查每份複本和來源相同.
+
+### Removed
+
+- `mreq-shared` skill. 用 `npx skills` 安裝過舊版時, 先執行 `npx skills update`, 再執行 `npx skills remove mreq-shared` (安裝時用了 `-g` 就加 `-g`). 順序不能反過來: 舊版的 skill 還需要 `mreq-shared`. 留著不會造成錯誤, 但沒有 skill 會使用它. 用 Claude Code plugin 安裝時, 只需要更新 plugin.
+
+## 0.22.0
+
+### Added
+
+- 只限使用者呼叫的 skill (`mreq-define`, `mreq-close`, `mreq-how`, `mreq-graph`, `mreq-pro`, `mreq-shared`) 加上 `agents/openai.yaml`, 內容是 `allow_implicit_invocation: false`. Codex 不讀 `disable-model-invocation`, 改讀這個設定.
+- `mreq-shared` 加上 `disable-slash-command: true`. Antigravity 用這個設定把它從 slash command 中移除.
+- `mreq-pro` 加上 `argument-hint`. agent 沒有替換 `$ARGUMENTS` 時, prompt 就是使用者在呼叫 skill 時給的文字.
+- `.gitattributes` 讓文字檔一律使用 LF.
+
+### Changed
+
+- 新的共用段落 "Running another mreq skill" (`mreq-define`, `mreq-grill`, `mreq-apply`, `mreq-close`): 交接到另一個 skill 時:
+  - 有 skill tool 的 agent (Claude Code), 用 skill 清單裡顯示的名稱呼叫. 用 plugin 安裝時是 `mreq:mreq-apply`. 收到 `Unknown skill ... Did you mean` 時, 用建議的名稱重試一次.
+  - 沒有 skill tool 的 agent (Codex, Grok, Antigravity), 讀取 `../mreq-<name>/SKILL.md` 並照著執行.
+  - 只有在呼叫被拒絕之後, 才禁止自己讀取 SKILL.md.
+- 只限使用者呼叫的 skill 接受每種呼叫方式: `/mreq-x`, `/mreq:mreq-x`, Codex 的 `$mreq-x`, 或直接點名. 原本只接受 `/mreq-x`.
+- 給使用者的指令依照 agent 的寫法: Codex 寫 `$mreq-close <path>`, 其他 agent 寫 `/mreq-close <path>`.
+- "Asking the user" 列出各 agent 的提問 tool (`AskUserQuestion`, `ask_user_question`, `ask_question`, `request_user_input`). 一個問題的選項比 tool 能接受的多時, 這一題改用純文字提問. tool 回傳錯誤後, 這個對話的其餘問題都改用純文字.
+- 只有 Claude Code 會附上 allow rule. 其他 agent 只回報被拒絕的指令或路徑.
+- explorer subagent 列出各 agent 的類型: Codex 的 `explorer`, Grok 的 `explore`, Antigravity 的 `research`.
+- README 依 agent 列出安裝指令, 安裝位置與呼叫方式.
+
+### Fixed
+
+- 用 plugin 安裝時, skill 交接會先出現 `Unknown skill: mreq-apply` 失敗, 然後才用 `mreq:mreq-apply` 重試成功.
+- 在 Codex, Antigravity, 以及 Grok 的交接中, `${CLAUDE_SKILL_DIR}` 不會被替換, 所以 script 指令會失敗. 現在 skill 要求在執行第一個指令之前自行替換成絕對路徑. 任何還含有 `${` 的指令都不能執行.
+- 共用檔的路徑改用 `${CLAUDE_SKILL_DIR}` 寫成完整路徑: `GRILL.md`, `MERMAID.md`, `WRITING.md`, `EXPLORER.md`, 以及交接時讀取的 SKILL.md. 原本寫 "`../mreq-shared` from this skill's directory", 要由 model 自己組出路徑, 可能被當成相對於專案根目錄. 「不使用含有 `${` 的路徑」的規則也擴大到讀檔. `WRITING.md` 不會被替換變數, 所以改成以 SKILL.md 給的路徑為準.
+- 其他 agent 沒有替換 `${CLAUDE_SKILL_DIR}` 時, skill 會說明去哪裡找 SKILL.md 的路徑: Codex 的 `<path>`, Grok skill 清單的 `Absolute path`, 或 model 自己讀檔時用的路徑. 錯誤訊息中的路徑以 `/../mreq-shared` 開頭時, 表示變數是空的, 要補上路徑後重新執行. script 路徑不存在 (`Failed to spawn`, `can't open file`) 不是換用 `python` 的理由.
+- sandbox 封鎖 `uv` 時, 每個 script 指令都會先失敗一次. 現在第一次成功的 runner 會用在同一個對話的其餘指令. Windows 上 Microsoft Store 的 `python3` stub 也視為找不到.
+
 ## 0.21.0
 
 ### Added
