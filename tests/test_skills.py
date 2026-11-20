@@ -65,6 +65,11 @@ class SkillTextTest(unittest.TestCase):
             self.assertIn("`GRILL.md` in the `mreq-shared` directory", text, name)
             self.assertNotIn("**Unknown unknowns**", text, name)
 
+    def test_skill_files_end_lines_with_lf(self):
+        for path in SKILLS_DIR.rglob("*"):
+            if path.suffix in (".md", ".yaml"):
+                self.assertNotIn(b"\r", path.read_bytes(), path.as_posix())
+
     def test_the_page_skills_name_their_own_kind(self):
         for name in ("how", "graph"):
             text = skill_text(name)
