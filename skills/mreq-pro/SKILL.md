@@ -1,12 +1,15 @@
 ---
 name: mreq-pro
 description: "Rewrite a prompt so it asks for what a top expert would do: deeper, not bigger. Use only when the user invokes it: /mreq-pro, or $mreq-pro in Codex."
+argument-hint: "[<prompt>]"
 disable-model-invocation: true
 ---
 
 Sharpen the prompt below (or, if none is given, my most recent request). Make it deeper, not bigger. Depth means sharper judgment, better source material, stronger methods and an outside check. It does not mean more deliverables, sections or steps.
 
 Prompt: $ARGUMENTS
+
+When the Prompt line above holds only a placeholder word, not a prompt, my agent did not fill it in: the prompt is the text I gave with this skill.
 
 First, answer these briefly (2-4 lines each):
 
