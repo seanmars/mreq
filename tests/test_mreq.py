@@ -8,7 +8,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MREQ = ROOT / "skills" / "mreq-shared" / "scripts" / "mreq.py"
+# Every task skill holds a copy of the script; only mreq-define holds the templates "new" reads.
+MREQ = ROOT / "skills" / "mreq-define" / "scripts" / "mreq.py"
 
 
 class MreqTest(unittest.TestCase):
@@ -36,6 +37,16 @@ class MreqTest(unittest.TestCase):
         text = path.read_text(encoding="utf-8")
         self.assertIn("# 輸入 1,000 時當掉", text)
         self.assertIn("## Root Cause", text)
+
+    def test_new_without_the_templates_names_the_skill_that_has_them(self):
+        other = ROOT / "skills" / "mreq-apply" / "scripts" / "mreq.py"
+        run = subprocess.run(
+            [sys.executable, str(other), "new", "--schema", "task", "--slug", "fix-it", "--title=T", "--desc=D"],
+            cwd=self.root, capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(run.returncode, 1)
+        self.assertIn("run the mreq.py in the mreq-define skill", run.stderr)
+        self.assertFalse((self.root / ".mreq").exists())
 
     def test_every_printed_path_uses_forward_slashes(self):
         path = self.new_document()["path"]

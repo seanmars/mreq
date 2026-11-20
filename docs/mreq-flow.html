@@ -248,7 +248,7 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
 <header class="hero">
   <div class="seal">流程圖</div>
   <h1>mreq skill 流程圖</h1>
-  <p>從需求到收尾的完整流程. 內容依 <code>skills/</code> 底下每個 skill 的 <code>SKILL.md</code> 與 <code>mreq-shared</code> 的共用檔案整理. 每張圖都可以用右上角的 + 與 − 按鈕縮放, 放大後可以拖曳.</p>
+  <p>從需求到收尾的完整流程. 內容依 <code>skills/</code> 底下每個 skill 的 <code>SKILL.md</code> 與它自己的檔案整理. 每張圖都可以用右上角的 + 與 − 按鈕縮放, 放大後可以拖曳.</p>
 </header>
 
 <!-- ============================== 0 ============================== -->
@@ -434,7 +434,7 @@ stateDiagram-v2
 
 <section class="block" id="parts">
   <h2><span class="stamp sub" aria-hidden="true">件</span>元件與呼叫權限</h2>
-  <p>共用的檔案都放在 <code>mreq-shared</code>. 其他 skill 從自己的目錄用 <code>../mreq-shared</code> 找到它, 所以安裝時一定要包含 <code>mreq-shared</code>. 執行其他 skill 時, 不修改這些檔案.</p>
+  <p>每個 skill 都帶著自己需要的檔案, 不讀其他 skill 的目錄. 所以可以只安裝部分 skill. 多個 skill 使用的檔案, 每個 skill 各有一份複本. 執行 skill 時, 不修改這些檔案.</p>
   <table>
     <tr><th>skill</th><th>輸入</th><th>使用者</th><th>agent</th><th>front matter</th></tr>
     <tr><td><code>mreq-define</code></td><td><code>&lt;request&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
@@ -444,9 +444,8 @@ stateDiagram-v2
     <tr><td><code>mreq-how</code></td><td><code>[--plain] &lt;question&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-graph</code></td><td><code>&lt;description&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-pro</code></td><td><code>[&lt;prompt&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
-    <tr><td><code>mreq-shared</code></td><td>沒有</td><td>不行</td><td>不行</td><td><code>disable-model-invocation: true</code>, <code>user-invocable: false</code></td></tr>
   </table>
-  <p>這些限制只適用 Claude Code. 其他 agent 不讀 <code>disable-model-invocation</code>. 所以「只有使用者能呼叫」的 skill 都在開頭寫明: agent 自己讀到這個檔案時, 停下來, 請使用者輸入指令. <code>mreq-pro</code> 是例外: 它只用 description 寫明 "Use only when invoked as /mreq-pro". <code>mreq-shared</code> 不是任務: agent 讀到它時, 告訴使用者哪一個 mreq skill 適合.</p>
+  <p>這些限制只適用 Claude Code. 其他 agent 不讀 <code>disable-model-invocation</code>. 所以「只有使用者能呼叫」的 skill 都在開頭寫明: agent 自己讀到這個檔案時, 停下來, 請使用者輸入指令. <code>mreq-pro</code> 是例外: 它只用 description 寫明 "Use only when invoked as /mreq-pro".</p>
 
   <h3>任務文件的 skill 與 mreq.py</h3>
   <figure class="diagram">
@@ -460,7 +459,7 @@ flowchart TD
     GRILL["mreq-grill"]:::skill
     APPLY["mreq-apply"]:::skill
   end
-  subgraph PY["mreq-shared/scripts/mreq.py"]
+  subgraph PY["每個 skill 自己的 scripts/mreq.py"]
     NEW["new"]:::script
     LIST["list [--open]"]:::script
     UPD["update [--status]"]:::script
@@ -471,38 +470,38 @@ flowchart TD
   GRILL --> LIST & UPD
   APPLY --> LIST & UPD & PROG
   CLOSE --> LIST & DEL
-  NEW -- "讀取" --> TPL[("mreq-shared/templates/<br>feature, issue,<br>refactor, task")]:::doc
+  NEW -- "讀取" --> TPL[("mreq-define/templates/<br>feature, issue,<br>refactor, task")]:::doc
   NEW & UPD & DEL --> MREQ[(".mreq/*.md<br>位於 git root")]:::doc
     </script>
-    <figcaption>四個 skill 使用的 mreq.py 指令. mreq-define 與 mreq-grill 另外讀 mreq-shared/GRILL.md</figcaption>
+    <figcaption>四個 skill 各自執行自己的 mreq.py. mreq-define 與 mreq-grill 另外讀自己的 GRILL.md</figcaption>
   </figure>
 
   <h3>頁面的 skill 與 page.py</h3>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  HOW["mreq-how"]:::skill -- "page.py how" --> PAGEPY["mreq-shared/scripts/page.py<br>new, build"]:::script
+  HOW["mreq-how"]:::skill -- "page.py how" --> PAGEPY["自己的 scripts/page.py<br>new, build"]:::script
   GRAPH["mreq-graph"]:::skill -- "page.py graph" --> PAGEPY
-  PAGEPY -- "套用" --> SK[("各 skill 自己的<br>skeleton.html")]:::doc
-  PAGEPY -- "內嵌" --> PELE[("mreq-shared/vendor/<br>pele.global.js")]:::doc
-  PAGEPY -- "有 Node 時<br>檢查每張圖" --> CHK["mreq-shared/scripts/<br>check.mjs"]:::script
+  PAGEPY -- "套用" --> SK[("自己的<br>skeleton.html")]:::doc
+  PAGEPY -- "內嵌" --> PELE[("自己的 vendor/<br>pele.global.js")]:::doc
+  PAGEPY -- "有 Node 時<br>檢查每張圖" --> CHK["自己的 scripts/<br>check.mjs"]:::script
   PAGEPY -- "new: 內容檔<br>build: 頁面" --> OUT[(".mreq/how/ 或 .mreq/graph/<br>位於 session root")]:::doc
     </script>
-    <figcaption>第一個參數 how 或 graph 決定輸出目錄與使用哪一份 skeleton.html</figcaption>
+    <figcaption>兩個 skill 各有一份 page.py, skeleton.html, Pele 與 check.mjs. 第一個參數 how 或 graph 決定輸出目錄與頁面的檢查, 必須和 skill 相同</figcaption>
   </figure>
 
-  <h3>mreq-shared 的檔案</h3>
+  <h3>多個 skill 使用的檔案</h3>
   <table>
-    <tr><th>檔案</th><th>內容</th><th>使用者</th></tr>
+    <tr><th>檔案</th><th>內容</th><th>有複本的 skill</th></tr>
     <tr><td><code>scripts/mreq.py</code></td><td>建立, 列出, 更新, 顯示進度, 刪除 <code>.mreq/</code> 底下的任務文件</td><td>define, grill, apply, close</td></tr>
-    <tr><td><code>templates/</code></td><td>每種 schema 一份 template</td><td><code>mreq.py new</code></td></tr>
     <tr><td><code>scripts/page.py</code></td><td>建立並檢查離線頁面</td><td>how, graph</td></tr>
     <tr><td><code>GRILL.md</code></td><td>grill 的方法: 四象限, 後續輪次, 訪談規則, 限制</td><td>grill, define</td></tr>
     <tr><td><code>MERMAID.md</code></td><td>圖的寫法: figure 的格式, 大小, 顏色, Mermaid 規則, 圖例</td><td>how, graph</td></tr>
-    <tr><td><code>vendor/pele.global.js</code></td><td><a href="https://pele.run/">Pele</a>, 繪製 Mermaid 圖. <code>page.py build</code> 把它內嵌在每個頁面</td><td><code>page.py</code></td></tr>
-    <tr><td><code>scripts/check.mjs</code></td><td>在 Node 裡用 Pele 繪製每張圖, 讓 build 看到瀏覽器會顯示的錯誤</td><td><code>page.py</code></td></tr>
+    <tr><td><code>vendor/pele.global.js</code></td><td><a href="https://pele.run/">Pele</a>, 繪製 Mermaid 圖. <code>page.py build</code> 把它內嵌在每個頁面</td><td>how, graph</td></tr>
+    <tr><td><code>scripts/check.mjs</code></td><td>在 Node 裡用 Pele 繪製每張圖, 讓 build 看到瀏覽器會顯示的錯誤</td><td>how, graph</td></tr>
   </table>
-  <p>各 skill 自己的檔案: <code>mreq-define/EXPLORER.md</code>; <code>mreq-how/EXPLORER.md</code>, <code>WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-graph/WRITING.md</code>, <code>skeleton.html</code>.</p>
+  <p>這些檔案的來源在 repository 的 <code>shared/</code>. <code>tools/sync.py</code> 把它們複製到各 skill; 測試會檢查每份複本和來源相同.</p>
+  <p>只有一個 skill 使用的檔案: <code>mreq-define/EXPLORER.md</code>, <code>templates/</code> (每種 schema 一份 template, <code>mreq.py new</code> 讀取); <code>mreq-how/EXPLORER.md</code>, <code>WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-graph/WRITING.md</code>, <code>skeleton.html</code>.</p>
 
   <h3>mreq.py 指令</h3>
   <table class="cmd">
@@ -838,7 +837,7 @@ flowchart TD
     <tr><td>3. Unknown knowns</td><td>沒人說出口的前提</td><td>點出每一個, 用 <code>It holds</code> / <code>It does not hold</code> 確認. 理由寫在推薦選項的說明.</td></tr>
     <tr><td>4. Unknown unknowns</td><td>盲點</td><td>問 "什麼條件下這會失敗?", 再追問答案.</td></tr>
   </table>
-  <p>方法寫在 <code>mreq-shared/GRILL.md</code>. <code>mreq-grill</code> 用它 grill 文件; <code>mreq-define</code> 的 "先 grill, 不寫文件" 用它 grill 重述, 結論不寫回文件, 而是帶進下一次重述. 後兩個象限藏著真正的風險. 四個象限依序分開報告; 沒有發現的象限寫 "none found".</p>
+  <p>方法寫在 <code>GRILL.md</code>, <code>mreq-grill</code> 與 <code>mreq-define</code> 各有一份相同的複本. <code>mreq-grill</code> 用它 grill 文件; <code>mreq-define</code> 的 "先 grill, 不寫文件" 用它 grill 重述, 結論不寫回文件, 而是帶進下一次重述. 後兩個象限藏著真正的風險. 四個象限依序分開報告; 沒有發現的象限寫 "none found".</p>
   <ul>
     <li>事實自己在程式碼裡查. 只問使用者決策.</li>
     <li>agent 自己帶進來的事實也算 known: 先在程式碼或文件驗證. 無法驗證的事實列為假設, 不能當決策的理由.</li>
@@ -1326,7 +1325,7 @@ flowchart TD
 <!-- ============================== 8 ============================== -->
 <section class="block" id="pro">
   <h2><span class="stamp" aria-hidden="true">深</span>mreq-pro</h2>
-  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 結果只在對話裡, 不寫檔案, 也不使用 <code>mreq-shared</code>. 只有使用者輸入 <code>/mreq-pro</code> 才會執行.</p>
+  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 結果只在對話裡, 不寫檔案, 也不執行 script. 只有使用者輸入 <code>/mreq-pro</code> 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -1442,7 +1441,7 @@ flowchart TD
   </ul>
 </section>
 
-<footer>依 mreq repository 的 <code>skills/*/SKILL.md</code> 與 <code>skills/mreq-shared/</code> 整理 · 圖表由 Pele (MIT License) 離線繪製</footer>
+<footer>依 mreq repository 的 <code>skills/</code> 整理 · 圖表由 Pele (MIT License) 離線繪製</footer>
 </main>
 </div>
 

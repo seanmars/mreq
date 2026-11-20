@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- 每個 skill 都帶著自己需要的檔案, 不再讀取其他 skill 的目錄. 可以只安裝部分 skill.
+  - `mreq-define`, `mreq-grill`, `mreq-apply`, `mreq-close` 各有一份 `scripts/mreq.py`. `mreq-define` 另有 `templates/`. `mreq-define` 與 `mreq-grill` 各有一份 `GRILL.md`.
+  - `mreq-how` 與 `mreq-graph` 各有一份 `scripts/page.py`, `scripts/check.mjs`, `vendor/` (Pele) 與 `MERMAID.md`.
+  - script 的路徑是 `${CLAUDE_SKILL_DIR}/scripts/<script>`, 不再有 `/../mreq-shared`. `page.py` 的第一個參數仍然是 `how` 或 `graph`.
+- `page.py` 只讀自己 skill 的 `skeleton.html`. 參數與 skill 不符時 (例: 用 `mreq-how` 的 `page.py` 執行 `graph build`), build 失敗, 並指出要用哪一個 skill 的 `page.py`.
+- 只有 `mreq-define` 的 `mreq.py` 能執行 `new`. 其他 skill 的 `mreq.py` 沒有 `templates/`, 執行 `new` 時會指出要用 `mreq-define` 的 script.
+- 交接的目標 skill 沒有安裝時, skill 告知使用者要安裝哪一個 skill, 然後停止.
+- 多個 skill 使用的檔案放在 repository 的 `shared/`. `tools/sync.py` 把它們複製到各 skill; `tools/sync.py --check` 與測試會檢查每份複本和來源相同.
+
+### Removed
+
+- `mreq-shared` skill. 用 `npx skills` 安裝過舊版時, 更新後請手動刪除安裝位置裡的 `mreq-shared` 目錄 (例: `.agents/skills/mreq-shared`). 留著不會造成錯誤, 但沒有 skill 會使用它.
+
 ## 0.22.0
 
 ### Added

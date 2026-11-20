@@ -1,4 +1,7 @@
-"""The SKILL.md files repeat some text on purpose, so each skill works alone. These tests keep the copies the same."""
+"""The SKILL.md files repeat some text on purpose, so each skill works alone. These tests keep the copies the same.
+
+test_sync.py does the same for the files tools/sync.py copies from shared/.
+"""
 
 import re
 import unittest
@@ -21,7 +24,7 @@ RUN_RULE = "Write every path with `/`, never with `\\`, on Windows too"
 HANDOFF_SKILLS = ("define", "grill", "apply", "close")
 HANDOFF_SECTION = "## Running another mreq skill"
 # Only the user starts these. Each agent marks that its own way.
-USER_ONLY = ("define", "close", "how", "graph", "pro", "shared")
+USER_ONLY = ("define", "close", "how", "graph", "pro")
 
 
 def skill_text(name: str) -> str:
@@ -47,9 +50,9 @@ class SkillTextTest(unittest.TestCase):
     def test_each_skill_runs_its_script_by_the_quoted_skill_directory(self):
         for name, script in SCRIPTS.items():
             text = section(skill_text(name), "## The script")
-            self.assertIn(f'uv run "${{CLAUDE_SKILL_DIR}}/../mreq-shared/scripts/{script}"', text, name)
+            self.assertIn(f'uv run "${{CLAUDE_SKILL_DIR}}/scripts/{script}"', text, name)
             self.assertIn(RUN_RULE, text, name)
-            self.assertTrue((SKILLS_DIR / "mreq-shared" / "scripts" / script).is_file(), script)
+            self.assertTrue((SKILLS_DIR / f"mreq-{name}" / "scripts" / script).is_file(), name)
 
     def test_the_run_rule_is_stated_once_in_each_skill(self):
         # The section on denied calls holds it; a second copy in "The script" only drifts.
@@ -62,12 +65,12 @@ class SkillTextTest(unittest.TestCase):
             self.assertIsNone(re.search(r"\b[A-Za-z]:\\|\\[\w.-]+\\", text), path.as_posix())
 
     def test_the_grill_method_is_written_once(self):
-        # GRILL.md holds the four quadrants; the skills that grill point to it and keep no copy.
-        shared = (SKILLS_DIR / "mreq-shared" / "GRILL.md").read_text(encoding="utf-8")
+        # GRILL.md holds the four quadrants; the SKILL.md of each skill that grills points to it and repeats none of it.
+        shared = (ROOT / "shared" / "GRILL.md").read_text(encoding="utf-8")
         self.assertIn("**Unknown unknowns**", shared)
         for name in ("grill", "define"):
             text = skill_text(name)
-            self.assertIn("`GRILL.md` in the `mreq-shared` directory", text, name)
+            self.assertIn("Read `${CLAUDE_SKILL_DIR}/GRILL.md` and follow it.", text, name)
             self.assertNotIn("**Unknown unknowns**", text, name)
 
     def test_the_handoff_section_is_word_for_word_the_same(self):
@@ -86,12 +89,21 @@ class SkillTextTest(unittest.TestCase):
             # An empty variable makes uv fail too; switching to python would only repeat the bad path.
             self.assertIn("neither is a script path that does not exist", text, name)
 
-    def test_shared_files_are_named_by_the_skill_directory(self):
-        # A bare "../mreq-shared" leaves the agent to guess the start; it often takes the project root.
+    def test_reference_files_are_named_by_the_skill_directory(self):
+        # A bare file name leaves the agent to guess the start; it often takes the project root.
         for path in SKILLS_DIR.rglob("*.md"):
             self.assertNotIn("from this skill's directory", path.read_text(encoding="utf-8"), path.as_posix())
         for name, shared in (("define", "GRILL.md"), ("grill", "GRILL.md"), ("how", "MERMAID.md"), ("graph", "MERMAID.md")):
-            self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/../mreq-shared/{shared}`", skill_text(name), name)
+            self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/{shared}`", skill_text(name), name)
+            self.assertTrue((SKILLS_DIR / f"mreq-{name}" / shared).is_file(), name)
+
+    def test_a_skill_uses_only_the_files_in_its_own_directory(self):
+        # A path that leaves the skill directory makes the skill need another one.
+        # Only a handoff may: it reads the SKILL.md of the skill it starts.
+        for path in SKILLS_DIR.rglob("*.md"):
+            for target in re.findall(r"\.\./([^\s`\"')]*)", path.read_text(encoding="utf-8")):
+                self.assertRegex(target, r"^mreq-[a-z]+/SKILL\.md$", path.as_posix())
+        self.assertFalse((SKILLS_DIR / "mreq-shared").exists())
 
     def test_the_user_only_guard_takes_every_agents_invocation(self):
         for name in ("define", "close", "how", "graph"):

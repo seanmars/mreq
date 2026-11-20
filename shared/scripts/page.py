@@ -8,7 +8,7 @@
   page.py <how|graph> build <x.content.html>  assemble <x>.html from the skill's skeleton.html and check it
 
 The agent writes only a content file: header lines, "---", then the sections.
-The build inlines the Pele bundle (mreq-shared/vendor/pele.global.js), so the page draws its
+The build inlines the Pele bundle (vendor/pele.global.js in the skill), so the page draws its
 Mermaid diagrams offline. The browser shows a broken diagram as an error box the
 agent never sees, so the build renders every diagram with the same bundle in Node
 first. Without Node it still builds, and says the diagrams were not checked.
@@ -26,11 +26,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-# mreq-shared holds what mreq-how and mreq-graph share: this script, one Pele, one checker.
-SHARED_DIR = Path(__file__).resolve().parent.parent
-SKILLS_DIR = SHARED_DIR.parent
-PELE = SHARED_DIR / "vendor" / "pele.global.js"
-CHECKER = SHARED_DIR / "scripts" / "check.mjs"
+# The skill that holds this script holds every file it reads. mreq-how and mreq-graph each have a copy,
+# so the first argument must be the kind of the skill the script is in.
+SKILL_DIR = Path(__file__).resolve().parent.parent
+SKELETON = SKILL_DIR / "skeleton.html"
+PELE = SKILL_DIR / "vendor" / "pele.global.js"
+CHECKER = SKILL_DIR / "scripts" / "check.mjs"
 CONTENT_SUFFIX = ".content.html"
 NODE_TIMEOUT = 60
 # The diagram canvas in skeleton.html is about 820 px wide. A wider diagram is shrunk to fit, and below
@@ -43,7 +44,7 @@ MAX_WIDTH = 1100
 class Kind:
     """What differs between the two skills that build a page."""
 
-    name: str  # "how" or "graph": the output folder, and the skill that holds skeleton.html
+    name: str  # "how" or "graph": the output folder, and the skill this kind's skeleton.html is in
     subject: str  # the header key for what the user asked
     needs_diagram: bool
     slug_example: str
@@ -52,10 +53,6 @@ class Kind:
     def output_dir(self) -> Path:
         # The agent runs every command from the session root (no cd), so the cwd is that root.
         return Path.cwd() / ".mreq" / self.name
-
-    @property
-    def skeleton(self) -> Path:
-        return SKILLS_DIR / f"mreq-{self.name}" / "skeleton.html"
 
     @property
     def header_keys(self) -> tuple:
@@ -351,16 +348,23 @@ def build(kind: Kind, content_file: str) -> int:
     if problems:
         return fail(page, problems)
 
-    # The skeleton is no longer beside this script: name the skill to reinstall, not a traceback.
-    if not kind.skeleton.is_file():
-        return fail(page, [f"{show(kind.skeleton)} is missing; reinstall the mreq-{kind.name} skill"])
-    with open(kind.skeleton, encoding="utf-8", newline="") as file:
+    # A file of the skill is gone: name the skill to reinstall, not a traceback.
+    if not SKELETON.is_file():
+        return fail(page, [f"{show(SKELETON)} is missing; reinstall the mreq-{kind.name} skill"])
+    with open(SKELETON, encoding="utf-8", newline="") as file:
         skeleton = file.read()
     missing = [p for p in kind.placeholders if p not in skeleton]
     if missing:
-        return fail(page, ["skeleton.html lost its placeholders; reinstall the skill"])
+        # The other skill's script ran with this kind, or the skeleton was edited.
+        return fail(
+            page,
+            [
+                f"{show(SKELETON)} is not the mreq-{kind.name} skeleton (no {missing[0]});"
+                f" run the page.py in the mreq-{kind.name} skill, or reinstall that skill"
+            ],
+        )
     if not PELE.is_file():
-        return fail(page, [f"{show(PELE)} is missing; reinstall the mreq-shared skill"])
+        return fail(page, [f"{show(PELE)} is missing; reinstall the mreq-{kind.name} skill"])
     pele = PELE.read_text(encoding="utf-8")
     page.write_text(assemble(kind, skeleton, pele, header, body), encoding="utf-8", newline="")
     if warning:

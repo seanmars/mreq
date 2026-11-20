@@ -1,6 +1,0 @@
-interface:
-  display_name: "mreq-shared"
-  short_description: "Shared files for the other mreq skills. Never run it on its own."
-
-policy:
-  allow_implicit_invocation: false

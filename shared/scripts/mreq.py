@@ -223,6 +223,10 @@ def cmd_new(args: argparse.Namespace) -> dict:
     for name in ("title", "desc"):
         if re.search(r"[\r\n]", getattr(args, name)):
             raise SystemExit(f"invalid --{name}: write it on one line")
+    # Only mreq-define holds the templates: the other skills have this script, and never run "new".
+    template = TEMPLATE_DIR / f"{args.schema}.md"
+    if not template.is_file():
+        raise SystemExit(f"new: {show(template)} is missing; run the mreq.py in the mreq-define skill, or reinstall that skill")
     stamp = datetime.now()
     created = stamp.strftime("%Y-%m-%d %H:%M:%S")
     directory = mreq_directory()
@@ -236,7 +240,7 @@ def cmd_new(args: argparse.Namespace) -> dict:
         "status": "draft",
         "updated": created,
     }
-    body = read_text(TEMPLATE_DIR / f"{args.schema}.md").replace("{{title}}", args.title)
+    body = read_text(template).replace("{{title}}", args.title)
     # "x" creates the file or fails, so two runs in the same second cannot overwrite each other.
     try:
         with path.open("x", encoding="utf-8", newline="\n") as file:

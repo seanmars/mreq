@@ -11,7 +11,6 @@
 | `mreq-how` | 先確認問題的解讀,再產生解說程式碼的離線 HTML,附 Mermaid 圖表與圖例,放在 session root 的 `.mreq/how/`. 加 `--plain` 改寫給企劃, PM 等非程式人員: 用功能名詞, 不放程式碼位置 | 只有使用者 |
 | `mreq-graph` | 先確認描述的解讀,再把描述畫成 Mermaid 圖表,產生附圖例的離線 HTML,放在 session root 的 `.mreq/graph/` | 只有使用者 |
 | `mreq-pro` | 改寫 prompt, 要求頂尖專家的做法: 更深, 不是更大. 先回答關鍵難點, 原始資料, 方法與工具, 外部驗證, 再給出可複製的新 prompt. 沒有給 prompt 時, 改寫最近一次的需求 | 只有使用者 |
-| `mreq-shared` | 不執行任何任務. 放其他 skill 共用的 script, template, Pele, grill 方法, 與 Mermaid 規則 | 沒有人 |
 
 「誰能呼叫」由各 agent 自己的設定控制. Claude Code, Grok 與 Antigravity 讀 SKILL.md 的 `disable-model-invocation`. Codex 讀各 skill 的 `agents/openai.yaml` (`allow_implicit_invocation: false`). 其他 agent 可能兩者都不讀, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
 
@@ -29,7 +28,7 @@ agent 有選項提問的 tool 時, 每個問題都用選項回答: Claude Code �
 
 ## 安裝
 
-請一次安裝全部 skill. 其他 skill 都使用 `mreq-shared` 裡的檔案, 沒有 `mreq-shared` 就不能執行. 下面兩種方式選一種, 不要同時使用.
+每個 skill 都帶著自己需要的檔案, 所以可以只安裝部分 skill. 下面兩種方式選一種, 不要同時使用.
 
 ### Claude Code plugin
 
@@ -54,7 +53,7 @@ npx skills add seanmars/mreq --skill '*' -a codex
 | Grok Build | `grok` | `.grok/skills/` | `/mreq-define <request>` |
 | Antigravity | `antigravity` | `.agents/skills/` | `/mreq-define <request>` |
 
-- 只安裝部分 skill 時, 一定要包含 `mreq-shared`.
+- 只安裝部分 skill 時, 自動接續只能接到已安裝的 skill. 例: `mreq-define` 接 `mreq-apply`, 兩個都要安裝.
 - 請安裝在 project, 不要加 `-g`. Codex 與 Antigravity 的 sandbox 可能讀不到 home 目錄下的 skill.
 - 已經用 plugin 安裝時, 不要再用 `-a claude-code` 安裝. Claude Code 會同時載入兩份.
 - sandbox 封鎖 `uv` 時 (沒有網路, 或 uv cache 不可寫入), skill 會改用 `python`. 同一個對話只會失敗一次.
@@ -71,13 +70,17 @@ npx skills add seanmars/mreq --skill '*' -a codex
 .claude-plugin/
 └── marketplace.json  # Claude Code plugin marketplace, plugin 為整個 repo
 skills/           # 只限使用者呼叫的 skill 另有 agents/openai.yaml (Codex)
-├── mreq-define/  # SKILL.md, EXPLORER.md
-├── mreq-grill/
-├── mreq-apply/
-├── mreq-close/
-├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html
-├── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html
-├── mreq-pro/
-└── mreq-shared/  # 共用: scripts/mreq.py, scripts/page.py, templates/, scripts/check.mjs, vendor/ (Pele), GRILL.md, MERMAID.md
+├── mreq-define/  # SKILL.md, EXPLORER.md, templates/, 複本: scripts/mreq.py, GRILL.md
+├── mreq-grill/   # 複本: scripts/mreq.py, GRILL.md
+├── mreq-apply/   # 複本: scripts/mreq.py
+├── mreq-close/   # 複本: scripts/mreq.py
+├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html, 複本: scripts/page.py, scripts/check.mjs, vendor/ (Pele), MERMAID.md
+├── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html, 複本同 mreq-how
+└── mreq-pro/
+shared/           # 複本的來源, 不是 skill: scripts/, vendor/, GRILL.md, MERMAID.md
+tools/
+└── sync.py       # 把 shared/ 的檔案複製到使用它的 skill
 tests/            # python -m unittest discover -s tests
 ```
+
+多個 skill 使用的檔案只在 `shared/` 修改. 修改後執行 `python tools/sync.py`. 不要直接修改 skill 裡的複本: 複本與 `shared/` 不同時, 測試會失敗.
