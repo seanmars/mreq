@@ -1,0 +1,6 @@
+interface:
+  display_name: "mreq-pro"
+  short_description: "Rewrite a prompt so it asks for what a top expert would do."
+
+policy:
+  allow_implicit_invocation: false

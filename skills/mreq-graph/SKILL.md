@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # mreq-graph
 
-Run only when the user typed `/mreq-graph`. If you are reading this file on your own, stop and ask the user to run `/mreq-graph <description>`.
+Run only when the user invoked this skill: typed `/mreq-graph` (`/mreq:mreq-graph` with the Claude Code plugin, `$mreq-graph` in Codex), or asked for it by name. If you are reading this file on your own, stop and ask the user to run `/mreq-graph <description>`.
 
 Turn the user's description into one or more Mermaid diagrams on a single offline HTML page. The page holds the diagrams and nothing else: each one has a legend and a one-line caption, and the assumptions close the page.
 

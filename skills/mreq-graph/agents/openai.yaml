@@ -1,0 +1,6 @@
+interface:
+  display_name: "mreq-graph"
+  short_description: "Draw a description as Mermaid diagrams on an offline HTML page."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "mreq-close"
+  short_description: "Check the code against a .mreq/ task document, then delete the document."
+
+policy:
+  allow_implicit_invocation: false

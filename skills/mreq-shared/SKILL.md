@@ -3,6 +3,7 @@ name: mreq-shared
 description: Shared files for the other mreq skills, not a task. Holds the task-document script, its templates, the page script, the Pele bundle, the diagram checker, the grill method and the Mermaid rules. Never run it on its own.
 disable-model-invocation: true
 user-invocable: false
+disable-slash-command: true
 ---
 
 # mreq-shared

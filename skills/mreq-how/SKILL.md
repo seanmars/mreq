@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # mreq-how
 
-Run only when the user typed `/mreq-how`. If you are reading this file on your own, stop and ask the user to run `/mreq-how <question>`.
+Run only when the user invoked this skill: typed `/mreq-how` (`/mreq:mreq-how` with the Claude Code plugin, `$mreq-how` in Codex), or asked for it by name. If you are reading this file on your own, stop and ask the user to run `/mreq-how <question>`.
 
 Explain how part of this codebase works (a subsystem, a flow, a module) at the depth its reader needs (see "Reader"), as an offline HTML page: prose that walks the reader through Mermaid diagrams, each with a legend and a one-line caption.
 

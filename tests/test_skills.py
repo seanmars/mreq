@@ -20,6 +20,8 @@ RUN_RULE = "Write every path with `/`, never with `\\`, on Windows too"
 # The skills that start another mreq skill, and the section that says how in every agent.
 HANDOFF_SKILLS = ("define", "grill", "apply", "close")
 HANDOFF_SECTION = "## Running another mreq skill"
+# Only the user starts these. Each agent marks that its own way.
+USER_ONLY = ("define", "close", "how", "graph", "pro", "shared")
 
 
 def skill_text(name: str) -> str:
@@ -75,6 +77,22 @@ class SkillTextTest(unittest.TestCase):
             self.assertEqual(copy, copies["define"], f"{HANDOFF_SECTION} in mreq-{name} differs from mreq-define")
             # Agents without a skill tool can only read the file; only a denied call forbids that.
             self.assertNotIn("Never read another skill's SKILL.md", skill_text(name), name)
+
+    def test_the_user_only_guard_takes_every_agents_invocation(self):
+        for name in ("define", "close", "how", "graph"):
+            text = skill_text(name)
+            self.assertIn(f"typed `/mreq-{name}` (`/mreq:mreq-{name}` with the Claude Code plugin, `$mreq-{name}` in Codex)", text, name)
+            self.assertNotIn("Run only when the user typed", text, name)
+
+    def test_codex_keeps_the_user_only_skills_from_the_model(self):
+        # Codex ignores disable-model-invocation; agents/openai.yaml is its switch.
+        for skill in sorted(SKILLS_DIR.iterdir()):
+            front = (skill / "SKILL.md").read_text(encoding="utf-8").split("---")[1]
+            user_only = "disable-model-invocation: true" in front
+            self.assertEqual(user_only, skill.name.removeprefix("mreq-") in USER_ONLY, skill.name)
+            yaml = skill / "agents" / "openai.yaml"
+            hidden = yaml.is_file() and "allow_implicit_invocation: false" in yaml.read_text(encoding="utf-8")
+            self.assertEqual(hidden, user_only, skill.name)
 
     def test_skill_files_end_lines_with_lf(self):
         for path in SKILLS_DIR.rglob("*"):

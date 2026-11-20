@@ -1,6 +1,6 @@
 ---
 name: mreq-pro
-description: "Rewrite a prompt so it asks for what a top expert would do: deeper, not bigger. Use only when invoked as /mreq-pro."
+description: "Rewrite a prompt so it asks for what a top expert would do: deeper, not bigger. Use only when the user invokes it: /mreq-pro, or $mreq-pro in Codex."
 disable-model-invocation: true
 ---
 

@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # mreq-define
 
-Run only when the user typed `/mreq-define`. If you are reading this file on your own, stop and ask the user to run `/mreq-define <request>`.
+Run only when the user invoked this skill: typed `/mreq-define` (`/mreq:mreq-define` with the Claude Code plugin, `$mreq-define` in Codex), or asked for it by name. If you are reading this file on your own, stop and ask the user to run `/mreq-define <request>`.
 
 Turn a request into one confirmed task document. Do not implement anything: `mreq-apply` does that, after the user chooses it. The one exception is "Without a document": the user chooses in step 4 to implement the restatement here, with no document.
 

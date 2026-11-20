@@ -1,0 +1,6 @@
+interface:
+  display_name: "mreq-how"
+  short_description: "Explain how part of the codebase works as an offline HTML page with Mermaid diagrams."
+
+policy:
+  allow_implicit_invocation: false

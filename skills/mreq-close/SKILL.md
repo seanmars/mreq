@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # mreq-close
 
-Run only when the user typed `/mreq-close`. If you are reading this file on your own, stop and ask the user to run `/mreq-close <path>`.
+Run only when the user invoked this skill: typed `/mreq-close` (`/mreq:mreq-close` with the Claude Code plugin, `$mreq-close` in Codex), or asked for it by name. If you are reading this file on your own, stop and ask the user to run `/mreq-close <path>`.
 
 Check the code against one `.mreq/` document, then delete the document. The code is the record of what was done.
 
