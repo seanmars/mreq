@@ -17,6 +17,9 @@ SCRIPTS = {
 }
 SHARED_SECTIONS = ("## Asking the user", "## When a tool call is denied")
 RUN_RULE = "Write every path with `/`, never with `\\`, on Windows too"
+# The skills that start another mreq skill, and the section that says how in every agent.
+HANDOFF_SKILLS = ("define", "grill", "apply", "close")
+HANDOFF_SECTION = "## Running another mreq skill"
 
 
 def skill_text(name: str) -> str:
@@ -64,6 +67,14 @@ class SkillTextTest(unittest.TestCase):
             text = skill_text(name)
             self.assertIn("`GRILL.md` in the `mreq-shared` directory", text, name)
             self.assertNotIn("**Unknown unknowns**", text, name)
+
+    def test_the_handoff_section_is_word_for_word_the_same(self):
+        copies = {name: section(skill_text(name), HANDOFF_SECTION) for name in HANDOFF_SKILLS}
+        self.assertTrue(copies["define"])
+        for name, copy in copies.items():
+            self.assertEqual(copy, copies["define"], f"{HANDOFF_SECTION} in mreq-{name} differs from mreq-define")
+            # Agents without a skill tool can only read the file; only a denied call forbids that.
+            self.assertNotIn("Never read another skill's SKILL.md", skill_text(name), name)
 
     def test_skill_files_end_lines_with_lf(self):
         for path in SKILLS_DIR.rglob("*"):

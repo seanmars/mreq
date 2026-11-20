@@ -42,6 +42,16 @@ Never write the front matter dates yourself: the script owns them.
 
 Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any command, Write, or Edit is denied, do not retry it another way: no other shell, no other path, no other form of the command. Show the user each denied command or path exactly as you ran it, with one allow rule for each. Use the rule this file gives for it; otherwise, for a command, write the tool you ran it in and the exact command, with no `*`, for example `Bash(python -m unittest discover -s tests)`. Never merge two denied commands into one rule, and never suggest a broader rule. Then stop.
 
+## Running another mreq skill
+
+When a step says to run another mreq skill (`mreq-apply` or `mreq-grill`), start it the way your agent allows, with the arguments the step gives:
+- **With a skill tool** (Claude Code: the Skill tool): call it by the name your skill list shows: `mreq:mreq-apply` when mreq is installed as the Claude Code plugin, `mreq-apply` otherwise. When the call fails with `Unknown skill` and names the skill to use (`Did you mean ...`), call that name once: this is not a denied call.
+- **Without one** (Codex, Grok, Antigravity): read that skill's SKILL.md in full, for example `${CLAUDE_SKILL_DIR}/../mreq-apply/SKILL.md`, and follow it from its first step, with the arguments as its input. In that file, the skill-directory variable means that skill's directory, not this one.
+
+When the call is denied, give the user the command that runs it, for example `/mreq-apply <path>`, and the Claude Code allow rule for the name you called, for example `Skill(mreq:mreq-apply)`, then stop. After a denied call, never read the skill's SKILL.md and follow it yourself: the user decides.
+
+When you give the user a command to type, write it the way their agent runs a skill: `/mreq-close <path>` in Claude Code, Grok and Antigravity (`/mreq:mreq-close <path>` also works with the plugin), `$mreq-close <path>` in Codex.
+
 ## Steps
 
 1. **Read before you ask.**
@@ -50,7 +60,7 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
    - **Treat it as a task**: go on with this step.
    Find the git root: run `git rev-parse --show-toplevel` on its own, without `-C`. When it fails (not a git repository), use the current directory. When the git root is not the directory the agent was started in, say so in your first reply, before any `new`: the document goes to `<git root>/.mreq/`, and the agent cannot read or edit it from here in later turns. Ask the user to start the agent from the git root, then stop.
    Run `list --open`. When an open document already covers this request, ask one question (see "Asking the user"), with the document's title and absolute path in the question:
-   - **Continue it (mreq-apply)**: run the `mreq-apply` skill on that document (in Claude Code: with the Skill tool), and do nothing more in this skill. When the Skill call is denied, follow step 6.
+   - **Continue it (mreq-apply)**: run the `mreq-apply` skill on that document (see "Running another mreq skill"), and do nothing more in this skill.
    - **Start a new document**: go on with this step.
    Read the project's README and agent instruction files, from the git root. Then size the request:
    - **Simple**: one module, one function, one file. Read the code it touches and its tests yourself.
@@ -135,10 +145,8 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 6. **Go on to the next step.**
    Ask nothing here: the user picked the next step in step 4.
-   - **Correct, write the document, then implement** or **Correct, write the document, then grill it**: run the skill they picked on this document now, `mreq-apply` or `mreq-grill` (in Claude Code: with the Skill tool).
+   - **Correct, write the document, then implement** or **Correct, write the document, then grill it**: run the skill they picked on this document now, `mreq-apply` or `mreq-grill` (see "Running another mreq skill").
    - **Correct, write the document only**, or the user skipped step 4's confirmation: give the absolute path the script printed, and stop.
-
-   When the Skill call is denied, give the user `/mreq-apply <path>` (or `/mreq-grill <path>`) and the allow rule `Skill(mreq-apply)` (or `Skill(mreq-grill)`), then stop. Never read another skill's SKILL.md and follow it yourself.
 
 ## Grill without a document
 

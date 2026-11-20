@@ -38,6 +38,16 @@ Write every path with `/`, never with `\`, on Windows too: the script prints its
 
 Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any command, Write, or Edit is denied, do not retry it another way: no other shell, no other path, no other form of the command. Show the user each denied command or path exactly as you ran it, with one allow rule for each. Use the rule this file gives for it; otherwise, for a command, write the tool you ran it in and the exact command, with no `*`, for example `Bash(python -m unittest discover -s tests)`. Never merge two denied commands into one rule, and never suggest a broader rule. Then stop.
 
+## Running another mreq skill
+
+When a step says to run another mreq skill (`mreq-apply` or `mreq-grill`), start it the way your agent allows, with the arguments the step gives:
+- **With a skill tool** (Claude Code: the Skill tool): call it by the name your skill list shows: `mreq:mreq-apply` when mreq is installed as the Claude Code plugin, `mreq-apply` otherwise. When the call fails with `Unknown skill` and names the skill to use (`Did you mean ...`), call that name once: this is not a denied call.
+- **Without one** (Codex, Grok, Antigravity): read that skill's SKILL.md in full, for example `${CLAUDE_SKILL_DIR}/../mreq-apply/SKILL.md`, and follow it from its first step, with the arguments as its input. In that file, the skill-directory variable means that skill's directory, not this one.
+
+When the call is denied, give the user the command that runs it, for example `/mreq-apply <path>`, and the Claude Code allow rule for the name you called, for example `Skill(mreq:mreq-apply)`, then stop. After a denied call, never read the skill's SKILL.md and follow it yourself: the user decides.
+
+When you give the user a command to type, write it the way their agent runs a skill: `/mreq-close <path>` in Claude Code, Grok and Antigravity (`/mreq:mreq-close <path>` also works with the plugin), `$mreq-close <path>` in Codex.
+
 ## Steps
 
 1. **Pick the document.**
@@ -47,12 +57,12 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 
 2. **Read it in full.**
    Read the document, before any `update`. Read `## Handoff` first: it says where the last agent stopped. Then run `progress <path>` and show its output (step 3) before any other tool call. Its `Status:` line gives the status: a document whose path you were given may be `done`. Run no `list` to learn it. When `progress` prints a `Warning:` line, name it to the user in that message.
-   - When the document still holds only the template's hints (no real goal or tasks), stop before any `update`: say so, and ask once: **Grill it (mreq-grill)** (run the `mreq-grill` skill on the document; in Claude Code: with the Skill tool) or **Stop** (say that `/mreq-define <request>` starts a new document).
-   - When `## Handoff` has an `Unconfirmed:` line, the user never confirmed the document: show `## Assumptions` and ask once: **Go on** (drop the line when you next rewrite `## Handoff`) or **Grill first** (run the `mreq-grill` skill on the document; in Claude Code: with the Skill tool).
+   - When the document still holds only the template's hints (no real goal or tasks), stop before any `update`: say so, and ask once: **Grill it (mreq-grill)** (run the `mreq-grill` skill on the document; see "Running another mreq skill") or **Stop** (say that `/mreq-define <request>` starts a new document).
+   - When `## Handoff` has an `Unconfirmed:` line, the user never confirmed the document: show `## Assumptions` and ask once: **Go on** (drop the line when you next rewrite `## Handoff`) or **Grill first** (run the `mreq-grill` skill on the document; see "Running another mreq skill").
    - When it is `done`, every task is checked, and you were handed no findings (see "Findings from mreq-close"), stop before any `update`: say that the work is done, and that `/mreq-close <path>`, with the absolute path filled in, finishes it. `/mreq-close` is user-invoked: do not try to run it.
    - When it is `draft`, or `done` with an unchecked task, run `update <path> --status active`, then read it again before your first Edit.
 
-   After you hand the document to `mreq-grill`, do nothing more in this skill. When that Skill call is denied, give the user `/mreq-grill <path>` and the allow rule `Skill(mreq-grill)`, then stop. Never read another skill's SKILL.md and follow it yourself.
+   After you hand the document to `mreq-grill`, do nothing more in this skill.
 
    Then read the code it cites.
    Run `git status` and `git diff`, each on its own and without `-C`, and compare them with `## Handoff`. A change the Handoff does not mention means the last session stopped mid-task: continue from the code, not from the Handoff alone.

@@ -40,6 +40,16 @@ Write every path with `/`, never with `\`, on Windows too: the script prints its
 
 Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any command, Write, or Edit is denied, do not retry it another way: no other shell, no other path, no other form of the command. Show the user each denied command or path exactly as you ran it, with one allow rule for each. Use the rule this file gives for it; otherwise, for a command, write the tool you ran it in and the exact command, with no `*`, for example `Bash(python -m unittest discover -s tests)`. Never merge two denied commands into one rule, and never suggest a broader rule. Then stop.
 
+## Running another mreq skill
+
+When a step says to run another mreq skill (`mreq-apply` or `mreq-grill`), start it the way your agent allows, with the arguments the step gives:
+- **With a skill tool** (Claude Code: the Skill tool): call it by the name your skill list shows: `mreq:mreq-apply` when mreq is installed as the Claude Code plugin, `mreq-apply` otherwise. When the call fails with `Unknown skill` and names the skill to use (`Did you mean ...`), call that name once: this is not a denied call.
+- **Without one** (Codex, Grok, Antigravity): read that skill's SKILL.md in full, for example `${CLAUDE_SKILL_DIR}/../mreq-apply/SKILL.md`, and follow it from its first step, with the arguments as its input. In that file, the skill-directory variable means that skill's directory, not this one.
+
+When the call is denied, give the user the command that runs it, for example `/mreq-apply <path>`, and the Claude Code allow rule for the name you called, for example `Skill(mreq:mreq-apply)`, then stop. After a denied call, never read the skill's SKILL.md and follow it yourself: the user decides.
+
+When you give the user a command to type, write it the way their agent runs a skill: `/mreq-close <path>` in Claude Code, Grok and Antigravity (`/mreq:mreq-close <path>` also works with the plugin), `$mreq-close <path>` in Codex.
+
 ## Steps
 
 1. **Pick the document.**
@@ -110,8 +120,8 @@ Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. When any c
 ## Handing over to mreq-apply
 
 Do this only where a step above says so, and never delete the document then.
-1. Run the `mreq-apply` skill (in Claude Code: with the Skill tool). Pass the document's absolute path as its argument, then each finding or failure on its own line: the document's line, what the code does, and its `path:line` or the failing command.
-2. Do nothing more in this skill. When the Skill call is denied, give the user `/mreq-apply <path>` with the findings, and the allow rule `Skill(mreq-apply)`, then stop. Never read another skill's SKILL.md and follow it yourself.
+1. Run the `mreq-apply` skill (see "Running another mreq skill"). Pass the document's absolute path as its argument, then each finding or failure on its own line: the document's line, what the code does, and its `path:line` or the failing command.
+2. Do nothing more in this skill. When the call is denied, give the user the findings with the command.
 
 ## Guardrails
 
