@@ -13,7 +13,7 @@
 | `mreq-pro` | 改寫 prompt, 要求頂尖專家的做法: 更深, 不是更大. 先回答關鍵難點, 原始資料, 方法與工具, 外部驗證, 再給出可複製的新 prompt. 沒有給 prompt 時, 改寫最近一次的需求 | 只有使用者 |
 | `mreq-shared` | 不執行任何任務. 放其他 skill 共用的 script, template, Pele, grill 方法, 與 Mermaid 規則 | 沒有人 |
 
-「誰能呼叫」只適用 Claude Code. 其他 agent 不讀 `disable-model-invocation`, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
+「誰能呼叫」由各 agent 自己的設定控制. Claude Code, Grok 與 Antigravity 讀 SKILL.md 的 `disable-model-invocation`. Codex 讀各 skill 的 `agents/openai.yaml` (`allow_implicit_invocation: false`). 其他 agent 可能兩者都不讀, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
 
 典型流程: `/mreq-define` → (`mreq-grill`) → `mreq-apply` → commit (程式碼和 `.mreq/`) → `/mreq-close`.
 
@@ -21,7 +21,7 @@
 
 skill 之間能自動接續的地方, 不需要輸入指令. `mreq-define` 與 `mreq-grill` 確認重述的那一題同時選下一步, 寫完文件後不再多問一次: `mreq-define` 可接 `mreq-grill` 或 `mreq-apply`, `mreq-grill` 與 `mreq-apply` 可互相接續, `mreq-close` 發現未完成的 task, 失敗的測試或要修正的 finding 時, 可帶著它們接 `mreq-apply`. `mreq-grill` 確認時也可以選「寫回後繼續 grill」: 已確認的結論先寫回文件, 然後直接開始下一輪. 同一個對話的下一輪只 grill 有變更的項目, 仍未決的項目與你指定的焦點. 第一輪也可以指定焦點, 例: `/mreq-grill <path> 錯誤處理`: 四象限仍然全部掃描, 但焦點的部分問得更深, 並先回報. 「只有使用者」能呼叫的 skill 不會被自動接續, 這時 skill 會給出完整的指令讓你執行.
 
-Claude Code 有 `AskUserQuestion` 時, 每個問題都用選項回答. 選項沒有你要的答案時, 在選項下方的文字欄輸入.
+agent 有選項提問的 tool 時, 每個問題都用選項回答: Claude Code 的 `AskUserQuestion`, Grok 的 `ask_user_question`, Antigravity 的 `ask_question`, Codex 的 `request_user_input` (只在 Plan mode). 選項沒有你要的答案時, 在選項下方的文字欄輸入. 沒有這種 tool 時, skill 用編號清單提問.
 
 `mreq-apply` 不會自己 commit. `mreq-close` 刪除前不檢查 git 狀態, 也不詢問. 沒有指定路徑, 而且只有一份 `done` 的文件時, `/mreq-close` 直接核對那一份. 要保留文件內容, 請先 commit, 再執行 `/mreq-close`.
 
@@ -42,17 +42,26 @@ plugin 一定會安裝全部 skill. skill 名稱前會加上 `mreq:`, 例如 `/m
 
 ### 其他 agent
 
-使用 [vercel-labs/skills](https://github.com/vercel-labs/skills) CLI 安裝. `--skill '*'` 選擇全部 skill.
+使用 [vercel-labs/skills](https://github.com/vercel-labs/skills) CLI 安裝. `--skill '*'` 選擇全部 skill, `-a` 選擇 agent.
 
 ```sh
-npx skills add seanmars/mreq --skill '*'
+npx skills add seanmars/mreq --skill '*' -a codex
 ```
 
-只安裝部分 skill 時, 一定要包含 `mreq-shared`.
+| Agent | `-a` | 安裝位置 (project) | 呼叫方式 |
+|---|---|---|---|
+| Codex | `codex` | `.agents/skills/` | `$mreq-define <request>`, 或 `/skills` 選擇 |
+| Grok Build | `grok` | `.grok/skills/` | `/mreq-define <request>` |
+| Antigravity | `antigravity` | `.agents/skills/` | `/mreq-define <request>` |
+
+- 只安裝部分 skill 時, 一定要包含 `mreq-shared`.
+- 請安裝在 project, 不要加 `-g`. Codex 與 Antigravity 的 sandbox 可能讀不到 home 目錄下的 skill.
+- 已經用 plugin 安裝時, 不要再用 `-a claude-code` 安裝. Claude Code 會同時載入兩份.
+- sandbox 封鎖 `uv` 時 (沒有網路, 或 uv cache 不可寫入), skill 會改用 `python`. 同一個對話只會失敗一次.
 
 ## 需求
 
-`uv`,或 Python 3.10 以上.script 只用標準函式庫.
+`uv`, 或 Python 3.10 以上. script 只用標準函式庫.
 
 安裝時需要 Node.js (`npx`). 使用 skill 時不需要. `mreq-how` 與 `mreq-graph` 有 Node.js 時會在 build 時檢查每張圖; 沒有時仍會產生頁面, 但不檢查.
 
@@ -61,7 +70,7 @@ npx skills add seanmars/mreq --skill '*'
 ```
 .claude-plugin/
 └── marketplace.json  # Claude Code plugin marketplace, plugin 為整個 repo
-skills/
+skills/           # 只限使用者呼叫的 skill 另有 agents/openai.yaml (Codex)
 ├── mreq-define/  # SKILL.md, EXPLORER.md
 ├── mreq-grill/
 ├── mreq-apply/
