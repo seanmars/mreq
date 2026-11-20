@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.23.0
 
 ### Changed
 
@@ -15,7 +15,7 @@
 
 ### Removed
 
-- `mreq-shared` skill. 用 `npx skills` 安裝過舊版時, 更新後請手動刪除安裝位置裡的 `mreq-shared` 目錄 (例: `.agents/skills/mreq-shared`). 留著不會造成錯誤, 但沒有 skill 會使用它.
+- `mreq-shared` skill. 用 `npx skills` 安裝過舊版時, 先執行 `npx skills update`, 再執行 `npx skills remove mreq-shared` (安裝時用了 `-g` 就加 `-g`). 順序不能反過來: 舊版的 skill 還需要 `mreq-shared`. 留著不會造成錯誤, 但沒有 skill 會使用它. 用 Claude Code plugin 安裝時, 只需要更新 plugin.
 
 ## 0.22.0
 
