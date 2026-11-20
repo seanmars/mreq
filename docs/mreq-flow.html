@@ -310,7 +310,7 @@ flowchart TD
 
 <section class="block" id="handoffs">
   <h2><span class="stamp sub" aria-hidden="true">接</span>skill 之間的交接</h2>
-  <p>能自動接續的地方, skill 用 Skill tool 呼叫下一個 skill, 使用者不需要輸入指令. 目標是「只有使用者能呼叫」的 skill 時, 目前的 skill 只給出完整的指令, 然後停止.</p>
+  <p>能自動接續的地方, skill 自己啟動下一個 skill, 使用者不需要輸入指令. 啟動的方式依 agent 而定, 見下方的 "自動接續的方式". 目標是「只有使用者能呼叫」的 skill 時, 目前的 skill 只給出完整的指令, 然後停止.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -329,26 +329,47 @@ flowchart TD
   GRILL -. "沒有文件, 或<br>New document:<br>/mreq-define" .-> DEF
   APPLY -. "沒有文件:<br>/mreq-define" .-> DEF
     </script>
-    <figcaption>實線: 用 Skill tool 自動接續. 虛線: 只給出或建議指令, 由使用者執行. 完整的條件見下表</figcaption>
+    <figcaption>實線: 自動接續. 虛線: 只給出或建議指令, 由使用者執行. 完整的條件見下表</figcaption>
   </figure>
   <table class="cmd pair">
     <tr><th>從</th><th>到</th><th>何時</th><th>方式</th></tr>
-    <tr><td>mreq-define</td><td>mreq-apply</td><td>Step 1 選 <code>Continue it</code>; Step 4 選 "撰寫後實作"; 不寫文件的流程選 <code>Write the document, continue with mreq-apply</code></td><td>Skill tool</td></tr>
-    <tr><td>mreq-define</td><td>mreq-grill</td><td>Step 4 選 "撰寫後 grill"</td><td>Skill tool</td></tr>
+    <tr><td>mreq-define</td><td>mreq-apply</td><td>Step 1 選 <code>Continue it</code>; Step 4 選 "撰寫後實作"; 不寫文件的流程選 <code>Write the document, continue with mreq-apply</code></td><td>自動接續</td></tr>
+    <tr><td>mreq-define</td><td>mreq-grill</td><td>Step 4 選 "撰寫後 grill"</td><td>自動接續</td></tr>
     <tr><td>mreq-define</td><td>mreq-how</td><td>Step 1 選 <code>Explain it</code></td><td>給出 <code>/mreq-how &lt;問題&gt;</code>, 停止</td></tr>
     <tr><td>mreq-define</td><td>mreq-apply</td><td>不寫文件的流程中途停止</td><td>先補寫文件, 再給出 <code>/mreq-apply &lt;path&gt;</code></td></tr>
-    <tr><td>mreq-grill</td><td>mreq-apply</td><td>Step 4 選 "寫回後實作"</td><td>Skill tool</td></tr>
+    <tr><td>mreq-grill</td><td>mreq-apply</td><td>Step 4 選 "寫回後實作"</td><td>自動接續</td></tr>
     <tr><td>mreq-grill</td><td>mreq-define</td><td>沒有開啟中的文件; <code>done</code> 文件選 <code>New document</code></td><td>建議 <code>/mreq-define</code>, 停止</td></tr>
-    <tr><td>mreq-apply</td><td>mreq-grill</td><td>文件只有 template 的提示, 選 <code>Grill it</code>; 文件有 <code>Unconfirmed:</code>, 選 <code>Grill first</code></td><td>Skill tool</td></tr>
+    <tr><td>mreq-apply</td><td>mreq-grill</td><td>文件只有 template 的提示, 選 <code>Grill it</code>; 文件有 <code>Unconfirmed:</code>, 選 <code>Grill first</code></td><td>自動接續</td></tr>
     <tr><td>mreq-apply</td><td>mreq-close</td><td>task 全部完成並設為 <code>done</code>; 或文件已經是 <code>done</code> 而且沒有工作</td><td>給出 <code>/mreq-close &lt;path&gt;</code>, 不自己執行</td></tr>
     <tr><td>mreq-apply</td><td>mreq-define</td><td>沒有開啟中的文件; template 文件選 <code>Stop</code></td><td>說明 <code>/mreq-define &lt;request&gt;</code> 可以開始新工作, 停止</td></tr>
-    <tr><td>mreq-close</td><td>mreq-apply</td><td>未勾選的 task 選 <code>Continue</code>; 選了 <code>Fix now</code> 或 <code>Fix the code</code></td><td>Skill tool. 參數是文件的絕對路徑, 加上每個 finding 或 failure 各一行</td></tr>
+    <tr><td>mreq-close</td><td>mreq-apply</td><td>未勾選的 task 選 <code>Continue</code>; 選了 <code>Fix now</code> 或 <code>Fix the code</code></td><td>自動接續. 參數是文件的絕對路徑, 加上每個 finding 或 failure 各一行</td></tr>
     <tr><td>mreq-close</td><td>mreq-apply</td><td>選了 <code>Stop</code> 或 <code>Keep it</code>, 而且有要修的項目</td><td>給出 <code>/mreq-apply &lt;path&gt;</code> 與要修的項目, 停止</td></tr>
   </table>
+  <p>表中的指令以 Claude Code 為例. 給使用者輸入的指令依 agent 的寫法: Claude Code, Grok 與 Antigravity 寫 <code>/mreq-close &lt;path&gt;</code> (plugin 也可以寫 <code>/mreq:mreq-close &lt;path&gt;</code>); Codex 寫 <code>$mreq-close &lt;path&gt;</code>.</p>
+
+  <h3>自動接續的方式</h3>
+  <figure class="diagram">
+    <script type="text/x-mermaid">
+flowchart TD
+  A["步驟要執行另一個 mreq skill<br>(mreq-apply 或 mreq-grill)"] --> B{"agent 有 skill tool?"}
+  B -- "有 (Claude Code)" --> C["用 skill 清單顯示的名稱呼叫<br>plugin: mreq:mreq-apply<br>其他: mreq-apply"]:::skill
+  C --> D{"結果"}
+  D -- "Unknown skill,<br>Did you mean ..." --> E["用建議的名稱<br>再呼叫一次"]:::skill
+  E --> D
+  D -- "成功" --> RUN(["目標 skill 接手<br>原本的 skill 不再做任何事"])
+  B -- "沒有 (Codex,<br>Grok, Antigravity)" --> F["完整讀取<br>../mreq-apply/SKILL.md<br>從第一步照做"]:::doc
+  F -- "檔案存在" --> RUN
+  D -- "被拒絕" --> DEN(["給出指令與 allow rule<br>例: Skill(mreq:mreq-apply)<br>停止"]):::stop
+  D -- "skill 不存在<br>也沒有建議的名稱" --> MISS(["告知要安裝<br>哪一個 skill, 停止"]):::stop
+  F -- "檔案不存在" --> MISS
+    </script>
+    <figcaption>四個會交接的 skill (define, grill, apply, close) 用同一段 "Running another mreq skill", 內容一字不差</figcaption>
+  </figure>
   <ul>
-    <li>交接之後, 原本的 skill 不再做任何事.</li>
-    <li>Skill 呼叫被拒絕時, 給出對應的指令 (<code>/mreq-apply &lt;path&gt;</code> 或 <code>/mreq-grill &lt;path&gt;</code>) 與 allow rule (<code>Skill(mreq-apply)</code> 或 <code>Skill(mreq-grill)</code>), 然後停止.</li>
-    <li>不讀其他 skill 的 <code>SKILL.md</code> 自己照做.</li>
+    <li><code>Unknown skill</code> 並建議名稱時, 只用建議的名稱重試一次. 這不算被拒絕.</li>
+    <li>讀取目標的 <code>SKILL.md</code> 時, 那個檔案裡的 skill 目錄變數指的是目標 skill 的目錄, 不是原本的 skill.</li>
+    <li>呼叫被拒絕時, 給出對應的指令 (例: <code>/mreq-apply &lt;path&gt;</code>) 與這次呼叫的名稱的 allow rule (例: <code>Skill(mreq:mreq-apply)</code>), 然後停止. 被拒絕之後, 不讀目標的 <code>SKILL.md</code> 自己照做: 由使用者決定.</li>
+    <li>每個 skill 只帶自己的檔案, 可以只安裝部分 skill. 所以目標 skill 可能沒有安裝.</li>
   </ul>
 </section>
 
@@ -445,7 +466,7 @@ stateDiagram-v2
     <tr><td><code>mreq-graph</code></td><td><code>&lt;description&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-pro</code></td><td><code>[&lt;prompt&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
   </table>
-  <p>這些限制只適用 Claude Code. 其他 agent 不讀 <code>disable-model-invocation</code>. 所以「只有使用者能呼叫」的 skill 都在開頭寫明: agent 自己讀到這個檔案時, 停下來, 請使用者輸入指令. <code>mreq-pro</code> 是例外: 它只用 description 寫明 "Use only when invoked as /mreq-pro".</p>
+  <p>只有 Claude Code 讀 <code>disable-model-invocation</code>. Codex 改讀 <code>agents/openai.yaml</code> 的 <code>allow_implicit_invocation: false</code>; 每個「只有使用者能呼叫」的 skill 都有這個檔案. 其他 agent 兩個都不讀. 所以這些 skill 都在開頭寫明: agent 自己讀到這個檔案時, 停下來, 請使用者輸入指令. 使用者用任何一種方式呼叫都算: <code>/mreq-close</code>, plugin 的 <code>/mreq:mreq-close</code>, Codex 的 <code>$mreq-close</code>, 或直接點名. <code>mreq-pro</code> 是例外: 它只用 description 寫明 "Use only when the user invokes it: /mreq-pro, or $mreq-pro in Codex".</p>
 
   <h3>任務文件的 skill 與 mreq.py</h3>
   <figure class="diagram">
@@ -709,7 +730,7 @@ flowchart TD
 
 <section class="block" id="define-explore">
   <h2><span class="stamp sub" aria-hidden="true">探</span>平行探索 (Complex 時)</h2>
-  <p><code>mreq-define</code> 與 <code>mreq-how</code> 都使用這個模式. 每個 skill 有自己的 <code>EXPLORER.md</code>, 報告格式不同. 無法啟動 subagent 時, 主 agent 依序自己處理每個角度, 筆記用 <code>EXPLORER.md</code> 的格式.</p>
+  <p><code>mreq-define</code> 與 <code>mreq-how</code> 都使用這個模式. 每個 skill 有自己的 <code>EXPLORER.md</code>, 報告格式不同. 能啟動 subagent 時, 每個角度一個 read-only explorer, 例: Codex 的 <code>explorer</code> role, Grok 的 <code>explore</code> type, Antigravity 的 <code>research</code> subagent. <code>EXPLORER.md</code> 的路徑寫成絕對路徑. 無法啟動 subagent 時, 主 agent 依序自己處理每個角度, 筆記用 <code>EXPLORER.md</code> 的格式.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 sequenceDiagram
@@ -1325,7 +1346,7 @@ flowchart TD
 <!-- ============================== 8 ============================== -->
 <section class="block" id="pro">
   <h2><span class="stamp" aria-hidden="true">深</span>mreq-pro</h2>
-  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 結果只在對話裡, 不寫檔案, 也不執行 script. 只有使用者輸入 <code>/mreq-pro</code> 才會執行.</p>
+  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 結果只在對話裡, 不寫檔案, 也不執行 script. 只有使用者輸入 <code>/mreq-pro</code> (Codex 是 <code>$mreq-pro</code>) 才會執行. agent 沒有替換 <code>$ARGUMENTS</code> 時, prompt 就是使用者呼叫 skill 時給的文字.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -1372,10 +1393,11 @@ flowchart TD
   <p class="lede">除了 <code>mreq-pro</code>, 每個 skill 都遵守下面的規則. "Asking the user" 與 "When a tool call is denied" 兩節在六個 <code>SKILL.md</code> 裡一字不差; <code>tests/test_skills.py</code> 檢查這一點.</p>
   <h3>問使用者</h3>
   <ul>
-    <li>有 <code>AskUserQuestion</code> tool 時使用它: 一次最多 4 個獨立問題, 推薦選項放第一個, 標示 "(Recommended)".</li>
-    <li>沒有時, 用純文字編號清單提問, 推薦選項放第一個, 然後等待回答.</li>
+    <li>agent 有提問 tool 時使用它: Claude Code 的 <code>AskUserQuestion</code>, Grok 的 <code>ask_user_question</code>, Antigravity 的 <code>ask_question</code>, Codex 的 <code>request_user_input</code>. 一次最多 4 個獨立問題 (或 tool 能接受的數量), 推薦選項放第一個, 標示 "(Recommended)".</li>
+    <li>一題的選項比 tool 能接受的多時, 這一題用純文字提問. tool 回傳錯誤時 (Codex 只在 Plan mode 允許), 這個對話的其餘問題都用純文字.</li>
+    <li>沒有提問 tool 時, 用純文字編號清單提問, 推薦選項放第一個, 然後等待回答.</li>
     <li>用選項讓使用者選, 不讓使用者打字: 每題 2 到 4 個選項, label 1 到 5 個字, 細節放在說明, header 最多 12 個字元.</li>
-    <li>不加 "Other": <code>AskUserQuestion</code> 每題都有自由回答欄. 答案可能需要選項放不下的值 (路徑, 修正) 時, 在問題裡說明可以在那裡輸入.</li>
+    <li>不加 "Other": 這些 tool 每題都有自由回答欄. 答案可能需要選項放不下的值 (路徑, 修正) 時, 在問題裡說明可以在那裡輸入.</li>
     <li>只有選項放不下的答案 (例: 只有使用者看過的錯誤訊息) 才請使用者輸入. 能猜時, 仍把猜測列為選項.</li>
     <li>skill 的步驟自己會執行的指令, 不叫使用者輸入.</li>
   </ul>
@@ -1391,31 +1413,32 @@ flowchart TD
 
 <section class="block" id="common-script">
   <h2><span class="stamp sub" aria-hidden="true">令</span>執行 script 與被拒絕</h2>
+  <p>script 的路徑是 <code>${CLAUDE_SKILL_DIR}/scripts/&lt;script&gt;</code>. 只有 Claude Code 會把變數換成 skill 目錄的絕對路徑. 其他 agent 可能保留原樣: 這時 agent 在第一個用到它的指令或讀檔之前, 自己換成這個 <code>SKILL.md</code> 所在目錄的絕對路徑. Codex 在 skill 的 <code>&lt;path&gt;</code> 給出這個路徑, Grok 在 skill 清單的 <code>Absolute path</code> 給出. 還含有 <code>${</code> 的指令或路徑一律不執行. 錯誤訊息的路徑以 <code>/scripts/</code> 開頭時, 表示變數是空的: 補上路徑, 再執行同一個指令.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
   A["需要執行 script 指令"] --> B["每個指令單獨執行<br>不用 cd, &&, ||, ;, |, $()<br>路徑一律用 /, 不用反斜線<br>script 的路徑加雙引號"]
   B --> C["uv run script 指令"]:::script
   C --> D{"結果"}
-  D -- "成功" --> OK(["讀取輸出"])
-  D -- "script 印出錯誤" --> ERR(["依錯誤處理<br>不換執行方式"])
-  D -- "uv 在 script 啟動前失敗:<br>找不到 uv, 或 uv 自己出錯" --> E["python script 指令<br>找不到 python 時<br>用 python3"]:::script
+  D -- "成功" --> OK(["讀取輸出<br>這個對話的其餘指令<br>都用這個執行方式"])
+  D -- "script 印出錯誤<br>或路徑不存在" --> ERR(["依錯誤處理或修正路徑<br>不換執行方式"])
+  D -- "uv 在 script 啟動前失敗:<br>找不到 uv, 或 uv 自己出錯<br>(例: sandbox 封鎖)" --> E["python script 指令<br>找不到 python 時用 python3<br>Windows 的 Store stub 算找不到"]:::script
   E --> D2{"結果"}
   D2 -- "成功" --> OK
   D -- "被拒絕" --> F["不換方式重試:<br>不換 shell, 路徑,<br>或指令寫法"]
   D2 -- "被拒絕" --> F
-  F --> G["列出每個被拒絕的<br>指令或路徑, 原樣呈現<br>每個一條 allow rule"]
+  F --> G["原樣列出每個被拒絕的<br>指令或路徑. Claude Code<br>另給每個一條 allow rule"]
   G --> H(["停止"]):::stop
     </script>
-    <figcaption>指令, Write, Edit 被拒絕時都用同一套處理</figcaption>
+    <figcaption>指令, Write, Edit 被拒絕時都用同一套處理. 其他 agent 的 rule 寫法不同, 所以只給出指令或路徑</figcaption>
   </figure>
   <table>
-    <tr><th>被拒絕的對象</th><th>allow rule</th></tr>
+    <tr><th>被拒絕的對象</th><th>allow rule (只在 Claude Code)</th></tr>
     <tr><td><code>mreq.py</code> 指令</td><td><code>Bash(uv run *mreq.py*)</code> 或 <code>PowerShell(uv run *mreq.py*)</code>; 用 python 執行時把 <code>uv run</code> 換成 <code>python</code> 或 <code>python3</code></td></tr>
     <tr><td><code>page.py</code> 指令</td><td><code>Bash(uv run *page.py*)</code> 或 <code>PowerShell(uv run *page.py*)</code>. 用這條專案 rule, 不用寫出完整路徑的 rule</td></tr>
     <tr><td>mreq-how 內容檔的 Write / Edit</td><td><code>Edit(./.mreq/how/**)</code></td></tr>
     <tr><td>mreq-graph 內容檔的 Write / Edit</td><td><code>Edit(./.mreq/graph/**)</code></td></tr>
-    <tr><td>Skill 交接</td><td><code>Skill(mreq-apply)</code> 或 <code>Skill(mreq-grill)</code>, 並給出對應的指令</td></tr>
+    <tr><td>Skill 交接</td><td>這次呼叫的名稱: <code>Skill(mreq-apply)</code>, 或 plugin 的 <code>Skill(mreq:mreq-apply)</code>. 並給出對應的指令</td></tr>
     <tr><td>其他指令</td><td>tool 名稱加完整指令, 不用 <code>*</code>. 例: <code>Bash(python -m unittest discover -s tests)</code></td></tr>
   </table>
   <p>不把兩個被拒絕的指令合併成一條 rule, 也不建議範圍更大的 rule. <code>mreq-close</code> 的 Step 3 是例外: 檢查的指令被拒絕時不停止, 繼續到 Step 4 並詢問. <code>mreq-apply</code> 停止前, 先依 "停止與記錄" 留下紀錄.</p>
