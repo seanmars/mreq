@@ -464,7 +464,7 @@ stateDiagram-v2
     <tr><td><code>mreq-close</code></td><td><code>[&lt;path&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-how</code></td><td><code>[--plain] &lt;question&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-graph</code></td><td><code>&lt;description&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
-    <tr><td><code>mreq-pro</code></td><td><code>[&lt;prompt&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
+    <tr><td><code>mreq-pro</code></td><td><code>[--no-terms] [&lt;prompt&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
   </table>
   <p>只有 Claude Code 讀 <code>disable-model-invocation</code>. Codex 改讀 <code>agents/openai.yaml</code> 的 <code>allow_implicit_invocation: false</code>; 每個「只有使用者能呼叫」的 skill 都有這個檔案. 其他 agent 兩個都不讀. 所以這些 skill 都在開頭寫明: agent 自己讀到這個檔案時, 停下來, 請使用者輸入指令. 使用者用任何一種方式呼叫都算: <code>/mreq-close</code>, plugin 的 <code>/mreq:mreq-close</code>, Codex 的 <code>$mreq-close</code>, 或直接點名. <code>mreq-pro</code> 是例外: 它只用 description 寫明 "Use only when the user invokes it: /mreq-pro, or $mreq-pro in Codex".</p>
 
@@ -1346,21 +1346,29 @@ flowchart TD
 <!-- ============================== 8 ============================== -->
 <section class="block" id="pro">
   <h2><span class="stamp" aria-hidden="true">深</span>mreq-pro</h2>
-  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 結果只在對話裡, 不寫檔案, 也不執行 script. 只有使用者輸入 <code>/mreq-pro</code> (Codex 是 <code>$mreq-pro</code>) 才會執行. agent 沒有替換 <code>$ARGUMENTS</code> 時, prompt 就是使用者呼叫 skill 時給的文字.</p>
+  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法, 外部驗證, 以及專家的術語. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 預設會讀 prompt 提到的檔案與程式碼, 教使用者術語, 並打開每個引用的連結來確認. 加 <code>--no-terms</code> 時跳過術語, 不打開網頁. 結果只在對話裡, 不寫檔案, 也不執行 script. 只有使用者輸入 <code>/mreq-pro</code> (Codex 是 <code>$mreq-pro</code>) 才會執行. agent 沒有替換 <code>$ARGUMENTS</code> 時, prompt 就是使用者呼叫 skill 時給的文字.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
   S(["/mreq-pro prompt"]):::user --> A{"有給 prompt?"}
   A -- "否" --> A1["使用最近一次的需求"]
-  A -- "是" --> B
-  A1 --> B["簡短回答四題<br>每題 2 到 4 行"]
-  B --> K{"懂這個領域,<br>能回答每一題?"}
+  A -- "是" --> R
+  A1 --> R["從 prompt 開始<br>預設也讀它提到的檔案與程式碼"]
+  R --> P{"prompt 可能是<br>不只一個問題?"}
+  P -- "是" --> P1["列出 2 到 3 個問題<br>選最可能的一個, 說明原因"]
+  P -- "否" --> B
+  P1 --> B["簡短回答四題<br>每題 2 到 4 行"]
+  B --> T{"有 --no-terms?"}
+  T -- "否" --> W["教術語: 8 到 12 個術語<br>相鄰領域, 沒提到的事"]
+  W --> L["打開每個連結確認<br>刪除無法確認的引用"]
+  L --> K
+  T -- "是" --> K{"懂這個領域,<br>能回答每一題?"}
   K -- "否" --> ASK["說明不懂的部分<br>詢問使用者, 不猜測"]:::user
   ASK --> B
   K -- "是" --> C["在一個 code block<br>寫出新 prompt"]
-  C --> D(["逐行列出刪除或縮小的<br>部分與原因"]):::stop
+  C --> D(["逐行列出刪除或縮小的部分<br>以及換成術語的片語"]):::stop
     </script>
-    <figcaption>mreq-pro 的步驟. 四題的答案, 新 prompt 與刪除清單都在同一則回覆</figcaption>
+    <figcaption>mreq-pro 的步驟. 各題的答案, 新 prompt 與兩份清單都在同一則回覆</figcaption>
   </figure>
 
   <div class="grid2">
@@ -1378,13 +1386,21 @@ flowchart TD
       <h3>新 prompt 的條件</h3>
       <ul>
         <li>要求上面四項: crux, 原始資料, 方法, 外部驗證.</li>
+        <li>原本的 prompt 已經要求的事, 用術語取代白話描述. 不因為術語而增加工作.</li>
         <li>範圍與原本相同, 或更小. 刪除不增加深度的內容. 比原本長時, 每一行新增的內容都要有理由.</li>
         <li>要求 agent 用 prototype 決定實驗能決定的選擇, 並依照觀察結果推薦一個選項.</li>
-        <li>實驗不能決定的產品或偏好選擇, 列成問使用者的問題, 不自己決定.</li>
+        <li>實驗不能決定的產品或偏好選擇, 列成問使用者的問題, 不自己決定. 使用者沒提到的事也列在這裡, 不擴大範圍.</li>
       </ul>
     </div>
   </div>
-  <div class="callout"><strong>規則:</strong> 不懂領域時, 說明並詢問使用者, 不猜測. 新 prompt 只放在一個 code block, 讓使用者可以複製. <code>SKILL.md</code> 沒有 "Asking the user" 與 "When a tool call is denied" 兩節, 所以下面的共通規則不適用.</div>
+  <h3>術語 (加 <code>--no-terms</code> 時跳過)</h3>
+  <table>
+    <tr><th>題目</th><th>回答的內容</th></tr>
+    <tr><td>The words</td><td>8 到 12 個術語, 依照對成品的影響排序. 每個術語: 一句白話的意思, 對應 prompt 或檔案的哪一部分, 一個這樣使用它的實際專案, 論文或系統 (附連結), 以及它讓使用者能向 agent 要求什麼.</td></tr>
+    <tr><td>Neighboring fields</td><td>2 到 3 個用其他名稱解決同一種問題的領域. 每個領域: 哪些可以沿用, 類比在哪裡失效, 帶回哪些術語.</td></tr>
+    <tr><td>What I left out</td><td>使用者沒提到, 但應該在意的事.</td></tr>
+  </table>
+  <div class="callout"><strong>規則:</strong> 不懂領域時, 說明並詢問使用者, 不猜測. 每個連結都要打開, 確認那一頁這樣使用該術語; 無法確認的引用要刪除, 術語可以保留. agent 沒有開網頁的 tool 時, 不給引用, 並說明一次. 新 prompt 只放在一個 code block, 讓使用者可以複製. <code>SKILL.md</code> 沒有 "Asking the user" 與 "When a tool call is denied" 兩節, 所以下面的共通規則不適用.</div>
 </section>
 
 <!-- ============================== 9 ============================== -->
