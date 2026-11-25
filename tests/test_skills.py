@@ -24,7 +24,7 @@ RUN_RULE = "Write every path with `/`, never with `\\`, on Windows too"
 HANDOFF_SKILLS = ("define", "grill", "apply", "close")
 HANDOFF_SECTION = "## Running another mreq skill"
 # Only the user starts these. Each agent marks that its own way.
-USER_ONLY = ("define", "close", "how", "graph", "pro")
+USER_ONLY = ("define", "close", "how", "graph", "pro", "terms")
 
 
 def skill_text(name: str) -> str:

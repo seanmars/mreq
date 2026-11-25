@@ -1,0 +1,6 @@
+interface:
+  display_name: "mreq-terms"
+  short_description: "Teach the expert terms for what the user is building, then rewrite their description with them."
+
+policy:
+  allow_implicit_invocation: false
