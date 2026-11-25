@@ -10,8 +10,8 @@
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
 | `mreq-how` | 先確認問題的解讀,再產生解說程式碼的離線 HTML,附 Mermaid 圖表與圖例,放在 session root 的 `.mreq/how/`. 加 `--plain` 改寫給企劃, PM 等非程式人員: 用功能名詞, 不放程式碼位置 | 只有使用者 |
 | `mreq-graph` | 先確認描述的解讀,再把描述畫成 Mermaid 圖表,產生附圖例的離線 HTML,放在 session root 的 `.mreq/graph/` | 只有使用者 |
-| `mreq-pro` | 改寫 prompt, 要求頂尖專家的做法: 更深, 不是更大. 先回答關鍵難點, 原始資料, 方法與工具, 外部驗證, 再給出可複製的新 prompt. 沒有給 prompt 時, 改寫最近一次的需求 | 只有使用者 |
-| `mreq-terms` | 教使用者專家的術語. 從使用者的檔案, 程式碼與描述開始. 給出 8 到 12 個術語 (附已打開確認的連結), 2 到 3 個相鄰領域, 使用者沒提到的事, 再用術語改寫描述. 描述可以接著交給 `/mreq-pro` | 只有使用者 |
+| `mreq-pro` | 改寫 prompt, 要求頂尖專家的做法: 更深, 不是更大. 先回答關鍵難點, 原始資料, 方法與工具, 外部驗證, 再給出可複製的新 prompt. 沒有給 prompt 時, 改寫最近一次的需求; 對話裡有 `mreq-terms` 的結果時, 改寫它給的 prompt | 只有使用者 |
+| `mreq-terms` | 使用者有想法, 但缺少專家的術語與知識時使用. 依照 prompt, 對話與檔案, 給出 5 到 12 個適合的術語 (意思, 專家知道的事, 已打開確認的連結), 看起來對但不適合的術語, 2 到 3 個相鄰領域, 使用者沒提到的事, 再用術語改寫 prompt. 沒有給 prompt 時, 使用最近一次的需求. 接著輸入 `/mreq-pro` (不給 prompt), 就會加深這個新 prompt | 只有使用者 |
 
 「誰能呼叫」由各 agent 自己的設定控制. Claude Code, Grok 與 Antigravity 讀 SKILL.md 的 `disable-model-invocation`. Codex 讀各 skill 的 `agents/openai.yaml` (`allow_implicit_invocation: false`). 其他 agent 可能兩者都不讀, 模型可能自動觸發任何一個 skill. `mreq-close` 核對通過後會直接刪除文件.
 
