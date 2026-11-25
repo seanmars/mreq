@@ -223,6 +223,7 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
     <li class="sub"><a href="#lifecycle"><span class="stamp sub" aria-hidden="true">態</span>文件生命週期</a></li>
     <li class="sub"><a href="#parts"><span class="stamp sub" aria-hidden="true">件</span>元件與呼叫權限</a></li>
     <li><a href="#define"><span class="stamp" aria-hidden="true">立</span>mreq-define</a></li>
+    <li class="sub"><a href="#define-source"><span class="stamp sub" aria-hidden="true">源</span>需求的來源</a></li>
     <li class="sub"><a href="#define-confirm"><span class="stamp sub" aria-hidden="true">認</span>重述, 確認與寫文件</a></li>
     <li class="sub"><a href="#define-nodoc"><span class="stamp sub" aria-hidden="true">免</span>不寫文件的流程</a></li>
     <li class="sub"><a href="#define-explore"><span class="stamp sub" aria-hidden="true">探</span>平行探索</a></li>
@@ -236,6 +237,7 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
     <li class="sub"><a href="#close-act"><span class="stamp sub" aria-hidden="true">決</span>處理結果與刪除</a></li>
     <li><a href="#how"><span class="stamp" aria-hidden="true">解</span>mreq-how</a></li>
     <li><a href="#graph"><span class="stamp" aria-hidden="true">圖</span>mreq-graph</a></li>
+    <li class="sub"><a href="#page-build"><span class="stamp sub" aria-hidden="true">頁</span>頁面與 build</a></li>
     <li><a href="#pro"><span class="stamp" aria-hidden="true">深</span>mreq-pro</a></li>
     <li><a href="#terms"><span class="stamp" aria-hidden="true">詞</span>mreq-terms</a></li>
     <li><a href="#common"><span class="stamp" aria-hidden="true">通</span>共通規則</a></li>
@@ -249,7 +251,7 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
 <header class="hero">
   <div class="seal">流程圖</div>
   <h1>mreq skill 流程圖</h1>
-  <p>從需求到收尾的完整流程. 內容依 <code>skills/</code> 底下每個 skill 的 <code>SKILL.md</code> 與它自己的檔案整理. 每張圖都可以用右上角的 + 與 − 按鈕縮放, 放大後可以拖曳.</p>
+  <p>mreq 的 8 個 skill 各自做什麼, 以及它們怎麼交接. 每一項說明都對照 <code>skills/</code> 底下的 <code>SKILL.md</code>, 它引用的檔案, 與 script. 每張圖都可以用圖上的 + 與 − 按鈕縮放, 放大後可以拖曳.</p>
 </header>
 
 <!-- ============================== 0 ============================== -->
@@ -265,13 +267,25 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
     <li><span class="chip plain"></span>agent 的一般步驟</li>
     <li><span class="chip decision"></span>判斷 (菱形)</li>
   </ul>
-  <p>選項名稱保留 skill 裡的英文 (例: <code>Continue it</code>, <code>Something is wrong</code>). agent 每次會用自己的話寫選項, 但意思不變. 圖裡的 "撰寫後實作" 這類中文名稱, 對照表列在各節.</p>
+  <p>選項名稱保留 skill 裡的英文 (例: <code>Continue it</code>, <code>Something is wrong</code>). agent 每次用自己的話寫選項, 但意思不變. 圖裡的 "撰寫後實作" 這類中文名稱, 對照表列在各節.</p>
+  <p>步驟編號 (Step 1, Step 2, ...) 是各 <code>SKILL.md</code> 的 "Steps" 編號. 每個 skill 的編號各自獨立.</p>
 </section>
 
 <!-- ============================== 1 ============================== -->
 <section class="block" id="overall">
   <h2><span class="stamp" aria-hidden="true">總</span>整體流程</h2>
   <p class="lede">一份需求變成一份 <code>.mreq/</code> 任務文件. 文件記錄進度, 並交接給下一個 agent. 工作完成後, <code>/mreq-close</code> 核對程式碼, 然後刪除文件.</p>
+  <table>
+    <tr><th>skill</th><th>工作</th><th>產出</th><th>寫入的地方</th></tr>
+    <tr><td><code>mreq-define</code></td><td>分類需求, 訪談, 重述, 取得確認</td><td>一份任務文件. 使用者選擇不寫文件時, 直接實作</td><td><code>.mreq/*.md</code>. 只有不寫文件的流程會改程式碼</td></tr>
+    <tr><td><code>mreq-grill</code></td><td>用四象限壓力測試一份文件</td><td>寫回文件的決策, 假設與未決事項</td><td>只有被 grill 的那一份文件</td></tr>
+    <tr><td><code>mreq-apply</code></td><td>一次實作一個 task</td><td>程式碼, 勾選的 task, 最新的 <code>## Handoff</code></td><td>程式碼與那一份文件</td></tr>
+    <tr><td><code>mreq-close</code></td><td>核對程式碼是否做到文件約定的內容</td><td>報告</td><td>不改程式碼, 不改文件. 最後刪除文件</td></tr>
+    <tr><td><code>mreq-how</code></td><td>解說一段程式碼怎麼運作</td><td>一頁離線 HTML</td><td>session root 的 <code>.mreq/how/</code></td></tr>
+    <tr><td><code>mreq-graph</code></td><td>把描述畫成 Mermaid 圖</td><td>一頁離線 HTML</td><td>session root 的 <code>.mreq/graph/</code></td></tr>
+    <tr><td><code>mreq-pro</code></td><td>改寫 prompt, 要求頂尖專家的做法</td><td>四題的答案與新 prompt</td><td>只在對話裡</td></tr>
+    <tr><td><code>mreq-terms</code></td><td>教使用者這件工作的專家術語</td><td>術語, 知識與用術語改寫的 prompt</td><td>只在對話裡</td></tr>
+  </table>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -285,6 +299,9 @@ flowchart TD
   Q -- "學這件工作<br>的術語" --> TERMS["/mreq-terms"]:::skill
   TERMS --> NEWD(["術語與改寫後的 prompt<br>在對話裡"]):::stop
   Q -- "要做一件工作" --> DEF["/mreq-define<br>分類, 訪談, 重述"]:::skill
+  NEWP -. "接著輸入<br>/mreq-define<br>(不給需求)" .-> DEF
+  NEWD -. "接著輸入<br>/mreq-pro<br>(不給 prompt)" .-> PRO
+  NEWD -. "或 /mreq-define<br>(不給需求)" .-> DEF
   DEF --> C{"確認重述時<br>選的下一步"}:::user
   C -- "直接實作, 不寫文件<br>(小需求時推薦)" --> DIRECT["在 mreq-define 內<br>實作"]
   DIRECT --> DREP(["對照重述回報<br>沒有文件可以 close"]):::stop
@@ -296,6 +313,7 @@ flowchart TD
   DOC -- "撰寫後 grill" --> GRILL["mreq-grill<br>四象限壓力測試<br>結論寫回文件"]:::skill
   DOC -- "撰寫後實作<br>(一般需求時推薦)" --> APPLY["mreq-apply<br>逐項實作 Tasks"]:::skill
   GRILL -- "寫回後實作<br>(推薦)" --> APPLY
+  GRILL -- "寫回後停止" --> LATER
   APPLY -- "文件未確認或<br>只有 template:<br>選擇先 grill" --> GRILL
   APPLY -- "task 全部完成<br>測試通過" --> DONE[("status: done")]:::doc
   DONE --> COMMIT["使用者 commit<br>(要保留文件內容時)"]:::user
@@ -307,7 +325,16 @@ flowchart TD
     </script>
     <figcaption>從需求到刪除文件的主流程. 各 skill 內部的步驟畫在後面的章節</figcaption>
   </figure>
-  <div class="callout"><strong>要保留文件內容, 先 commit, 再 close.</strong> <code>mreq-apply</code> 不會自己 commit, 完成時也不提醒 commit. <code>mreq-close</code> 刪除前不檢查 git 狀態, 也不詢問. 文件被刪除後, 只有 git history 保留它.</div>
+
+  <h3>常見的走法</h3>
+  <table>
+    <tr><th>走法</th><th>順序</th><th>說明</th></tr>
+    <tr><td>典型</td><td><code>/mreq-define</code> → (<code>mreq-grill</code>) → <code>mreq-apply</code> → commit → <code>/mreq-close</code></td><td>括號裡的步驟可以省略. <code>mreq-grill</code> 與 <code>mreq-apply</code> 由前一個 skill 自動接續</td></tr>
+    <tr><td>小需求</td><td><code>/mreq-define</code> → 選 "直接實作, 不寫文件" → 在同一個 session 實作 → 對照重述回報</td><td>不產生文件, 也不需要 <code>/mreq-close</code></td></tr>
+    <tr><td>先加深需求</td><td>(<code>/mreq-terms</code>) → <code>/mreq-pro</code> → <code>/mreq-define</code> (不給需求)</td><td><code>mreq-define</code> 直接使用對話裡最新的那一則回覆</td></tr>
+    <tr><td>只學術語</td><td><code>/mreq-terms</code> → <code>/mreq-define</code> (不給需求)</td><td>跳過 <code>/mreq-pro</code></td></tr>
+  </table>
+  <div class="callout"><strong>要保留文件內容, 先 commit, 再 close.</strong> <code>mreq-apply</code> 不會自己 commit: 使用者沒要求時, 它不執行會改變 working tree, index 或 history 的 git 指令. 完成時它只給出 <code>/mreq-close &lt;path&gt;</code>. <code>mreq-close</code> 刪除前不檢查 git 狀態, 也不詢問. 文件被刪除後, 只有 git history 保留它.</div>
   <div class="callout"><strong>小需求可以不寫文件.</strong> 需求是 Simple 而且沒有延後的決策時, <code>mreq-define</code> 在確認重述時提供並推薦 "直接實作, 不寫文件". 這個流程沒有獨立的稽核: 結束時由同一個 session 對照重述回報. 這時 grill 也不需要文件: <code>mreq-define</code> 自己對重述做四象限 grill, 然後再重述一次. <code>mreq-grill</code> 只處理文件.</div>
 </section>
 
@@ -317,35 +344,45 @@ flowchart TD
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
+  TERMS["mreq-terms"]:::skill
+  PRO["mreq-pro"]:::skill
   DEF["mreq-define"]:::skill
   GRILL["mreq-grill"]:::skill
   APPLY["mreq-apply"]:::skill
   CLOSE["mreq-close"]:::skill
   HOW["mreq-how"]:::skill
+  TERMS -. "回覆的最後一行:<br>/mreq-pro" .-> PRO
+  TERMS -. "回覆的最後一行:<br>/mreq-define" .-> DEF
+  PRO -. "回覆的最後一行:<br>/mreq-define" .-> DEF
   DEF -- "撰寫後 grill" --> GRILL
   DEF -- "Continue it,<br>撰寫後實作,<br>補寫文件後接續" --> APPLY
+  DEF -. "不寫文件的流程<br>中途停止:<br>/mreq-apply path" .-> APPLY
   GRILL -- "寫回後實作" --> APPLY
   APPLY -- "Grill it,<br>Grill first" --> GRILL
   CLOSE -- "Continue, Fix now,<br>Fix the code" --> APPLY
+  CLOSE -. "Stop 或 Keep it,<br>有要修的項目:<br>/mreq-apply path" .-> APPLY
   DEF -. "Explain it:<br>/mreq-how 問題" .-> HOW
   APPLY -. "完成:<br>/mreq-close path" .-> CLOSE
   GRILL -. "沒有文件, 或<br>New document:<br>/mreq-define" .-> DEF
-  APPLY -. "沒有文件:<br>/mreq-define" .-> DEF
+  APPLY -. "沒有文件, 或<br>template 文件選 Stop:<br>/mreq-define" .-> DEF
     </script>
-    <figcaption>實線: 自動接續. 虛線: 只給出或建議指令, 由使用者執行. 完整的條件見下表</figcaption>
+    <figcaption>實線: 自動接續. 虛線: 只給出或建議指令, 由使用者執行. 同一對 skill 之間可以兩種都有. 完整的條件見下表</figcaption>
   </figure>
   <table class="cmd pair">
     <tr><th>從</th><th>到</th><th>何時</th><th>方式</th></tr>
+    <tr><td>mreq-terms</td><td>mreq-pro</td><td>每一次回覆, code block 之後的那一行</td><td>說明 <code>/mreq-pro</code> (不給 prompt) 會加深新 prompt. 由使用者執行. <code>mreq-pro</code> 從對話讀取 <code>mreq-terms</code> 的回覆</td></tr>
+    <tr><td>mreq-terms</td><td>mreq-define</td><td>同一行</td><td>說明 <code>/mreq-define</code> (不給需求) 會用新 prompt 開始工作. 由使用者執行. <code>mreq-define</code> 從對話讀取 <code>mreq-terms</code> 的回覆</td></tr>
+    <tr><td>mreq-pro</td><td>mreq-define</td><td>每一次回覆的最後一行</td><td>說明 <code>/mreq-define</code> (不給需求) 會用新 prompt 開始工作. 由使用者執行. <code>mreq-define</code> 從對話讀取 <code>mreq-pro</code> 的回覆</td></tr>
     <tr><td>mreq-define</td><td>mreq-apply</td><td>Step 1 選 <code>Continue it</code>; Step 4 選 "撰寫後實作"; 不寫文件的流程選 <code>Write the document, continue with mreq-apply</code></td><td>自動接續</td></tr>
     <tr><td>mreq-define</td><td>mreq-grill</td><td>Step 4 選 "撰寫後 grill"</td><td>自動接續</td></tr>
     <tr><td>mreq-define</td><td>mreq-how</td><td>Step 1 選 <code>Explain it</code></td><td>給出 <code>/mreq-how &lt;問題&gt;</code>, 停止</td></tr>
     <tr><td>mreq-define</td><td>mreq-apply</td><td>不寫文件的流程中途停止</td><td>先補寫文件, 再給出 <code>/mreq-apply &lt;path&gt;</code></td></tr>
     <tr><td>mreq-grill</td><td>mreq-apply</td><td>Step 4 選 "寫回後實作"</td><td>自動接續</td></tr>
     <tr><td>mreq-grill</td><td>mreq-define</td><td>沒有開啟中的文件; <code>done</code> 文件選 <code>New document</code></td><td>建議 <code>/mreq-define</code>, 停止</td></tr>
-    <tr><td>mreq-apply</td><td>mreq-grill</td><td>文件只有 template 的提示, 選 <code>Grill it</code>; 文件有 <code>Unconfirmed:</code>, 選 <code>Grill first</code></td><td>自動接續</td></tr>
-    <tr><td>mreq-apply</td><td>mreq-close</td><td>task 全部完成並設為 <code>done</code>; 或文件已經是 <code>done</code> 而且沒有工作</td><td>給出 <code>/mreq-close &lt;path&gt;</code>, 不自己執行</td></tr>
+    <tr><td>mreq-apply</td><td>mreq-grill</td><td>文件只有 template 的提示, 選 <code>Grill it</code>; 文件有 <code>Unconfirmed:</code>, 選 <code>Grill first</code></td><td>自動接續. 交接後 <code>mreq-apply</code> 不再做任何事</td></tr>
+    <tr><td>mreq-apply</td><td>mreq-close</td><td>task 全部完成並設為 <code>done</code>; 或文件已經是 <code>done</code>, task 全部勾選, 而且沒有 findings</td><td>給出 <code>/mreq-close &lt;path&gt;</code>, 不自己執行</td></tr>
     <tr><td>mreq-apply</td><td>mreq-define</td><td>沒有開啟中的文件; template 文件選 <code>Stop</code></td><td>說明 <code>/mreq-define &lt;request&gt;</code> 可以開始新工作, 停止</td></tr>
-    <tr><td>mreq-close</td><td>mreq-apply</td><td>未勾選的 task 選 <code>Continue</code>; 選了 <code>Fix now</code> 或 <code>Fix the code</code></td><td>自動接續. 參數是文件的絕對路徑, 加上每個 finding 或 failure 各一行</td></tr>
+    <tr><td>mreq-close</td><td>mreq-apply</td><td>未勾選的 task 選 <code>Continue</code>; 選了 <code>Fix now</code> 或 <code>Fix the code</code></td><td>自動接續. 參數是文件的絕對路徑, 加上每個 finding 或 failure 各一行. <code>Continue</code> 不帶 findings. 交接後不刪除文件</td></tr>
     <tr><td>mreq-close</td><td>mreq-apply</td><td>選了 <code>Stop</code> 或 <code>Keep it</code>, 而且有要修的項目</td><td>給出 <code>/mreq-apply &lt;path&gt;</code> 與要修的項目, 停止</td></tr>
   </table>
   <p>表中的指令以 Claude Code 為例. 給使用者輸入的指令依 agent 的寫法: Claude Code, Grok 與 Antigravity 寫 <code>/mreq-close &lt;path&gt;</code> (plugin 也可以寫 <code>/mreq:mreq-close &lt;path&gt;</code>); Codex 寫 <code>$mreq-close &lt;path&gt;</code>.</p>
@@ -357,22 +394,22 @@ flowchart TD
   A["步驟要執行另一個 mreq skill<br>(mreq-apply 或 mreq-grill)"] --> B{"agent 有 skill tool?"}
   B -- "有 (Claude Code)" --> C["用 skill 清單顯示的名稱呼叫<br>plugin: mreq:mreq-apply<br>其他: mreq-apply"]:::skill
   C --> D{"結果"}
-  D -- "Unknown skill,<br>Did you mean ..." --> E["用建議的名稱<br>再呼叫一次"]:::skill
-  E --> D
-  D -- "成功" --> RUN(["目標 skill 接手<br>原本的 skill 不再做任何事"])
+  D -- "Unknown skill,<br>Did you mean ..." --> E["用它指出的名稱<br>再呼叫一次, 只一次"]:::skill
+  E --> RUN
+  D -- "成功" --> RUN(["目標 skill 接手<br>帶著步驟給的參數"])
   B -- "沒有 (Codex,<br>Grok, Antigravity)" --> F["完整讀取<br>../mreq-apply/SKILL.md<br>從第一步照做"]:::doc
   F -- "檔案存在" --> RUN
   D -- "被拒絕" --> DEN(["給出指令與 allow rule<br>例: Skill(mreq:mreq-apply)<br>停止"]):::stop
-  D -- "skill 不存在<br>也沒有建議的名稱" --> MISS(["告知要安裝<br>哪一個 skill, 停止"]):::stop
+  D -- "不認得這個 skill,<br>也沒有指出其他名稱" --> MISS(["告知要安裝<br>哪一個 skill, 停止"]):::stop
   F -- "檔案不存在" --> MISS
     </script>
-    <figcaption>四個會交接的 skill (define, grill, apply, close) 用同一段 "Running another mreq skill", 內容一字不差</figcaption>
+    <figcaption>四個會交接的 skill (define, grill, apply, close) 用同一段 "Running another mreq skill". 測試檢查這四份內容一字不差</figcaption>
   </figure>
   <ul>
-    <li><code>Unknown skill</code> 並建議名稱時, 只用建議的名稱重試一次. 這不算被拒絕.</li>
-    <li>讀取目標的 <code>SKILL.md</code> 時, 那個檔案裡的 skill 目錄變數指的是目標 skill 的目錄, 不是原本的 skill.</li>
+    <li><code>Unknown skill</code> 並指出名稱 (<code>Did you mean ...</code>) 時, 用那個名稱呼叫一次. 這不算被拒絕.</li>
+    <li>讀取目標的 <code>SKILL.md</code> 時, 步驟給的參數就是它的輸入. 那個檔案裡的 skill 目錄變數指的是目標 skill 的目錄, 不是原本的 skill.</li>
     <li>呼叫被拒絕時, 給出對應的指令 (例: <code>/mreq-apply &lt;path&gt;</code>) 與這次呼叫的名稱的 allow rule (例: <code>Skill(mreq:mreq-apply)</code>), 然後停止. 被拒絕之後, 不讀目標的 <code>SKILL.md</code> 自己照做: 由使用者決定.</li>
-    <li>每個 skill 只帶自己的檔案, 可以只安裝部分 skill. 所以目標 skill 可能沒有安裝.</li>
+    <li>每個 skill 只帶自己的檔案, 可以只安裝部分 skill. 所以目標 skill 可能沒有安裝. 這時告知使用者要安裝哪一個 skill, 然後停止.</li>
   </ul>
 </section>
 
@@ -393,7 +430,7 @@ sequenceDiagram
   DEF->>S: list --open
   S-->>DEF: 開啟中的文件 (JSON)
   Note over DEF: 讀 README 與程式碼, 判斷大小, 分類 schema
-  DEF->>U: 訪談: 選項式提問
+  DEF->>U: 訪談, 選項式提問
   U-->>DEF: 回答
   DEF->>U: 重述, 並選下一步
   U-->>DEF: 正確, 撰寫後實作
@@ -401,7 +438,7 @@ sequenceDiagram
   S->>F: 從 template 建立, status draft
   DEF->>F: Edit 逐節填寫 body
   Note over DEF: 不再問下一步
-  DEF->>AP: Skill tool 呼叫 mreq-apply
+  DEF->>AP: 自動接續 mreq-apply, 帶著文件路徑
   AP->>F: 完整讀取, 先讀 Handoff
   AP->>S: progress
   AP-->>U: 原樣顯示進度
@@ -413,19 +450,24 @@ sequenceDiagram
     AP->>S: update
   end
   AP->>S: update --status done
+  AP->>F: Handoff 寫完成與驗證方式
   AP-->>U: 給出 /mreq-close 與文件路徑
   Note over U: 要保留文件內容時, 先 commit
   U->>CL: /mreq-close 文件路徑
   CL-->>U: 第一行 Closing 與絕對路徑
   CL->>F: Audit, 完整讀文件與引用的檔案
-  CL->>CL: Run, 只執行文件指定的檢查
-  Note over CL: 全部通過時不詢問, 也不檢查 git
+  Note over CL: Run 不重跑測試指令與 task 的檢查
+  Note over CL: 沒有 finding 時不詢問, 也不檢查 git
   CL->>S: delete
   S->>F: 刪除文件
-  CL-->>U: 報告
+  CL-->>U: 報告, 包含沒重跑的檢查
     </script>
-    <figcaption>各參與者之間的訊息順序</figcaption>
+    <figcaption>各參與者之間的訊息順序. 這份文件是 done, 而且 Handoff 寫了驗證方式, 所以 mreq-close 不重跑測試</figcaption>
   </figure>
+  <ul>
+    <li><code>mreq-close</code> 不重跑的只有測試指令與每個 task 自己的檢查. <code>issue</code> 的 Repro 與 <code>refactor</code> 的 Behavior Pin 仍然執行.</li>
+    <li>沒重跑的檢查不算通過. 報告會列出它們, 並附上 Handoff 寫的驗證方式.</li>
+  </ul>
 </section>
 
 <section class="block" id="lifecycle">
@@ -447,21 +489,22 @@ stateDiagram-v2
     <figcaption>status 的轉換與觸發者</figcaption>
   </figure>
   <ul>
+    <li><code>mreq-define</code> 寫完文件後, status 保持 <code>draft</code>.</li>
     <li><code>mreq-grill</code> 處理 <code>draft</code> 或 <code>active</code> 文件時, 只執行 <code>update</code>, 不改 status. 只有 Reopen 的 <code>done</code> 文件會執行 <code>update --status active</code>.</li>
-    <li><code>mreq-apply</code> 在兩種情況把 <code>done</code> 設回 <code>active</code>: 收到 <code>mreq-close</code> 的 findings, 或文件是 <code>done</code> 但還有未勾選的 task.</li>
+    <li><code>mreq-apply</code> 在三種情況設為 <code>active</code>: 文件是 <code>draft</code>; 文件是 <code>done</code> 但還有未勾選的 task; 收到 findings.</li>
     <li>測試沒有執行就不算通過. 這時 <code>mreq-apply</code> 不設 <code>done</code>, 文件停在 <code>active</code>.</li>
-    <li><code>mreq-close</code> 可以 close 任何 status 的文件. 沒有指定路徑, 而且剛好一份 <code>done</code> 的文件時, 直接使用它; 其他情況由使用者挑選. 有未勾選的 task 時, 先問 Continue, Close anyway 或 Keep it.</li>
+    <li><code>mreq-close</code> 可以 close 任何 status 的文件. 沒有指定路徑, 而且剛好一份 <code>done</code> 的文件時, 直接使用它; 其他情況由使用者挑選. 有未勾選的 task 時, 先問 <code>Continue</code>, <code>Close anyway</code> 或 <code>Keep it</code>.</li>
     <li><code>update</code> 會重寫檔案. 下一次 Edit 之前, 一定先重讀文件.</li>
-    <li>不寫文件的流程沒有文件, 所以沒有 status. 它中途補寫文件時, 文件從 <code>draft</code> 開始, 已完成的 task 已經打勾.</li>
+    <li>不寫文件的流程沒有文件, 所以沒有 status. 它中途補寫文件時, 文件從 <code>draft</code> 開始, 已完成而且已證明的 task 已經打勾.</li>
   </ul>
 </section>
 
 <section class="block" id="parts">
   <h2><span class="stamp sub" aria-hidden="true">件</span>元件與呼叫權限</h2>
-  <p>每個 skill 都帶著自己需要的檔案, 不讀其他 skill 的目錄. 所以可以只安裝部分 skill. 多個 skill 使用的檔案, 每個 skill 各有一份複本. 執行 skill 時, 不修改這些檔案.</p>
+  <p>每個 skill 都帶著自己需要的檔案, 不讀其他 skill 的目錄. 唯一的例外是交接: 沒有 skill tool 的 agent 會讀目標 skill 的 <code>SKILL.md</code>. 所以可以只安裝部分 skill. 多個 skill 使用的檔案, 每個 skill 各有一份複本.</p>
   <table>
     <tr><th>skill</th><th>輸入</th><th>使用者</th><th>agent</th><th>front matter</th></tr>
-    <tr><td><code>mreq-define</code></td><td><code>&lt;request&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
+    <tr><td><code>mreq-define</code></td><td><code>[&lt;request&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-grill</code></td><td><code>[&lt;path&gt;] [&lt;focus&gt;]</code></td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
     <tr><td><code>mreq-apply</code></td><td><code>[&lt;path&gt;]</code>, 或 findings</td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
     <tr><td><code>mreq-close</code></td><td><code>[&lt;path&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
@@ -470,7 +513,8 @@ stateDiagram-v2
     <tr><td><code>mreq-pro</code></td><td><code>[&lt;prompt&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-terms</code></td><td><code>[&lt;prompt&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
   </table>
-  <p>只有 Claude Code 讀 <code>disable-model-invocation</code>. Codex 改讀 <code>agents/openai.yaml</code> 的 <code>allow_implicit_invocation: false</code>; 每個「只有使用者能呼叫」的 skill 都有這個檔案. 其他 agent 兩個都不讀. 所以這些 skill 都在開頭寫明: agent 自己讀到這個檔案時, 停下來, 請使用者輸入指令. 使用者用任何一種方式呼叫都算: <code>/mreq-close</code>, plugin 的 <code>/mreq:mreq-close</code>, Codex 的 <code>$mreq-close</code>, 或直接點名. <code>mreq-pro</code> 與 <code>mreq-terms</code> 是例外: 它們只用 description 寫明, 例: "Use only when the user invokes it: /mreq-pro, or $mreq-pro in Codex".</p>
+  <p>「誰能呼叫」由各 agent 自己的設定控制. Claude Code, Grok 與 Antigravity 讀 <code>SKILL.md</code> 的 <code>disable-model-invocation</code>. Codex 不讀它, 改讀 <code>agents/openai.yaml</code> 的 <code>allow_implicit_invocation: false</code>; 每個「只有使用者能呼叫」的 skill 都有這個檔案. 其他 agent 可能兩者都不讀.</p>
+  <p>所以 <code>mreq-define</code>, <code>mreq-close</code>, <code>mreq-how</code> 與 <code>mreq-graph</code> 都在開頭寫明: agent 自己讀到這個檔案時, 停下來, 請使用者輸入指令. 使用者用任何一種方式呼叫都算: <code>/mreq-close</code>, plugin 的 <code>/mreq:mreq-close</code>, Codex 的 <code>$mreq-close</code>, 或直接點名. <code>mreq-pro</code> 與 <code>mreq-terms</code> 沒有這一段: 它們只在 description 寫明, 例: "Use only when the user invokes it: /mreq-pro, or $mreq-pro in Codex".</p>
 
   <h3>任務文件的 skill 與 mreq.py</h3>
   <figure class="diagram">
@@ -498,7 +542,7 @@ flowchart TD
   NEW -- "讀取" --> TPL[("mreq-define/templates/<br>feature, issue,<br>refactor, task")]:::doc
   NEW & UPD & DEL --> MREQ[(".mreq/*.md<br>位於 git root")]:::doc
     </script>
-    <figcaption>四個 skill 各自執行自己的 mreq.py. mreq-define 與 mreq-grill 另外讀自己的 GRILL.md</figcaption>
+    <figcaption>四個 skill 各自執行自己的 mreq.py. 只有 mreq-define 有 templates, 所以只有它能執行 new. mreq-define 與 mreq-grill 另外讀自己的 GRILL.md</figcaption>
   </figure>
 
   <h3>頁面的 skill 與 page.py</h3>
@@ -510,7 +554,7 @@ flowchart TD
   PAGEPY -- "套用" --> SK[("自己的<br>skeleton.html")]:::doc
   PAGEPY -- "內嵌" --> PELE[("自己的 vendor/<br>pele.global.js")]:::doc
   PAGEPY -- "有 Node 時<br>檢查每張圖" --> CHK["自己的 scripts/<br>check.mjs"]:::script
-  PAGEPY -- "new: 內容檔<br>build: 頁面" --> OUT[(".mreq/how/ 或 .mreq/graph/<br>位於 session root")]:::doc
+  PAGEPY -- "new: 內容檔的路徑<br>build: 頁面" --> OUT[(".mreq/how/ 或 .mreq/graph/<br>位於 session root")]:::doc
     </script>
     <figcaption>兩個 skill 各有一份 page.py, skeleton.html, Pele 與 check.mjs. 第一個參數 how 或 graph 決定輸出目錄與頁面的檢查, 必須和 skill 相同</figcaption>
   </figure>
@@ -519,14 +563,14 @@ flowchart TD
   <table>
     <tr><th>檔案</th><th>內容</th><th>有複本的 skill</th></tr>
     <tr><td><code>scripts/mreq.py</code></td><td>建立, 列出, 更新, 顯示進度, 刪除 <code>.mreq/</code> 底下的任務文件</td><td>define, grill, apply, close</td></tr>
+    <tr><td><code>GRILL.md</code></td><td>grill 的方法: 四象限, 焦點, 後續輪次, 訪談規則, 限制</td><td>define, grill</td></tr>
     <tr><td><code>scripts/page.py</code></td><td>建立並檢查離線頁面</td><td>how, graph</td></tr>
-    <tr><td><code>GRILL.md</code></td><td>grill 的方法: 四象限, 後續輪次, 訪談規則, 限制</td><td>grill, define</td></tr>
-    <tr><td><code>MERMAID.md</code></td><td>圖的寫法: figure 的格式, 大小, 顏色, Mermaid 規則, 圖例</td><td>how, graph</td></tr>
-    <tr><td><code>vendor/pele.global.js</code></td><td><a href="https://pele.run/">Pele</a>, 繪製 Mermaid 圖. <code>page.py build</code> 把它內嵌在每個頁面</td><td>how, graph</td></tr>
     <tr><td><code>scripts/check.mjs</code></td><td>在 Node 裡用 Pele 繪製每張圖, 讓 build 看到瀏覽器會顯示的錯誤</td><td>how, graph</td></tr>
+    <tr><td><code>vendor/pele.global.js</code>, <code>vendor/pele.LICENSE</code></td><td><a href="https://pele.run/">Pele</a>, 繪製 Mermaid 圖, 與它的授權. <code>page.py build</code> 把 bundle 內嵌在每個頁面</td><td>how, graph</td></tr>
+    <tr><td><code>MERMAID.md</code></td><td>圖的寫法: figure 的格式, 大小, 顏色, Mermaid 規則, 圖例</td><td>how, graph</td></tr>
   </table>
-  <p>這些檔案的來源在 repository 的 <code>shared/</code>. <code>tools/sync.py</code> 把它們複製到各 skill; 測試會檢查每份複本和來源相同.</p>
-  <p>只有一個 skill 使用的檔案: <code>mreq-define/EXPLORER.md</code>, <code>templates/</code> (每種 schema 一份 template, <code>mreq.py new</code> 讀取); <code>mreq-how/EXPLORER.md</code>, <code>WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-graph/WRITING.md</code>, <code>skeleton.html</code>.</p>
+  <p>這些檔案的來源在 repository 的 <code>shared/</code>. <code>tools/sync.py</code> 把它們複製到各 skill; <code>tests/test_sync.py</code> 檢查每份複本和來源相同. 所以只修改 <code>shared/</code> 的檔案, 不修改複本.</p>
+  <p>只有一個 skill 使用的檔案: <code>mreq-define/EXPLORER.md</code>, <code>templates/</code> (每種 schema 一份 template, <code>mreq.py new</code> 讀取); <code>mreq-how/EXPLORER.md</code>, <code>WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-graph/WRITING.md</code>, <code>skeleton.html</code>. 兩個 <code>EXPLORER.md</code>, 兩個 <code>WRITING.md</code> 與兩個 <code>skeleton.html</code> 的內容各不相同.</p>
 
   <h3>mreq.py 指令</h3>
   <table class="cmd">
@@ -535,9 +579,9 @@ flowchart TD
     <tr><td><code>list [--open]</code></td><td>列出每份文件的 front matter 與 <code>## Tasks</code> 的勾選進度. 最近更新的排前面. <code>--open</code> 排除 <code>done</code>. 有 <code>warning</code> 或 <code>error</code> 的項目是 script 不能信任的檔案: 要告知使用者.</td><td>define, grill, apply, close</td></tr>
     <tr><td><code>update &lt;path&gt; [--status]</code></td><td>把 <code>updated</code> 設為現在. 可以同時改 status. 它會重寫檔案, 所以下一次 Edit 前要再讀一次文件.</td><td>grill, apply</td></tr>
     <tr><td><code>progress &lt;path&gt;</code></td><td>印出三行純文字 (不是 JSON): <code>Using: 絕對路徑</code>, <code>schema: N/M tasks done. Next: 第一個未勾選的 task</code> 與 <code>Status: status</code>. 全部勾選時 Next 是 <code>none</code>. front matter 的 status 或 schema 不合法時, 多印 <code>Warning:</code> 行.</td><td>mreq-apply</td></tr>
-    <tr><td><code>delete &lt;path&gt;</code></td><td>刪除文件. 拒絕 <code>.mreq/</code> 以外的檔案.</td><td>mreq-close</td></tr>
+    <tr><td><code>delete &lt;path&gt;</code></td><td>刪除文件. 拒絕 <code>.mreq/</code> 以外的檔案, 也拒絕沒有 mreq front matter 的檔案.</td><td>mreq-close</td></tr>
   </table>
-  <p><code>progress</code> 以外的指令都印出 JSON. 路徑一律用 <code>/</code>. 不是 git repository 時, 目前的目錄就是專案的根目錄.</p>
+  <p><code>progress</code> 以外的指令都印出 JSON. 路徑一律用 <code>/</code>. <code>.mreq/</code> 位於 git root; 不是 git repository 時, 目前的目錄就是專案的根目錄.</p>
 
   <h3>文件結構 (依 schema)</h3>
   <p>front matter 欄位: <code>title</code>, <code>desc</code>, <code>date</code>, <code>schema</code>, <code>status</code>, <code>updated</code>. 其他 skill 依 <code>##</code> 標題找章節, 所以標題不能改.</p>
@@ -548,17 +592,18 @@ flowchart TD
     <tr><td><code>refactor</code></td><td>Goal, Scope (Out), Behavior Pin, Target Shape, Assumptions, Decisions, Tasks, Open, Handoff</td><td>1. Pin 目前的行為</td></tr>
     <tr><td><code>task</code></td><td>Goal, Scope (Out), Context, Assumptions, Decisions, Tasks, Open, Handoff</td><td>無</td></tr>
   </table>
-  <p><code>## Open</code> 的每一項是 <code>- Open: &lt;question&gt;</code> 或 <code>- Follow-up: &lt;what&gt;</code>. <code>## Decisions</code> 的每個決策是一個 <code>### Dn:</code>.</p>
+  <p><code>## Open</code> 的每一項是 <code>- Open: &lt;question&gt;</code> 或 <code>- Follow-up: &lt;what&gt;</code>. <code>## Decisions</code> 的每個決策是一個 <code>### Dn:</code>. <code>## Root Cause</code> 在原因驗證之前寫 <code>Not verified yet: &lt;hypothesis&gt;</code>.</p>
 </section>
 
 <!-- ============================== 2 ============================== -->
 <section class="block" id="define">
   <h2><span class="stamp" aria-hidden="true">立</span>mreq-define</h2>
-  <p class="lede">把一個需求變成一份確認過的任務文件. 它不實作任何東西, 只寫 <code>.mreq/</code> 底下的文件. 唯一的例外是使用者在 Step 4 選了不寫文件: 這時它直接實作重述的內容. 只有使用者輸入 <code>/mreq-define</code> 才會執行.</p>
+  <p class="lede">把一個需求變成一份確認過的任務文件. 需求可以是 feature, bug, refactor 或其他工作, 也可以很模糊. 它不實作任何東西, 只寫 <code>.mreq/</code> 底下的文件; 實作由 <code>mreq-apply</code> 負責. 唯一的例外是使用者在 Step 4 選了不寫文件: 這時它直接實作重述的內容. 只有使用者輸入 <code>/mreq-define</code> 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  S(["/mreq-define 需求"]):::user --> B1{"只是問程式碼<br>怎麼運作?"}
+  S(["/mreq-define 需求"]):::user --> P0["決定需求<br>(見 '需求的來源')"]
+  P0 --> B1{"只是問程式碼<br>怎麼運作?"}
   B1 -- 是 --> B1q{"問一次"}:::user
   B1q -- "Explain it" --> X3(["給出 /mreq-how 問題<br>停止"]):::stop
   B1q -- "Treat it<br>as a task" --> A1
@@ -574,24 +619,32 @@ flowchart TD
   A5 --> A6{"需求大小?"}
   A6 -- "Simple:<br>一個模組或檔案" --> A7["自己讀相關的<br>程式碼與測試"]
   A6 -- "Complex:<br>跨模組" --> A8["拆成 2-4 個角度<br>平行 explorer<br>再整合"]
-  A7 --> B2["分類 schema:<br>feature, issue,<br>refactor, task"]
+  A7 --> B2["Step 2 分類 schema:<br>feature, issue,<br>refactor, task"]
   A8 --> B2
   B2 --> C1{"還有需求與程式碼<br>沒回答的決策?"}
-  C1 -- 是 --> C2["訪談: 選項式提問<br>建議答案排第一<br>可加 Decide later"]:::user
+  C1 -- 是 --> C2["Step 3 訪談: 選項式提問<br>建議答案排第一<br>可加 Decide later"]:::user
   C2 --> C1
-  C1 -- 否 --> D(["Step 4: 重述與確認<br>(見下一節)"])
+  C1 -- 否 --> D(["Step 4: 重述與確認<br>(見 '重述, 確認與寫文件')"])
     </script>
     <figcaption>Step 1 到 Step 3: 先讀, 再分類, 然後訪談. 拿不準大小時, 走 Simple</figcaption>
   </figure>
 
   <h3>Step 1: 先讀再問</h3>
   <ul>
-    <li>需求讀起來只是在問程式碼怎麼運作時, 在執行任何指令或讀任何程式碼之前先問一次: <code>Explain it</code> 或 <code>Treat it as a task</code>. 只依照需求的文字判斷. <code>/mreq-how</code> 只有使用者能呼叫, 所以 agent 只給出填好問題的指令, 不嘗試執行.</li>
-    <li><code>git rev-parse --show-toplevel</code> 單獨執行, 不加 <code>-C</code>. git root 不是 agent 的啟動目錄時, 文件會寫到 <code>&lt;git root&gt;/.mreq/</code>, agent 之後讀不到也改不了它. 所以在任何 <code>new</code> 之前就說明並停止.</li>
+    <li>需求讀起來只是在問程式碼怎麼運作時, 在執行任何指令或讀任何程式碼之前先問一次: <code>Explain it (/mreq-how)</code> 或 <code>Treat it as a task</code>. 只依照需求的文字判斷.</li>
+    <li><code>/mreq-how</code> 只有使用者能呼叫, 所以它不在 agent 的 skill 清單裡. agent 只給出填好問題的指令, 讓使用者複製. 不說它不存在, 也不嘗試執行.</li>
+    <li><code>git rev-parse --show-toplevel</code> 單獨執行, 不加 <code>-C</code>. 失敗時 (不是 git repository), 用目前的目錄.</li>
+    <li>git root 不是 agent 的啟動目錄時, 文件會寫到 <code>&lt;git root&gt;/.mreq/</code>, agent 之後讀不到也改不了它. 所以在第一則回覆, 任何 <code>new</code> 之前就說明, 請使用者從 git root 啟動 agent, 然後停止.</li>
     <li>已有開啟中的文件涵蓋需求時, 問題裡寫出文件的標題與絕對路徑. 選 <code>Continue it</code> 後, <code>mreq-define</code> 不再做任何事.</li>
+    <li>README 與 agent 指示檔 (<code>AGENTS.md</code>, <code>CLAUDE.md</code>, ...) 從 git root 讀取.</li>
     <li>程式碼能回答的事, 不問使用者. 程式碼不能決定的決策, 留到 Step 3 問.</li>
     <li>記住需求的大小: Step 4 用它決定提供哪一組選項.</li>
   </ul>
+  <table>
+    <tr><th>大小</th><th>條件</th><th>做法</th></tr>
+    <tr><td>Simple</td><td>一個模組, 一個函式, 一個檔案</td><td>自己讀它碰到的程式碼與測試</td></tr>
+    <tr><td>Complex</td><td>多個模組, 橫跨多處的修改, 或還不知道放在哪裡的程式碼</td><td>拆成 2-4 個角度, 平行探索, 再整合. 見 "平行探索"</td></tr>
+  </table>
 
   <h3>Step 2: 分類與 Step 3: 訪談順序</h3>
   <table>
@@ -601,18 +654,62 @@ flowchart TD
     <tr><td><code>refactor</code></td><td>改結構, 保持行為</td><td>"clean up", "extract", "rename", "split", "simplify"</td><td>不能改變的行為與證明方式 → 目標形狀 → 不做什麼</td></tr>
     <tr><td><code>task</code></td><td>其他工作</td><td>docs, config, CI, 相依套件升級, scripts</td><td>完成狀態 → 限制 → 不做什麼</td></tr>
   </table>
-  <p>兩種都符合時, 選使用者最在意的完成狀態, 並在重述時說明.</p>
+  <p>兩種都符合時, 選使用者最在意完成狀態的那一種, 並在 Step 4 重述時說明這個選擇.</p>
 
   <h3>訪談規則</h3>
   <ul>
     <li>跳過需求或程式碼已經回答的問題. 需求清楚時, 直接到 Step 4.</li>
-    <li>每個決策都用選項問: 建議答案排第一並附理由, 再列其他選項. 不阻擋文件的決策, 最後加 <code>Decide later</code>.</li>
-    <li>只有使用者才知道的事實 (repro, 錯誤訊息) 才請使用者輸入; 有猜測時仍列為選項.</li>
+    <li>每個決策都用選項問: 建議答案排第一, 理由寫在說明, 再列真正的替代方案. 不阻擋文件的決策, 最後加 <code>Decide later</code>.</li>
+    <li>只有使用者才知道的事實 (精確的 repro, 錯誤訊息) 才請使用者輸入, 並在問題裡說明; 有猜測時仍列為選項.</li>
     <li>事實自己查. 只問決策: 行為, 範圍, 取捨.</li>
     <li>互不相關的問題一起問. 依賴未決問題的題目, 先保留.</li>
     <li>追問每個答案隱含, 但沒人說出口的事.</li>
-    <li>使用者說 "之後再決定" 也算回答. 它留在 Open, 不再追問.</li>
+    <li>使用者說 "之後再決定" 也算回答: 它保持未決, 不再追問. Step 4 把它列在 Open.</li>
   </ul>
+</section>
+
+<section class="block" id="define-source">
+  <h2><span class="stamp sub" aria-hidden="true">源</span>需求的來源</h2>
+  <p>需求通常是使用者給的文字. 對話裡有 <code>mreq-pro</code> 或 <code>mreq-terms</code> 的回覆時, 需求也可以是那則回覆裡的新 prompt. 這時 <code>mreq-define</code> 照回覆的原文使用它: 不重新推導它回答了什麼, 也不問使用者.</p>
+  <figure class="diagram">
+    <script type="text/x-mermaid">
+flowchart TD
+  S(["/mreq-define [需求]"]):::user --> A{"對話裡有 mreq-pro 或<br>mreq-terms 的回覆?"}
+  A -- 否 --> N["需求 = 使用者給的文字"]
+  A -- 是 --> B{"使用者給的需求"}
+  B -- "沒有給" --> L["使用最新的那一則回覆<br>不論它來自哪一個 skill"]
+  B -- "就是那則回覆<br>的新 prompt" --> L
+  B -- "其他需求" --> N
+  L --> R["需求 = code block 裡的新 prompt<br>加上使用者之後要求的修改"]
+  R --> T{"回覆來自?"}
+  T -- "mreq-pro" --> TP["四題不重新回答<br>Step 1, 3, 4 與 tasks 有變更"]
+  T -- "mreq-terms" --> TT["Step 3 與 Step 4 有變更<br>不使用它說不適合的術語"]
+    </script>
+    <figcaption>兩個回覆都在對話裡時, 只使用最新的那一則</figcaption>
+  </figure>
+  <p>Step 4 的重述用 agent 自己的話, 但術語保留新 prompt 的寫法: "用自己的話" 不會取代術語.</p>
+
+  <h3>mreq-pro 的回覆</h3>
+  <table>
+    <tr><th>回覆的內容</th><th>mreq-define 的用法</th><th>步驟</th></tr>
+    <tr><td>新 prompt (code block)</td><td>就是需求. 方法, 工具與 pass/fail 條件在重述時保留原文. 四題不重新回答.</td><td>Step 4</td></tr>
+    <tr><td>(回覆沒有讀程式碼)</td><td>照常讀程式碼. 程式碼可能與回覆矛盾: 這時以程式碼為準, 並在重述時說明差異.</td><td>Step 1</td></tr>
+    <tr><td>留給使用者的問題</td><td>逐一詢問. 對話裡已經回答的不問.</td><td>Step 3</td></tr>
+    <tr><td>要用 prototype 決定的選擇</td><td>不問使用者: 由實驗決定, 不是使用者. 寫進 Decided. 每個選擇是一個 task, 排在依賴它的 task 之前; 它的檢查方式是實驗顯示的結果.</td><td>Step 3, Step 4, tasks</td></tr>
+    <tr><td>crux 的做法, 原始資料, 方法與工具</td><td>寫進 Decided, 各附回覆給的理由.</td><td>Step 4</td></tr>
+    <tr><td>pass/fail 條件 (Outside check)</td><td>寫進 Goal. 它也是最後一個 task 的檢查方式.</td><td>Step 4, tasks</td></tr>
+    <tr><td>刪除或縮小的部分</td><td>寫進 Out of scope.</td><td>Step 4</td></tr>
+  </table>
+
+  <h3>mreq-terms 的回覆</h3>
+  <table>
+    <tr><th>回覆的內容</th><th>mreq-define 的用法</th><th>步驟</th></tr>
+    <tr><td>新 prompt (code block)</td><td>就是需求.</td><td></td></tr>
+    <tr><td>What I left out</td><td>逐一詢問, 除非對話裡已經決定. 沒有使用者的回答, 不加進範圍.</td><td>Step 3</td></tr>
+    <tr><td>選定的問題 (prompt 可能是不只一個問題時)</td><td>使用者還沒確認這個選擇時, 寫進 Assumptions.</td><td>Step 4</td></tr>
+    <tr><td>Words that look right but are not</td><td>每一則訊息與文件都不使用. 改用回覆給的術語.</td><td>全部</td></tr>
+  </table>
+  <p>"tasks" 是指 Step 5 的 <code>## Tasks</code>, 以及不寫文件的流程的 task 清單. 兩種回覆都不會讓 Step 4 的確認被跳過.</p>
 </section>
 
 <section class="block" id="define-confirm">
@@ -643,6 +740,19 @@ flowchart TD
     <figcaption>Step 4 到 Step 6. 只有 "Correct" 的選項才往下走; 修正一律回到訪談再重述</figcaption>
   </figure>
 
+  <h3>Step 4: 重述的欄位</h3>
+  <table>
+    <tr><th>欄位</th><th>內容</th><th>沒有時</th></tr>
+    <tr><td>Type</td><td>schema, 與選它的原因</td><td></td></tr>
+    <tr><td>Goal</td><td>完成後什麼是成立的</td><td></td></tr>
+    <tr><td>Problem</td><td>現在什麼是錯的, 或缺少什麼</td><td></td></tr>
+    <tr><td>Decided</td><td>每個做出的選擇, 各附理由</td><td>省略</td></tr>
+    <tr><td>Out of scope</td><td>不做的部分</td><td>省略</td></tr>
+    <tr><td>Assumptions</td><td>agent 推論而使用者沒說過的事, 每項標示為猜測</td><td></td></tr>
+    <tr><td>Open</td><td>使用者延後的每個決策</td><td>省略</td></tr>
+  </table>
+  <p>使用者回答完 Step 3 的每個問題後才重述. 重述用 agent 自己的話, 不照抄使用者的話.</p>
+
   <h3>Step 4: 兩組選項</h3>
   <p>最後一個選項固定是 <code>Something is wrong</code>. 前三個選項兩組選一組, 推薦每一組的第一個.</p>
   <table class="cmd">
@@ -651,13 +761,14 @@ flowchart TD
     <tr><td>不寫文件</td><td>需求是 Simple 而且 Open 是空的, 或使用者已經要求不寫文件</td><td>1. <code>Correct, implement now, no document</code> (直接實作, 不寫文件, 推薦)<br>2. <code>Correct, grill it first, no document</code> (先 grill, 不寫文件)<br>3. <code>Correct, write the document, then implement</code> (撰寫後實作)</td></tr>
   </table>
   <ul>
-    <li>寫文件的那一組裡, 計畫還沒被檢驗時, 改推薦 "撰寫後 grill", 並把它排第一.</li>
-    <li>使用者回答完 Step 3 的每個問題後才重述. 重述用 agent 自己的話, 不照抄使用者的話.</li>
+    <li>寫文件的那一組裡, 計畫看起來還沒被檢驗時, 改推薦 "撰寫後 grill", 並把它排第一.</li>
+    <li>agent 每次用自己的話寫選項, 但意思不變. 只有 "Correct" 的選項才往下走.</li>
     <li><code>Something is wrong</code>: 用一題多選題列出最多 4 個最可能有誤的重述項目, 假設排前面. 再依 Step 3 的方式追問選到的項目, 然後再重述.</li>
     <li>自由回答裡的修正就是修正: 還有沒說出口的事, 所以回到 Step 3, 然後再重述.</li>
     <li>自由回答確認了重述, 並指定選項沒有的下一步 (例: 不寫文件那一組裡的 "只寫文件"): 這就是確認, 執行那一步.</li>
-    <li>自由回答要求不寫文件, 而且沒有修正: 這就是確認, 進入不寫文件的流程. 這時不看需求大小, Open 有項目也一樣. 同時有修正時, 先處理修正, 下一次重述再提供 "直接實作, 不寫文件".</li>
-    <li>"先 grill, 不寫文件" 由 <code>mreq-define</code> 自己執行, 不呼叫 <code>mreq-grill</code>, 因為 <code>mreq-grill</code> 需要文件. grill 留下 Open, 或發現需求不是 Simple 時, 下一次重述改提供寫文件的那一組.</li>
+    <li>自由回答要求不寫文件 (例: "no document, just do it"), 而且沒有修正: 這就是確認, 進入不寫文件的流程. 這時不看需求大小, Open 有項目也一樣. 同時有修正時, 先處理修正, 下一次重述再提供 "直接實作, 不寫文件".</li>
+    <li>"先 grill, 不寫文件" 由 <code>mreq-define</code> 自己執行, 不呼叫 <code>mreq-grill</code>, 因為 <code>mreq-grill</code> 需要文件. 它依 <code>GRILL.md</code> grill 重述, 四個象限分開報告. 同一個對話已經 grill 過時, 改做後續輪次.</li>
+    <li>grill 之後回到 Step 4 再重述, 帶著 grill 改變的內容: 被推翻的主張, 變明確的假設, 做出的決策, 仍未決的事. grill 留下 Open, 或發現需求不是 Simple 時, 這次重述改提供寫文件的那一組.</li>
     <li>只有明確要求跳過確認 (例: "stop asking, just write the document") 才跳過. 只說 "just write it", 或只是回答問題, 都不算: 仍然重述. 跳過時, 回覆要列出假設.</li>
   </ul>
 
@@ -668,18 +779,18 @@ flowchart TD
     <tr><td>Goal</td><td><code>## Goal</code></td></tr>
     <tr><td>Problem</td><td>issue: <code>## Symptom</code>; refactor: <code>## Goal</code>; 其他: <code>## Context</code></td></tr>
     <tr><td>Decided</td><td><code>## Decisions</code>, 每個決策一個 <code>### Dn:</code></td></tr>
-    <tr><td>Out of scope</td><td><code>## Scope</code> 的 <code>Out:</code>. 沒有時寫 <code>None</code></td></tr>
+    <tr><td>Out of scope</td><td><code>## Scope</code> 的 <code>Out:</code>. 沒有時寫 <code>None</code>. feature 另外在 <code>In:</code> 寫 Goal 與 Decided 放進範圍的內容: <code>mreq-apply</code> 只做這些</td></tr>
     <tr><td>Assumptions</td><td><code>## Assumptions</code>, 保持標示為猜測. 不能變成決策</td></tr>
     <tr><td>Open</td><td><code>## Open</code>, 每項一個 <code>- Open: &lt;question&gt;</code>. 沒有時刪除提示, 章節留空</td></tr>
   </table>
   <ul>
-    <li>只用 Edit 逐節改 body. 不重寫整個檔案, 不碰 front matter.</li>
-    <li>每個 <code>&lt;!-- --&gt;</code> 提示換成內容; 章節不適用時刪除提示. <code>##</code> 標題保持原樣.</li>
+    <li>先執行 <code>new</code>, 再只用 Edit 逐節改 body. 不重寫整個檔案, 不碰 front matter: 它由 script 管理.</li>
+    <li>每個 <code>&lt;!-- --&gt;</code> 提示換成內容; 章節不適用時刪除提示. <code>##</code> 標題保持原樣: 其他 mreq skill 依標題找章節.</li>
     <li><code>## Tasks</code> 寫成小步驟, 每步附檢查方式. issue 與 refactor 保留 template 的固定步驟.</li>
-    <li><code>## Handoff</code> 寫: 尚未開始, 第一個要做的 task. 跳過確認時, 加一行 <code>Unconfirmed:</code>.</li>
-    <li>文件, <code>--title</code> 與 <code>--desc</code> 都用回覆語言.</li>
+    <li><code>## Handoff</code> 寫: 尚未開始, 第一個要做的 task. 跳過確認時, 加一行 <code>Unconfirmed: the user did not confirm a restatement; check ## Assumptions and ## Decisions with the user first.</code></li>
+    <li>文件, <code>--title</code> 與 <code>--desc</code> 都用回覆語言. status 保持 <code>draft</code>.</li>
   </ul>
-  <div class="callout"><strong>規則:</strong> 只寫 <code>.mreq/</code> 底下的文件; 只有不寫文件的流程可以改程式碼. 不自己開始下一步: 使用者在 Step 1 (繼續舊文件) 或 Step 4 (實作或 grill, 各有寫文件與不寫文件兩種, 或只寫文件) 選擇. 不跳過 Step 4 的確認, 即使需求看起來很清楚; 唯一的例外是使用者明確要求, 這時文件會記錄 <code>Unconfirmed:</code>.</div>
+  <div class="callout"><strong>規則:</strong> 只寫 <code>.mreq/</code> 底下的文件; 只有不寫文件的流程可以改程式碼或其他檔案. 不自己開始下一步: 使用者在 Step 1 (繼續舊文件) 或 Step 4 (實作或 grill, 各有寫文件與不寫文件兩種, 或只寫文件) 選擇. 不跳過 Step 4 的確認, 即使需求看起來很清楚; 唯一的例外是使用者明確要求, 這時文件會記錄 <code>Unconfirmed:</code>.</div>
 </section>
 
 <section class="block" id="define-nodoc">
@@ -710,17 +821,18 @@ flowchart TD
     <div>
       <h3>實作與回報</h3>
       <ul>
-        <li>一次一個 task. 執行測試, repro, 或錯了會失敗的指令來證明. 只讀程式碼不算證明.</li>
-        <li>schema 規則和 <code>mreq-apply</code> 相同, 但沒有文件可以寫. refactor 發現的 bug 寫進報告, 列為 follow-up.</li>
+        <li>一次一個 task, 做能完成它的最小改動. 執行測試, repro, 或錯了會失敗的指令來證明. 只讀程式碼不算證明.</li>
+        <li>沒有可以執行的東西能觸及這個行為時, 在報告中說明.</li>
         <li>回報 Goal 與每個 Decided: done, partly done, done differently 或 missing, 附 <code>path:line</code>.</li>
-        <li>回報執行了什麼與結果. 沒執行的測試不算通過.</li>
-        <li>回報程式碼多做了什麼, 以及仍然開著的 Open 與每個 follow-up.</li>
-        <li><code>Leave it out</code> 的工作在報告列為 follow-up.</li>
+        <li>回報執行了什麼與結果. 沒執行的測試不算通過: 要說明.</li>
+        <li>回報程式碼現在做了, 但重述沒要求的事.</li>
+        <li>回報仍然開著的 Open 與每個 follow-up. <code>Leave it out</code> 的工作列為 follow-up.</li>
       </ul>
     </div>
     <div>
       <h3>補寫文件</h3>
       <ul>
+        <li>"工作超出重述的範圍" 是指: task 需要 Goal 或範圍以外的工作, 或修改其實橫跨多個模組. 先說出多出來的工作, 再問一次.</li>
         <li>依 Step 5 寫文件, 再加上下面三點.</li>
         <li>已完成而且已證明的 task 打勾 (<code>- [x]</code>).</li>
         <li>在下一個未勾選的 task 下, 加一條巢狀 bullet: <code>- Resume: 已完成; 剩下; 下一步</code>. 包含只在 working tree 的修改.</li>
@@ -729,12 +841,22 @@ flowchart TD
       </ul>
     </div>
   </div>
+
+  <h3>Schema 規則 (沒有文件時)</h3>
+  <table>
+    <tr><th>schema</th><th>規則</th></tr>
+    <tr><td><code>feature</code></td><td>只做重述放進範圍的內容. 不為未來預留彈性.</td></tr>
+    <tr><td><code>issue</code></td><td>改程式碼前先重現 bug. 修正前先驗證 root cause. 修正原因, 不修症狀. 兩次修正失敗時停下: root cause 可能錯了. 說明, 並重新驗證後才修第三次.</td></tr>
+    <tr><td><code>refactor</code></td><td>先用測試或指令 pin 住行為, 每一步之後保持綠燈. 不改變行為. 發現 bug 時, 在報告列為 follow-up, 這裡不修.</td></tr>
+    <tr><td><code>task</code></td><td>依 Goal 的描述執行.</td></tr>
+  </table>
+  <p>這些規則對應 <code>mreq-apply</code> 的 schema 規則, 但依據是重述, 不是文件的章節. 所以 follow-up 寫進報告, 不寫進 <code>## Open</code>.</p>
   <div class="callout"><strong>規則:</strong> 不刪除, 不跳過, 不弱化測試來讓它通過. 使用者沒要求時, 不執行會改變 working tree, index 或 history 的 git 指令. 暫存檔只放在專案內, 結束前刪除.</div>
 </section>
 
 <section class="block" id="define-explore">
   <h2><span class="stamp sub" aria-hidden="true">探</span>平行探索 (Complex 時)</h2>
-  <p><code>mreq-define</code> 與 <code>mreq-how</code> 都使用這個模式. 每個 skill 有自己的 <code>EXPLORER.md</code>, 報告格式不同. 能啟動 subagent 時, 每個角度一個 read-only explorer, 例: Codex 的 <code>explorer</code> role, Grok 的 <code>explore</code> type, Antigravity 的 <code>research</code> subagent. <code>EXPLORER.md</code> 的路徑寫成絕對路徑. 無法啟動 subagent 時, 主 agent 依序自己處理每個角度, 筆記用 <code>EXPLORER.md</code> 的格式.</p>
+  <p><code>mreq-define</code> (Step 1) 與 <code>mreq-how</code> (Step 4) 都使用這個模式. 每個 skill 有自己的 <code>EXPLORER.md</code>, 報告格式不同. 能啟動 subagent 時, 每個角度一個 read-only explorer, 全部在同一則訊息啟動. 例: Codex 的 <code>explorer</code> role, Grok 的 <code>explore</code> type, Antigravity 的 <code>research</code> subagent. 無法啟動 subagent 時, 主 agent 依序自己處理每個角度, 筆記用 <code>EXPLORER.md</code> 的格式.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 sequenceDiagram
@@ -757,15 +879,16 @@ sequenceDiagram
   M->>M: 合併重複的內容
   M->>M: 矛盾處自己讀程式碼判斷
     </script>
-    <figcaption>prompt 只放需求 (或問題), 角度, 與 EXPLORER.md 的路徑. 不貼上檔案內容</figcaption>
+    <figcaption>prompt 只放需求 (或問題), 角度, 與 EXPLORER.md 的絕對路徑. 不貼上檔案內容</figcaption>
   </figure>
   <table>
     <tr><th>項目</th><th>mreq-define</th><th>mreq-how</th></tr>
-    <tr><td>角度的例子</td><td>需求碰到的程式碼與呼叫者; 測試與執行方式; bug 經過的程式碼的歷史</td><td>進入點與接線; 核心資料流; 保存與狀態; 錯誤路徑</td></tr>
+    <tr><td>角度的例子</td><td>需求碰到的程式碼與呼叫者; 測試與執行方式; bug 的症狀經過的程式碼的歷史</td><td>進入點與接線; 核心資料流; 保存與狀態; 錯誤路徑</td></tr>
     <tr><td>prompt 另外放</td><td>無</td><td><code>--plain</code> 時加一行 <code>Reader: plain</code></td></tr>
-    <tr><td>explorer 的限制</td><td>不改任何東西, 不執行專案程式碼. 可以用唯讀的 git 指令 (<code>log</code>, <code>blame</code>, <code>show</code>)</td><td>只讀與搜尋, 不改任何東西</td></tr>
+    <tr><td>explorer 的限制</td><td>只讀與搜尋, 不改任何東西, 不執行專案程式碼. 可以用唯讀的 git 指令 (<code>log</code>, <code>blame</code>, <code>show</code>)</td><td>只讀與搜尋, 不改任何東西, 不執行專案程式碼</td></tr>
     <tr><td>報告章節</td><td>Facts, Touchpoints, Tests, Constraints, Decisions the code cannot settle, Files read, Open questions</td><td>Components, Flow, State, Boundaries, Non-obvious things, Reader names (只在 <code>Reader: plain</code>), Files read, Open questions</td></tr>
   </table>
+  <p>整合時合併重複的內容. 兩份報告矛盾時, 主 agent 自己讀程式碼判斷, 不從兩種說法挑一個.</p>
 </section>
 
 <!-- ============================== 3 ============================== -->
@@ -775,7 +898,9 @@ sequenceDiagram
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  S(["mreq-grill [path]"]):::user --> P1{"有路徑, 或本對話<br>只談一份文件?"}
+  S(["mreq-grill [path] [focus]"]):::user --> I{"第一個字是 .mreq/<br>底下的檔案路徑?"}
+  I -- "是: 它是文件路徑<br>其餘是焦點" --> RD
+  I -- "否: 整段輸入<br>都是焦點" --> P1{"本對話只談<br>一份文件?"}
   P1 -- 是 --> RD
   P1 -- 否 --> P2["mreq.py list --open"]:::script
   P2 --> P3{"開啟中的文件"}
@@ -798,11 +923,12 @@ flowchart TD
     <figcaption>Step 1 到 Step 2: 選文件, 讀文件與它引用的程式碼</figcaption>
   </figure>
   <ul>
-    <li>挑選文件時, 每份文件一個選項, 順序和 <code>list</code> 相同: 標題是 label; status, task 進度與絕對路徑放在說明. 只有一份而且它有 warning 或 error 時, 第二個選項是 <code>Stop</code>. 超過 4 份時列前 4 份, 其他文件的路徑在自由回答輸入.</li>
+    <li>輸入是選用的: 文件路徑, 然後是焦點. 焦點是計畫裡要問得最深的部分, 例: <code>error handling</code>.</li>
+    <li>挑選文件時, 每份文件一個選項, 順序和 <code>list</code> 相同: 標題是 label; status, task 進度與絕對路徑放在說明. 只有一份而且它有 warning 或 error 時, 第二個選項是 <code>Stop</code>. 超過 4 份時列前 4 份, 並在問題裡說明: 其他文件的路徑可以在自由回答輸入.</li>
     <li>沒有開啟中的文件時, 不自己編一個對象.</li>
-    <li><code>done</code> 的文件: <code>Reopen</code> 會 grill, Step 5 寫回時把 status 設回 <code>active</code>. <code>Discuss only</code> 會 grill, 但 Step 5 什麼都不寫. <code>New document</code> 建議 <code>/mreq-define</code> 並停止.</li>
+    <li><code>done</code> 的文件: 在讀程式碼之前先說明, 再問一次. <code>Reopen</code> 會 grill, Step 5 寫回時把 status 設回 <code>active</code>. <code>Discuss only</code> 會 grill, 但 Step 5 什麼都不寫. <code>New document</code> 建議 <code>/mreq-define</code> 並停止.</li>
     <li><code>Unconfirmed:</code> 表示沒有人確認過這份文件的假設與決策.</li>
-    <li>同一個對話再 grill 同一份文件時, 重讀文件, 但只重讀有變更的程式碼.</li>
+    <li>同一個對話再 grill 同一份文件時, 重讀文件, 但只重讀之後有變更的程式碼.</li>
   </ul>
 </section>
 
@@ -838,7 +964,7 @@ flowchart TD
   WA -- "寫回後繼續 grill:<br>先給出絕對路徑" --> LR
   WA -- "寫回後停止" --> X3(["給出絕對路徑<br>停止"]):::stop
     </script>
-    <figcaption>Step 3 到 Step 6. 要繼續 grill, 一定先寫回. Something is wrong 是唯一不寫回的路徑</figcaption>
+    <figcaption>Step 3 到 Step 6. 要繼續 grill, 一定先寫回. Something is wrong 與 Discuss only 是不寫回的路徑</figcaption>
   </figure>
 
   <h3>Step 4: 選項</h3>
@@ -848,57 +974,59 @@ flowchart TD
     <tr><td>Step 2 選了 <code>Discuss only</code></td><td>1. <code>Correct, stop here</code>: 給出絕對路徑並停止, 跳過 Step 5 與 Step 6<br>2. <code>Correct, keep grilling</code>: 回到 Step 3 做後續輪次<br>3. <code>Something is wrong</code></td></tr>
   </table>
   <ul>
-    <li>重述包含四項: 成立與被推翻的主張, 變明確的假設, 做出的決策 (各附理由與被排除的替代方案), 仍未決的事.</li>
+    <li>重述用 agent 自己的話, 包含四項: 成立與被推翻的主張, 變明確的假設, 做出的決策 (各附理由與被排除的替代方案), 仍未決的事.</li>
     <li>每次重述都包含文件還沒有的全部內容. 所以 "Correct" 只確認最後一次重述, Step 5 寫回的就是那一次重述.</li>
-    <li><code>Something is wrong</code>: 什麼都不寫. 用多選題問哪幾項有誤, 只對選到的項目做後續輪次, 然後再重述.</li>
+    <li><code>Something is wrong</code>: 什麼都不寫. 用多選題問哪幾項有誤 (最多 4 項, 假設排前面), 只對選到的項目做後續輪次, 然後再重述.</li>
     <li>自由回答的修正就是修正: 繼續 grill, 然後再重述.</li>
+    <li>agent 每次用自己的話寫選項, 但意思不變.</li>
   </ul>
 
   <h3>四象限</h3>
   <table>
     <tr><th>象限</th><th>內容</th><th>做法</th></tr>
     <tr><td>1. Known knowns</td><td>對象依賴的主張</td><td>每一個都對照程式碼驗證. 錯誤的 known 最危險.</td></tr>
-    <tr><td>2. Known unknowns</td><td>已知的未決問題</td><td>用選項逐題問, 建議答案排第一並附理由; 可以等的決策, 最後加 <code>Leave it open</code>.</td></tr>
+    <tr><td>2. Known unknowns</td><td>已知的未決問題</td><td>用選項逐題問, 建議答案排第一, 理由寫在說明, 再列真正的替代方案; 可以等的決策, 最後加 <code>Leave it open</code>.</td></tr>
     <tr><td>3. Unknown knowns</td><td>沒人說出口的前提</td><td>點出每一個, 用 <code>It holds</code> / <code>It does not hold</code> 確認. 理由寫在推薦選項的說明.</td></tr>
-    <tr><td>4. Unknown unknowns</td><td>盲點</td><td>問 "什麼條件下這會失敗?", 再追問答案.</td></tr>
+    <tr><td>4. Unknown unknowns</td><td>盲點</td><td>問 "什麼條件成立時, 這會失敗?", 再追問答案.</td></tr>
   </table>
   <p>方法寫在 <code>GRILL.md</code>, <code>mreq-grill</code> 與 <code>mreq-define</code> 各有一份相同的複本. <code>mreq-grill</code> 用它 grill 文件; <code>mreq-define</code> 的 "先 grill, 不寫文件" 用它 grill 重述, 結論不寫回文件, 而是帶進下一次重述. 後兩個象限藏著真正的風險. 四個象限依序分開報告; 沒有發現的象限寫 "none found".</p>
   <ul>
     <li>事實自己在程式碼裡查. 只問使用者決策.</li>
-    <li>agent 自己帶進來的事實也算 known: 先在程式碼或文件驗證. 無法驗證的事實列為假設, 不能當決策的理由.</li>
+    <li>agent 自己帶進來的事實也算 known: 先在程式碼或文件驗證. 無法驗證的事實在重述裡列為假設, 不能當決策的理由.</li>
     <li>互不相關的問題一起問. 依賴未決問題的題目, 先保留.</li>
     <li>追問每個答案隱含, 但沒人說出口的事.</li>
   </ul>
 
-  <h3>後續輪次</h3>
-  <p>一輪是一次掃描加上之後的重述. 同一個對話再 grill 同一個對象時, 就是後續輪次. 這個規則寫在 <code>GRILL.md</code>, 所以 <code>mreq-define</code> 的 "先 grill, 不寫文件" 也適用.</p>
+  <h3>焦點與後續輪次</h3>
+  <p>焦點增加深度, 不縮小掃描範圍. 一輪是一次掃描加上之後的重述. 同一個對話再 grill 同一個對象時, 就是後續輪次. 這些規則寫在 <code>GRILL.md</code>, 所以 <code>mreq-define</code> 的 "先 grill, 不寫文件" 也適用.</p>
   <table>
     <tr><th>項目</th><th>第一輪</th><th>後續輪次</th></tr>
-    <tr><td>掃描範圍</td><td>四個象限全部. 使用者指定焦點時, 範圍不縮小: 每個象限先處理焦點, 問得更深, 並先回報焦點的發現</td><td>上一輪改變的項目, 仍未決的項目, 使用者指定的焦點</td></tr>
+    <tr><td>掃描範圍</td><td>四個象限全部. 有焦點時, 每個象限先處理焦點: 驗證它依賴的每個主張, 每個答案多追問一層</td><td>上一輪改變的項目, 仍未決的項目, 使用者指定的焦點</td></tr>
     <tr><td>已成立的主張, 已確認的前提</td><td>逐一驗證與確認</td><td>不重做. 之後的變更影響到它時才再檢查</td></tr>
-    <tr><td>回報</td><td>四個象限分開, 沒有發現寫 "none found"</td><td>只回報有新發現的象限. 都沒有時用一行說明</td></tr>
+    <tr><td>回報</td><td>四個象限分開, 沒有發現寫 "none found". 有焦點時, 每個象限先回報焦點的發現</td><td>只回報有新發現的象限, 順序不變. 都沒有時用一行說明</td></tr>
     <tr><td>重述 (mreq-grill)</td><td>完整重述</td><td>已經寫回時, 只重述之後各輪的變更, 並用一行說明其餘已在文件裡. 還沒寫回時, 仍然完整重述. 沒有變更時用一行說明</td></tr>
     <tr><td>讀程式碼 (mreq-grill)</td><td>文件引用的程式碼</td><td>重讀文件, 只重讀有變更的程式碼</td></tr>
   </table>
-  <p>使用者要求時仍然做完整的掃描. 新的對話一律從完整的掃描開始.</p>
+  <p>使用者要求完整掃描時, 仍然做完整的掃描. 新的對話一律從完整的掃描開始.</p>
 
   <h3>Step 5: 寫回對應</h3>
   <table>
     <tr><th>重述內容</th><th>寫到</th></tr>
-    <tr><td>做出的決策</td><td><code>## Decisions</code> 的 <code>### Dn:</code>. 取代舊決策時, 改寫它並加上 <code>Changed by grill: &lt;舊內容&gt;</code></td></tr>
+    <tr><td>做出的決策</td><td><code>## Decisions</code> 的 <code>### Dn:</code>, 新增或修改. 取代舊決策時, 改寫它並加上 <code>Changed by grill: &lt;舊內容&gt;</code></td></tr>
     <tr><td>變明確的假設</td><td><code>## Assumptions</code>, 每項一個 bullet</td></tr>
-    <tr><td>被推翻的主張</td><td>修正寫到它的章節 (Goal, Scope, Context, 或 schema 專屬章節). 這些章節的其他地方不改, 除非使用者修正了它</td></tr>
-    <tr><td>仍未決的事</td><td><code>## Open</code> 的 <code>- Open:</code>; 發現的後續工作寫 <code>- Follow-up:</code></td></tr>
-    <tr><td>改變工作內容的決策</td><td>修改 <code>## Tasks</code>. 不取消勾選, 不改寫已完成的 task; 修正放新 task 或 Open</td></tr>
+    <tr><td>被推翻的主張</td><td>修正寫到陳述它的章節 (Goal, Scope, Context, 或 schema 專屬章節). 這些章節的其他地方不改, 除非使用者修正了它</td></tr>
+    <tr><td>仍未決的事</td><td><code>## Open</code> 的 <code>- Open: &lt;question&gt;</code>; 發現的後續工作寫 <code>- Follow-up: &lt;what&gt;</code></td></tr>
+    <tr><td>改變工作內容的決策</td><td>修改 <code>## Tasks</code>. 不取消勾選, 不改寫已完成的 task; 修正放新 task 或 <code>## Open</code></td></tr>
     <tr><td><code>Unconfirmed:</code> 行</td><td>從 <code>## Handoff</code> 刪除: 使用者現在確認過重述了</td></tr>
   </table>
-  <div class="callout"><strong>規則:</strong> 只寫被 grill 的文件, 而且只用 Edit 逐節改 body. 不改程式碼. 不建立任何檔案, 包括暫存檔; 需要量測時, 寫成 task 或 <code>Open:</code>. 使用者確認重述前, 什麼都不寫. 使用者在重述後想繼續時, 就繼續.</div>
+  <p>寫完後執行 <code>update &lt;path&gt;</code>. Reopen 的 <code>done</code> 文件執行 <code>update &lt;path&gt; --status active</code>.</p>
+  <div class="callout"><strong>規則:</strong> 只寫被 grill 的文件, 而且只用 Edit 逐節改 body; front matter 由 <code>update</code> 管理. 不改程式碼. 不建立任何檔案, 包括暫存檔; 主張需要量測時, 寫成 task 或 <code>Open:</code>. 使用者確認重述前, 什麼都不寫. 使用者在重述後想繼續時, 就繼續.</div>
 </section>
 
 <!-- ============================== 4 ============================== -->
 <section class="block" id="apply">
   <h2><span class="stamp" aria-hidden="true">行</span>mreq-apply</h2>
-  <p class="lede">一次實作一個 task. 文件是唯一的進度紀錄: checkbox 表示完成了什麼, <code>## Handoff</code> 表示下一個 agent 需要知道什麼. 使用者與 agent 都能呼叫.</p>
+  <p class="lede">一次實作一個 task. 文件是唯一的進度紀錄: checkbox 表示完成了什麼, <code>## Handoff</code> 表示下一個 agent 需要知道什麼. 輸入是選用的: 文件路徑, 或 <code>mreq-close</code> 交來要修的 findings. 使用者與 agent 都能呼叫.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -908,7 +1036,7 @@ flowchart TD
   P2 --> P0{"開啟中的文件"}
   P0 -- "沒有" --> X0(["說明: /mreq-define<br>開始新工作, 停止"]):::stop
   P0 -- "一份, 沒有 warning<br>或 error: 不詢問" --> R1
-  P0 -- "其他情況" --> P3["用選項挑選<br>不自己猜"]:::user
+  P0 -- "其他情況" --> P3["用選項挑選<br>不自己選"]:::user
   P3 --> R1["讀完整文件<br>先讀 Handoff"]:::doc
   R1 --> FD{"帶著 mreq-close<br>的 findings?"}
   FD -- 是 --> FA["每個 finding 加成<br>新的未勾選 task"]:::doc
@@ -935,15 +1063,17 @@ flowchart TD
   C3 -- 否 --> NX
   C4 --> NX(["Step 4: Task 迴圈<br>(見下一節)"])
     </script>
-    <figcaption>Step 1 到 Step 3: 選文件, 讀文件, 顯示進度. 圖中三個 Step 2 的停止都在任何 update 之前</figcaption>
+    <figcaption>Step 1 到 Step 3: 選文件, 讀文件, 顯示進度. template 文件, Unconfirmed 與已完成這三種停止都在任何 update 之前</figcaption>
   </figure>
   <ul>
+    <li>挑選文件的方式和 <code>mreq-grill</code> 相同. 只有一份而且沒有 warning 或 error 時不詢問: 它的路徑由進度的 <code>Using:</code> 行顯示.</li>
+    <li>讀文件在任何 <code>update</code> 之前. 先讀 <code>## Handoff</code>: 它說明上一個 agent 停在哪裡. 讀完後, 在其他 tool call 之前執行 <code>progress</code>.</li>
     <li>status 來自 <code>progress</code> 的 <code>Status:</code> 行: 使用者給路徑的文件可能是 <code>done</code>. 不為了 status 執行 <code>list</code>. <code>progress</code> 印出 <code>Warning:</code> 行時, 在進度訊息裡告訴使用者.</li>
-    <li>讀文件在任何 <code>update</code> 之前. 讀完後, 在其他 tool call 之前執行 <code>progress</code>.</li>
     <li><code>progress</code> 印出後, 在下一個 tool call 之前寫一則訊息: 開頭是 <code>progress</code> 印出的各行, 原樣複製, 再加一句接下來做什麼. 在 Step 2 停止時也要寫. 最後的回覆不能取代這則訊息.</li>
-    <li>進度每次執行只顯示一次. 之後繼續工作的回合 (使用者回答問題, 或同意一個修改) 不再執行 <code>progress</code>.</li>
+    <li>進度每次執行 skill 只顯示一次. 之後繼續工作的回合 (使用者回答問題, 或同意一個修改) 不再執行 <code>progress</code>.</li>
     <li><code>Go on</code>: 下一次改寫 <code>## Handoff</code> 時, 拿掉 <code>Unconfirmed:</code> 行.</li>
-    <li><code>git status</code> 與 <code>git diff</code> 各自單獨執行, 不加 <code>-C</code>.</li>
+    <li>把文件交給 <code>mreq-grill</code> 之後, <code>mreq-apply</code> 不再做任何事.</li>
+    <li><code>git status</code> 與 <code>git diff</code> 各自單獨執行, 不加 <code>-C</code>, 並和 <code>## Handoff</code> 比較.</li>
     <li>收到 findings 時 (來自使用者或 <code>mreq-close</code>): 每個 finding 加成 <code>## Tasks</code> 的新 task, 設回 <code>active</code>, 顯示進度, 然後依 Step 4 處理.</li>
   </ul>
 </section>
@@ -962,7 +1092,7 @@ flowchart TD
   C --> D["做最小的改動<br>遵守 schema 規則"]
   D --> E["執行東西證明它可行:<br>測試, repro,<br>或錯了會失敗的指令"]:::script
   E --> E1{"需要停下?"}
-  E1 -- 是 --> STOP(["停止與記錄<br>(見後面的章節)"]):::stop
+  E1 -- 是 --> STOP(["停止與記錄<br>(見 '停止與記錄')"]):::stop
   E1 -- 否 --> F["勾選 task: - [x]<br>刪除 Resume: 行"]:::doc
   F --> G["改寫 Handoff:<br>完成什麼, 如何驗證,<br>下一個 task"]:::doc
   G --> H["mreq.py update"]:::script
@@ -975,9 +1105,10 @@ flowchart TD
     <figcaption>Step 4 到 Step 5. 只讀程式碼不算證明; 沒執行的測試不算通過</figcaption>
   </figure>
   <ul>
-    <li>改寫 Handoff 時, 不移動也不刪除 <code>## Open</code> 的項目.</li>
-    <li>沒有可以執行的東西能驗證時, 在報告中說明.</li>
-    <li>完成時只給出 <code>/mreq-close &lt;path&gt;</code>, 路徑是絕對路徑. 不提醒 commit.</li>
+    <li>Handoff 用幾行寫: 完成什麼, 驗證了什麼與方式, 下一個 task. 改寫 Handoff 時, 不移動也不刪除 <code>## Open</code> 的項目.</li>
+    <li>沒有可以執行的東西能觸及這個行為時, 在報告中說明.</li>
+    <li>完成時的 Handoff 要寫驗證方式. <code>mreq-close</code> 依它決定是否重跑測試.</li>
+    <li>完成時給出 <code>/mreq-close &lt;path&gt;</code>, 路徑是絕對路徑. <code>/mreq-close</code> 只有使用者能呼叫, 所以不嘗試執行.</li>
   </ul>
 </section>
 
@@ -1004,19 +1135,24 @@ flowchart TD
     </script>
     <figcaption>四種 schema 的實作規則</figcaption>
   </figure>
-  <div class="callout"><strong>規則:</strong> 進度記在文件裡; 內建的 todo list 可以輔助, 但 checkbox 才是紀錄. 不刪除, 不跳過, 不弱化測試來讓它通過; 修程式碼. 使用者沒要求時, 不執行會改變 working tree, index 或 history 的 git 指令 (stash, checkout, reset, restore, commit). 要證明測試能抓到 bug: 用 Edit 還原修正, 跑測試, 再改回來. 不改其他 <code>.mreq/</code> 文件. 暫存檔只放在專案內 (不用 <code>/tmp</code> 或 <code>$TEMP</code>), 結束前刪除; 刪不掉的在報告列出.</div>
+  <ul>
+    <li><code>issue</code>: <code>## Root Cause</code> 有驗證過的原因之後才修正. 先驗證, 並寫下驗證的方式.</li>
+    <li><code>refactor</code>: pin 是 <code>## Behavior Pin</code> 的測試或指令. 不改變任何行為.</li>
+  </ul>
+  <div class="callout"><strong>規則:</strong> 進度記在文件裡; 內建的 todo list 可以輔助, 但 checkbox 才是紀錄. 不刪除, 不跳過, 不弱化測試來讓它通過; 修程式碼. 使用者沒要求時, 不執行會改變 working tree, index 或 history 的 git 指令 (stash, checkout, reset, restore, commit). 要證明測試能抓到 bug: 編輯檔案來還原修正, 跑測試, 再改回來. 不改其他 <code>.mreq/</code> 文件. 檢查用的暫存檔只放在專案內 (不用 <code>/tmp</code> 或 <code>$TEMP</code>); 文件指定了暫存檔名稱時, 用那個名稱. 結束前刪除; 刪不掉的在報告列出.</div>
 </section>
 
 <section class="block" id="apply-stop">
   <h2><span class="stamp sub" aria-hidden="true">止</span>停止與記錄</h2>
   <h3>何時停下來問</h3>
+  <p>除了最後一種情況, 每個問題都是選項式提問.</p>
   <table>
     <tr><th>情況</th><th>選項</th><th>之後</th></tr>
     <tr><td>task 不清楚</td><td>每種解讀一個選項, 最可能的排第一</td><td>依答案繼續</td></tr>
-    <tr><td><code>## Open</code> 的 <code>Open:</code> 決定下一個 task 怎麼做</td><td>建議答案排第一並附理由, 再列其他選項</td><td>答案寫進 <code>## Decisions</code>, 並刪除該項</td></tr>
+    <tr><td><code>## Open</code> 的 <code>Open:</code> 決定下一個 task 怎麼做</td><td>建議答案排第一並附理由, 再列真正的替代方案</td><td>答案寫進 <code>## Decisions</code>, 並刪除該項</td></tr>
     <tr><td>程式碼顯示 <code>## Decisions</code> 的某個決策是錯的</td><td><code>Change Dn</code> (說明寫提議的修改) / <code>Keep Dn</code></td><td>使用者同意後, 改決策與受影響的 task</td></tr>
-    <tr><td>task 需要做 Goal 或 Scope 以外的工作</td><td><code>Do it</code> / <code>Add a follow-up</code> / <code>Stop</code></td><td>Do it: 加成新 task. Add a follow-up: 在 <code>## Open</code> 寫 <code>- Follow-up:</code>, 不做它並繼續</td></tr>
-    <tr><td>無法解決的錯誤</td><td>下一個要嘗試的步驟 / <code>Stop</code></td><td>問題裡說明: 使用者可以輸入他對這個錯誤的了解</td></tr>
+    <tr><td>task 需要做文件的 Goal 或 Scope 以外的工作</td><td>先說出多出來的工作. <code>Do it</code> / <code>Add a follow-up</code> / <code>Stop</code></td><td>Do it: 加成新 task. Add a follow-up: 在 <code>## Open</code> 寫 <code>- Follow-up: &lt;what&gt;</code>, 不做它並繼續</td></tr>
+    <tr><td>無法解決的錯誤</td><td>下一個要嘗試的步驟排第一, 再來是 <code>Stop</code></td><td>問題裡說明: 使用者可以輸入他對這個錯誤的了解</td></tr>
     <tr><td>證明 task 完成的指令被拒絕</td><td>不詢問</td><td>task 保持未勾選, 不設 <code>done</code>; 依 "被拒絕" 的規則處理</td></tr>
   </table>
   <figure class="diagram">
@@ -1032,7 +1168,7 @@ flowchart TD
   D --> E["mreq.py update"]:::script
   E --> F(["回覆使用者"]):::stop
     </script>
-    <figcaption>停止前一定先用 tool call 留下紀錄. 沒有 Edit 與 update 的停止不夠</figcaption>
+    <figcaption>回覆前一定先用 tool call 留下紀錄. 沒有 Edit 與 update 的停止不夠</figcaption>
   </figure>
   <div class="grid2">
     <div>
@@ -1040,6 +1176,7 @@ flowchart TD
       <ul>
         <li>它是巢狀 bullet, 不是 checkbox.</li>
         <li>寫進現在知道的全部內容.</li>
+        <li>使用者叫停時說的話是新的內容: 即使其餘紀錄是最新的, 也要加進這一行.</li>
         <li>勾選 task 時刪除它.</li>
         <li>下一次執行時, 先對照程式碼確認它說已完成的部分, 再從那裡接續.</li>
       </ul>
@@ -1059,7 +1196,7 @@ flowchart TD
 <!-- ============================== 5 ============================== -->
 <section class="block" id="close">
   <h2><span class="stamp" aria-hidden="true">結</span>mreq-close</h2>
-  <p class="lede">核對程式碼是否做到文件約定的內容, 通過後直接刪除文件. 程式碼是完成內容的紀錄. 只有使用者輸入 <code>/mreq-close</code> 才會執行. 它可以在任何 session 執行, 包括做修改的同一個 session. 不寫文件的流程沒有文件可以核對, 所以不經過 <code>mreq-close</code>.</p>
+  <p class="lede">核對程式碼是否做到文件約定的內容, 通過後直接刪除文件. 程式碼是完成內容的紀錄. 只有使用者輸入 <code>/mreq-close</code> 才會執行. 它可以在任何 session 執行, 包括做修改的同一個 session: 它只依照現在讀到的文件與程式碼判斷. 不寫文件的流程沒有文件可以核對, 所以不經過 <code>mreq-close</code>.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -1087,36 +1224,53 @@ flowchart TD
     <figcaption>Step 1 到 Step 3: 選文件, 檢查 task, 然後 Audit 與 Run</figcaption>
   </figure>
   <ul>
-    <li>第一則訊息的開頭是 <code>Closing: &lt;絕對路徑&gt;</code>. 沒有任何文件時不寫這一行.</li>
-    <li>挑選文件時, 每份文件一個選項, <code>done</code> 的排前面, 其他的依 <code>list</code> 順序排在後面. 每個選項的 label 開頭是方括號標示的 status, 例: <code>[done] add login retry</code>, <code>[active] fix cache key</code>. 只有一份時, 第二個選項是 <code>Stop</code>. 超過 4 份時列前 4 份, 其他文件的路徑在自由回答輸入.</li>
+    <li>第一則訊息的開頭是 <code>Closing: &lt;絕對路徑&gt;</code>, 使用者給了路徑時也一樣. 沒有任何文件時不寫這一行.</li>
+    <li>挑選文件時, 每份文件一個選項: <code>done</code> 的排前面, 其他的排在後面, 兩組各自依 <code>list</code> 的順序. 每個 label 的開頭是方括號標示的 status, 再來是標題, 例: <code>[done] add login retry</code>, <code>[active] fix cache key</code>. task 進度與絕對路徑放在說明.</li>
+    <li>只有一份文件時, 第二個選項是 <code>Stop</code>. 超過 4 份時列前 4 份, 並在問題裡說明: 其他文件的路徑可以在自由回答輸入.</li>
     <li><code>Close anyway</code>: 繼續核對, 並在報告列出未完成的 task.</li>
   </ul>
 
-  <h3>Step 3: Audit 與 Run 的規則</h3>
-  <div class="grid2">
-    <div>
-      <p><strong>Audit</strong></p>
-      <ul>
-        <li>只依照現在讀到的文件與程式碼判斷, 不依照對話記憶.</li>
-        <li>完整讀文件與它引用的每個檔案: 這是稽核, 不是搜尋.</li>
-        <li>finding: 程式碼和文件矛盾, 或缺少文件要求的東西.</li>
-        <li>文件沒提到, 但不矛盾的細節, 放進 "沒要求的內容" 清單.</li>
-        <li>不執行專案程式碼, 不寫檔案.</li>
-      </ul>
-    </div>
-    <div>
-      <p><strong>Run</strong></p>
-      <ul>
-        <li>執行: 文件的測試指令 (文件沒有時, 用 README 或 agent 指示檔的); issue 的 <code>## Symptom</code> repro; refactor 的 <code>## Behavior Pin</code>; task 自己指定的檢查.</li>
-        <li>文件的 status 是 <code>done</code>, 而且 <code>## Handoff</code> 寫了驗證方式時, 不跑測試指令, 也不跑 task 自己的檢查; <code>mreq-apply</code> 只在 task 全部勾選而且相關測試通過時才設定 <code>done</code>. 這時不找其他測試指令. Handoff 只寫完成, 沒寫怎麼驗證時, 不算. repro 與 Behavior Pin 仍要跑: 它們直接證明目標達成.</li>
-        <li>已勾選的 task 的工作就是跑相關測試時, 不重跑測試指令, 也不找其他測試指令. repro, Behavior Pin 與 task 自己的檢查仍要跑.</li>
-        <li>指令照文件原樣執行. 不加 <code>uv run</code>, 不用 <code>python -c</code> 代替.</li>
-        <li>會寫入資料的檢查, 指向新的路徑 (例: <code>--file</code>), 或交給使用者執行. 這是唯一能改指令的地方.</li>
-        <li>不加自己的檢查, 即使是為了確認 finding. Audit 的 <code>path:line</code> 就是證據.</li>
-        <li>指令被拒絕時, 不換方式重試, 也不停止; 它歸到 "測試沒執行".</li>
-      </ul>
-    </div>
-  </div>
+  <h3>Step 3: Audit 的規則</h3>
+  <ul>
+    <li>只依照現在讀到的文件與程式碼判斷, 不依照對話記憶.</li>
+    <li>完整讀文件與它引用的每個檔案: 這是稽核, 不是搜尋.</li>
+    <li>逐項回答 <code>## Goal</code>, <code>## Decisions</code> 的每個 <code>### Dn:</code>, 與每個已勾選的 task: 程式碼做到了嗎? 答案是 done, partly done, done differently 或 missing, 附 <code>path:line</code>.</li>
+    <li>finding: 程式碼和文件矛盾, 或缺少文件要求的東西.</li>
+    <li>文件沒提到, 但不矛盾的細節, 放進 "沒要求的內容" 清單. 程式碼做了而文件沒要求的事, 也記下來.</li>
+    <li>不執行會執行專案程式碼的指令, 也不執行會寫檔案的指令.</li>
+  </ul>
+
+  <h3>Step 3: Run 的規則</h3>
+  <p>Audit 之後, 執行文件指定的檢查, 而且只執行這些.</p>
+  <figure class="diagram">
+    <script type="text/x-mermaid">
+flowchart TD
+  S(["Run"]) --> A{"status 是 done, 而且<br>Handoff 寫了驗證方式?"}
+  A -- 是 --> A1["跳過測試指令<br>與每個 task 的檢查<br>不找其他測試指令"]
+  A -- 否 --> B{"有已勾選的 task,<br>工作就是跑相關測試?"}
+  B -- 是 --> B1["只跳過測試指令<br>不找其他測試指令"]
+  B -- 否 --> C{"哪裡有<br>測試指令?"}
+  C -- "文件" --> C1["執行文件的測試指令"]:::script
+  C -- "文件沒有: README<br>或 agent 指示檔" --> C3["執行那個測試指令"]:::script
+  C -- "都沒有" --> C4["不執行<br>在報告說明"]
+  B1 --> T["執行每個 task<br>指定的檢查"]:::script
+  C1 --> T
+  C3 --> T
+  C4 --> T
+  A1 --> R["issue: Symptom 的 Repro<br>refactor: Behavior Pin<br>一定執行"]:::script
+  T --> R
+  R --> NX(["Step 4"])
+    </script>
+    <figcaption>哪些檢查要執行. Repro 與 Behavior Pin 直接證明目標達成, 所以不會被跳過</figcaption>
+  </figure>
+  <ul>
+    <li><code>mreq-apply</code> 只在 task 全部勾選而且相關測試通過時才設定 <code>done</code>. 所以 <code>done</code> 而且 Handoff 寫了驗證方式 (它執行的測試或指令) 時, 不重跑. Handoff 只寫完成, 沒寫怎麼驗證時, 不算.</li>
+    <li>"工作就是跑相關測試" 的 task, 例: issue template 的 "Run the related tests". 只說明自己怎麼檢查的 task, 或未勾選的 task, 不算.</li>
+    <li>指令照文件原樣執行. 不加 <code>uv run</code>, 不用 <code>python -c</code> 代替. 檢查需要 script 時, 直接 inline 執行.</li>
+    <li>檢查會寫入或修改 cache 以外的檔案 (資料檔, 資料庫) 時, 不碰專案的真實資料: 指向指令接受的新路徑 (例: <code>--file</code> 選項), 或交給使用者執行. 這個新路徑是唯一能對指令做的修改.</li>
+    <li>不加自己的檢查, 即使是為了確認 finding. Audit 的 <code>path:line</code> 就是證據.</li>
+    <li>這一步的指令被拒絕時, 不換方式重試, 也不停止; 它歸到 Step 4 的 "測試沒執行".</li>
+  </ul>
 </section>
 
 <section class="block" id="close-act">
@@ -1142,33 +1296,60 @@ flowchart TD
   <table>
     <tr><th>結果</th><th>詢問</th><th>選項</th><th>報告</th></tr>
     <tr><td>全部完成, 測試通過</td><td>不詢問</td><td></td><td>檢查結果</td></tr>
-    <tr><td>檢查已由 mreq-apply 執行 (文件是 done, Handoff 寫了驗證方式, Step 3 跳過測試指令與 task 的檢查)</td><td>不詢問</td><td></td><td>沒重跑的檢查與 Handoff 寫的驗證方式. 不算通過</td></tr>
+    <tr><td>檢查已由 mreq-apply 執行 (文件是 <code>done</code>, Handoff 寫了驗證方式, Step 3 跳過測試指令與 task 的檢查)</td><td>不詢問</td><td></td><td>沒重跑的檢查與 Handoff 寫的驗證方式. 不算通過</td></tr>
     <tr><td>測試指令已由 task 執行 (Step 3 跳過)</td><td>不詢問</td><td></td><td>沒重跑的指令與 task 編號. 不算通過</td></tr>
     <tr><td>找不到測試指令 (文件, README, agent 指示檔都沒有)</td><td>不詢問</td><td></td><td>找不到測試指令, 沒有執行. 不算通過</td></tr>
-    <tr><td>測試失敗</td><td>列出每個失敗, 問一次</td><td><code>Fix now</code> / <code>Close anyway</code> / <code>Stop</code></td><td>選了 Close anyway 的失敗測試</td></tr>
-    <tr><td>測試沒執行 (Step 3 的指令被拒絕)</td><td>給出每個指令與 allow rule, 問一次</td><td><code>Close anyway</code> / <code>Keep it</code></td><td>沒執行的指令. 不算通過</td></tr>
+    <tr><td>測試失敗</td><td>列出每個失敗, 問一次</td><td><code>Fix now (mreq-apply)</code> / <code>Close anyway</code> / <code>Stop</code></td><td>選了 Close anyway 的失敗測試</td></tr>
+    <tr><td>測試沒執行 (Step 3 的指令被拒絕)</td><td>原樣給出每個沒執行的指令, 各附一條 allow rule, 問一次</td><td><code>Close anyway</code> / <code>Keep it</code></td><td>沒執行的指令. 不算通過</td></tr>
     <tr><td>finding (partly done, done differently, missing)</td><td>每個 finding 一題: 引用文件的那一行, 說明程式碼做了什麼</td><td><code>Accept the code</code> / <code>Fix the code</code></td><td>接受的 finding 列為 accepted departure</td></tr>
   </table>
+  <p>"不算通過" 而且不詢問的三種結果, 單獨出現時直接到 Step 5. 同時有其他結果時, 依其他結果處理.</p>
   <p>Step 4 的問題一起問, 測試的問題排前面, 一次最多 4 題; 超過時, 等使用者回答後再問下一批. 使用者選了 <code>Stop</code> 或 <code>Keep it</code> 後, 不再問剩下的問題. 然後依序套用第一條符合的規則:</p>
   <ol>
     <li>任一 <code>Stop</code> 或 <code>Keep it</code>: 停止, 不刪除. 給出 <code>/mreq-apply &lt;path&gt;</code>, 附上沒有選 Close anyway 的失敗, 選了 Fix the code 的 finding, 與還沒問到的 finding. 都沒有時只停止.</li>
-    <li>任一 <code>Fix now</code> 或 <code>Fix the code</code>: 交給 <code>mreq-apply</code>. 失敗的測試只在選了 Fix now 時才帶過去.</li>
-    <li>其他: 到 Step 5.</li>
+    <li>任一 <code>Fix now</code> 或 <code>Fix the code</code>: 交給 <code>mreq-apply</code>. 失敗的測試只在選了 Fix now 時才帶過去; finding 只帶選了 Fix the code 的.</li>
+    <li>其他: 到 Step 5. 報告列出選了 Close anyway 的失敗測試, 沒執行的指令, 與接受的 finding (accepted departure).</li>
   </ol>
 
-  <h3>Step 5: 刪除與 Step 6: 報告</h3>
+  <h3>Step 5: 刪除</h3>
   <ul>
-    <li>刪除前, 先收集 <code>## Open</code> 的項目, 與 <code>## Handoff</code> 裡的 follow-up, <code>Open:</code> 或 <code>Unconfirmed:</code> 行. 檔案刪除後沒有東西保留它們, 所以它們寫進報告.</li>
-    <li>報告: 刪除了什麼, 檢查結果, 每個 accepted departure, 未完成的 task, 選了 Close anyway 的失敗測試, 沒執行的測試, 找不到測試指令, 沒重跑的測試指令與執行它的 task, 文件是 done 而沒重跑的檢查與 Handoff 寫的驗證方式, Step 5 的 follow-up, 檢查留下的檔案 (cache 除外), 以及程式碼做了但文件沒要求的事.</li>
-    <li>交給 <code>mreq-apply</code> 時: 文件的絕對路徑是參數, 每個 finding 或 failure 各一行 (文件的那一行, 程式碼做了什麼, <code>path:line</code> 或失敗的指令). 交接後不刪除文件.</li>
+    <li>只在 Step 4 的每個問題都回答之後才刪除.</li>
+    <li>刪除前, 先收集 <code>## Open</code> 的項目, 與 <code>## Handoff</code> 裡還在的 follow-up, <code>Open:</code> 或 <code>Unconfirmed:</code> 行. 檔案刪除後沒有東西保留它們, 所以它們寫進報告.</li>
+    <li>執行 <code>delete &lt;path&gt;</code>; 不用其他指令刪除. 不檢查 git, 刪除前也不詢問.</li>
   </ul>
-  <div class="callout"><strong>規則:</strong> 不改程式碼, 也不改文件; 修正交給 <code>mreq-apply</code>. 自己不建立檔案; 測試留下的 cache 與檢查需要的新資料路徑可以. 只在 Step 5 刪除, 而且 Step 1 到 4 的問題都要先回答. 只說 "直接 close" 不會跳過 Step 3 的檢查; 只有明確要求跳過檢查才會跳過.</div>
+
+  <h3>Step 6: 報告</h3>
+  <p>一定說明刪除了什麼, 以及檢查發現了什麼. 再列出下面適用的每一項:</p>
+  <div class="grid2">
+    <ul>
+      <li>每個 accepted departure.</li>
+      <li>每個未完成的 task.</li>
+      <li>每個選了 Close anyway 的失敗測試.</li>
+      <li>每個沒執行的指令.</li>
+      <li>找不到測試指令, 而且沒有執行.</li>
+    </ul>
+    <ul>
+      <li>沒重跑的測試指令, 與執行它的 task.</li>
+      <li>文件是 <code>done</code> 而沒重跑的測試指令與 task 檢查, 與 Handoff 寫的驗證方式.</li>
+      <li>Step 5 收集的 follow-up.</li>
+      <li>檢查留下的每個檔案 (cache 除外).</li>
+      <li>程式碼做了, 但文件沒要求的事.</li>
+    </ul>
+  </div>
+
+  <h3>交給 mreq-apply</h3>
+  <ul>
+    <li>只在上面的步驟指定時才交接, 而且交接後不刪除文件.</li>
+    <li>參數是文件的絕對路徑, 再來是每個 finding 或 failure 各一行: 文件的那一行, 程式碼做了什麼, 與它的 <code>path:line</code> 或失敗的指令.</li>
+    <li>交接後 <code>mreq-close</code> 不再做任何事. 呼叫被拒絕時, 把 findings 和指令一起給使用者.</li>
+  </ul>
+  <div class="callout"><strong>規則:</strong> 不改程式碼, 也不改文件; 修正交給 <code>mreq-apply</code>. 自己不建立檔案; 測試留下的 cache 與檢查需要的新資料路徑可以. 只在 Step 5 刪除, 而且 Step 1 到 4 的問題都要先回答. 交給 <code>mreq-apply</code> 之後不刪除. 只說 "直接 close" 不會跳過 Step 3 的檢查; 只有明確要求跳過檢查才會跳過.</div>
 </section>
 
 <!-- ============================== 6 ============================== -->
 <section class="block" id="how">
   <h2><span class="stamp" aria-hidden="true">解</span>mreq-how</h2>
-  <p class="lede">用一頁離線 HTML 解說程式碼怎麼運作. 文字帶讀者看懂 Mermaid 畫的架構, 時序, 狀態, 與流程圖; 每張圖附上圖例與一行說明. 圖由 <a href="https://pele.run/">Pele</a> 繪製, Pele 內嵌在頁面裡, 所以不需要網路. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/how/</code> 裡的頁面. 只有使用者輸入 <code>/mreq-how</code> 才會執行.</p>
+  <p class="lede">用一頁離線 HTML 解說程式碼怎麼運作: 一個子系統, 一個流程, 或一個模組. 文字帶讀者看懂 Mermaid 畫的架構, 時序, 狀態與流程圖; 每張圖附上圖例與一行說明. 它回答三種問題: "X 怎麼運作", 修改前的 walkthrough, 以及放置問題 ("這個該放哪裡", "哪一層負責"). 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/how/</code> 裡的頁面. 只有使用者輸入 <code>/mreq-how</code> 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -1200,67 +1381,96 @@ flowchart TD
   </figure>
 
   <h3>Step 1: 確認問題</h3>
+  <table>
+    <tr><th>重述欄位</th><th>內容</th></tr>
+    <tr><td>Question</td><td>頁面要解說什麼, 以及問題的種類 (怎麼運作, 修改前的 walkthrough, 或放置問題)</td></tr>
+    <tr><td>Scope</td><td>涵蓋的子系統, 流程或檔案</td></tr>
+    <tr><td>Out of scope</td><td>頁面不放的內容. 沒有時省略</td></tr>
+    <tr><td>Reader</td><td>頁面寫給誰, 依 style 決定. 沒有給 style 時省略</td></tr>
+  </table>
   <ul>
+    <li>重述用 agent 自己的話. <code>--plain</code> 時, 重述也用讀者的用語: 用功能說明範圍, 不用檔案.</li>
     <li>問題有多種解讀時, 每種解讀一個選項, 最可能的排第一, 範圍寫在說明. 選了一種解讀就是確認.</li>
     <li>其他情況: <code>Correct, go on</code> 排第一, 再來是 <code>Correct, also cover &lt;X&gt;</code>; X 是使用者最可能也想要的, 原本不涵蓋的項目. 沒有不涵蓋的項目時, 第二個選項是 <code>Stop</code>.</li>
-    <li>第一個字是 <code>--xxx</code> 但不是已知的 style 時, 不猜. 在同一次詢問裡問讀者: <code>Plain (--plain)</code> 或 <code>Engineer (no style)</code>.</li>
+    <li>自由回答的修正就是修正: 表示讀錯了, 所以再重述一次. 只有確認解讀的選擇才往下走.</li>
     <li>確認前只讀命名範圍需要的東西 (檔名與目錄名). 不探索程式碼, 不啟動 explorer, 不執行 <code>page.py</code>.</li>
-    <li>只有明確要求跳過確認 (例: "don't ask, just explain") 才跳過.</li>
+    <li>只有明確要求跳過確認 (例: "don't ask, just explain") 才跳過. 這時把選定的解讀寫在報告與 Overview 的第一句, 例: "I read X as Y; ask again if you meant Z."</li>
   </ul>
 
   <h3>讀者與 style</h3>
+  <p>style 是輸入的第一個字, 不是問題的一部分.</p>
   <table>
     <tr><th>style</th><th>讀者</th><th>頁面</th></tr>
     <tr><td>沒有 (預設)</td><td>要修改這段程式碼的工程師</td><td>引用 <code>path:line</code>, 用程式碼裡的名稱</td></tr>
     <tr><td><code>--plain</code></td><td>用功能認識產品的人 (企劃, PM), 不讀程式碼</td><td>用讀者的用語說明功能做什麼. 不放路徑, <code>path:line</code> 與讀者自己不用的程式碼名稱</td></tr>
   </table>
-  <p>每一種讀者的事實都來自程式碼. style 只改變頁面怎麼說, 不改變 agent 讀什麼.</p>
+  <ul>
+    <li>第一個字以 <code>--</code> 開頭, 但不是上面的 style 時, 不猜. 在 Step 1 的同一次詢問裡問讀者: <code>Plain (--plain)</code> 或 <code>Engineer (no style)</code>, 並說明那個字不是 style.</li>
+    <li>每一種讀者的事實都來自程式碼. style 只改變頁面怎麼說, 不改變 agent 讀什麼.</li>
+  </ul>
+
+  <h3>Step 2 到 Step 5</h3>
+  <ul>
+    <li>Step 2: README, agent 指示檔與相關文件說明程式碼應該做什麼, 所以 agent 知道要找什麼. 實際執行的是程式碼: 它和文件不同時, 解說程式碼, 並把差異寫進 Gotchas.</li>
+    <li>Step 3: Simple 是一個模組, 一個工具, 一個函式. Complex 是跨多個檔案的子系統, 橫跨多處的功能, 或架構總覽. 拿不準時, 走 Simple.</li>
+    <li>Step 4: 只在 Complex 時執行. 見 "平行探索".</li>
+    <li>Step 5: 依 <code>WRITING.md</code> 與 <code>MERMAID.md</code>, 選用得到的章節與回答每一部分問題的圖, 再寫每張圖的 Mermaid 原始碼, 圖例與說明. 先決定圖, 再寫文字: 文字帶讀者走過圖.</li>
+  </ul>
 
   <div class="grid2">
     <div>
       <h3>頁面章節 (依序, 用得到的才放)</h3>
       <ol>
         <li><strong>Overview</strong>: 這是什麼, 做什麼, 為什麼存在.</li>
-        <li><strong>Key Concepts</strong>: 其他內容依賴的型別與抽象.</li>
-        <li><strong>How It Works</strong>: 核心, 最長的一節. 先放圖, 再逐步說明.</li>
+        <li><strong>Key Concepts</strong>: 其他內容依賴的型別, 服務與抽象.</li>
+        <li><strong>How It Works</strong>: 核心, 最長的一節. 先放圖 (圖例, 再來是圖), 再用文字或步驟逐步說明.</li>
         <li><strong>Where Things Live</strong>: 簡短的檔案地圖.</li>
-        <li><strong>Gotchas</strong>: 不明顯的行為, 程式碼與文件的差異.</li>
+        <li><strong>Gotchas</strong>: 不明顯的行為, 歷史背景, 程式碼與文件的差異.</li>
         <li><strong>Open Questions</strong>: 無法追蹤的部分, 與圖省略的細節.</li>
       </ol>
-      <p><code>--plain</code> 的章節: Overview, Key Terms (功能名詞), How It Works, Rules and Values (規則與數值), Things to Know (意料外的行為), Open Questions. 不放 Where Things Live. 圖只用 <code>flowchart</code>, <code>stateDiagram-v2</code>, <code>sequenceDiagram</code>.</p>
+      <p><code>--plain</code> 的章節: Overview, Key Terms (功能名詞), How It Works (步驟依使用者或產品做的事, 不依程式碼的呼叫), Rules and Values (規則與數值), Things to Know (意料外的行為), Open Questions. 不放 Where Things Live. 圖只用 <code>flowchart</code>, <code>stateDiagram-v2</code>, <code>sequenceDiagram</code>.</p>
     </div>
     <div>
       <h3>選擇圖的類型</h3>
       <table>
         <tr><th>讀者需要看到</th><th>圖</th></tr>
         <tr><td>有哪些部分, 誰依賴誰</td><td><code>flowchart</code> + <code>subgraph</code></td></tr>
-        <tr><td>一個請求的呼叫順序</td><td><code>sequenceDiagram</code></td></tr>
+        <tr><td>一個請求或指令的呼叫順序</td><td><code>sequenceDiagram</code></td></tr>
         <tr><td>一個東西的生命週期</td><td><code>stateDiagram-v2</code></td></tr>
         <tr><td>分支邏輯</td><td><code>flowchart</code> + <code>{decision}</code> 節點</td></tr>
         <tr><td>型別, 欄位, 繼承</td><td><code>classDiagram</code></td></tr>
-        <tr><td>資料表與關聯</td><td><code>erDiagram</code></td></tr>
+        <tr><td>資料表或紀錄與關聯</td><td><code>erDiagram</code></td></tr>
       </table>
-      <p>每張圖大約 12 個節點以內; sequence 最多 6 個參與者, 14 則訊息. 文字能說清楚時不畫圖: 頁面可以沒有圖.</p>
+      <p>每張圖大約 12 個節點以內; sequence 最多 6 個參與者, 14 則訊息. 文字能說清楚時不畫圖: 頁面可以沒有圖. 每張圖之後, 文字依箭頭的順序, 用圖上的標籤說明每個節點.</p>
     </div>
   </div>
 
-  <h3>Step 6 與 Step 7</h3>
+  <h3>Step 6: 寫頁面</h3>
   <ul>
-    <li><code>new</code> 建立輸出目錄, 並用現在的時間命名內容檔. agent 不自己編時間.</li>
+    <li><code>page.py how new &lt;topic-slug&gt;</code> 建立輸出目錄, 並用現在的時間命名內容檔. agent 不自己編時間, 路徑照印出的使用.</li>
     <li>內容檔的 header 是 <code>lang</code>, <code>title</code>, <code>question</code>, <code>meta</code> 四行, 然後一行 <code>---</code>, 然後 sections. agent 只寫內容檔, 不讀也不複製 <code>skeleton.html</code> 與 Pele bundle.</li>
-    <li>build 只在印出 <code>ok</code> 時寫出頁面. 兩次 build 之間只用 Edit 或 Write 改內容檔. 不改 build 出來的頁面: 下一次 build 會覆蓋它.</li>
-    <li>同一個 Pele 錯誤在 3 次 build 後仍在時: <code>Simplify the diagram</code> (再 build 最多 3 次), <code>Use prose instead</code> (拿掉圖, 用文字說明, 並寫進 Open Questions), 或 <code>Stop</code>.</li>
-    <li>回覆只有: 最多 4 句的答案 (Overview 的重點), 與頁面的絕對路徑. 不詢問. 使用者要求時才開啟頁面.</li>
-    <li>build 印出 <code>WARN</code> 時, 4 句之一要說明圖沒有被檢查.</li>
+    <li><code>page.py how build &lt;內容檔&gt;</code> 檢查頁面與每張圖. 只在印出 <code>ok</code> 時, 才在內容檔旁邊寫出同名的 <code>.html</code>. Pele 的 FAIL 行會給出 Mermaid 原始碼裡的行號.</li>
+    <li>兩次 build 之間只用 Edit 或 Write 改內容檔. 不執行 <code>python</code>, heredoc, <code>cd</code> 或其他 script 來產生或修補它. 不改 build 出來的頁面: 下一次 build 會覆蓋它.</li>
+    <li>同一個 Pele 錯誤在 3 次 build 後仍在時, 給出 Pele 的錯誤與內容檔的絕對路徑, 問一次: <code>Simplify the diagram</code> (依 <code>WRITING.md</code> 的 "Keep it readable" 改寫, 再 build 最多 3 次), <code>Use prose instead</code> (拿掉圖, 用文字說明, 並寫進 Open Questions), 或 <code>Stop</code>.</li>
+  </ul>
+
+  <h3>Step 7: 報告</h3>
+  <ul>
+    <li>回覆只有兩項: 最多 4 句的答案 (Overview 的重點, 不用清單與標題), 與頁面的絕對路徑. 不詢問. 使用者要求時才開啟頁面.</li>
+    <li>頁面就是解說, 所以不在對話裡重複它. 每一句只說一個重點. 不用分號塞進更多內容, 不列輸入, 情況或檔案.</li>
+    <li>使用者跳過確認時, 第一句是 agent 的解讀. <code>--plain</code> 時, 4 句也用讀者的用語: 不放程式碼的路徑與名稱.</li>
+    <li>build 的限制或其他原因讓部分需求沒做到時, 4 句之一要說明. build 印出 <code>WARN</code> 時, 4 句之一要說明圖沒有被檢查.</li>
+    <li>不超過 4 句: 其他要提醒的事 (例: 無法檢查的版面) 寫在頁面的 Open Questions.</li>
+    <li>問新問題的追問從 Step 1 重新開始. 修改頁面的追問重走 Step 6, 這時 4 句說明頁面改了什麼, 不列新增的內容.</li>
     <li>頁面 build 之前有 Write, Edit 或指令被拒絕時: 只回覆被拒絕的路徑或指令與 allow rule, 然後停止. 不在對話裡回答問題.</li>
   </ul>
-  <div class="callout"><strong>規則:</strong> 使用者確認解讀前, 不開始分析, 除非使用者明確要求跳過確認. 除了 <code>.mreq/how/</code>, 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它. 解說實際執行的程式碼, 不是文件描述的內容; 兩者不同時寫進 Gotchas. 無法追蹤的部分寫進 Open Questions. <code>--plain</code> 的頁面與回覆不放路徑, <code>path:line</code> 與程式碼名稱, 但每個說法仍要對照程式碼確認.</div>
+  <div class="callout"><strong>規則:</strong> 使用者確認解讀前, 不開始分析, 除非使用者明確要求跳過確認. 除了 <code>.mreq/how/</code>, 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它; 行為不清楚時, 寫進 Open Questions. 解說實際執行的程式碼, 不是文件描述的內容; 兩者的差異要回報. 無法追蹤的部分寫進 Open Questions. <code>--plain</code> 的頁面與回覆不放路徑, <code>path:line</code> 與讀者自己不用的程式碼名稱, 但每個說法仍要對照程式碼確認.</div>
 </section>
 
 <!-- ============================== 7 ============================== -->
 <section class="block" id="graph">
   <h2><span class="stamp" aria-hidden="true">圖</span>mreq-graph</h2>
-  <p class="lede">把使用者的描述畫成 Mermaid 圖表, 放在一頁離線 HTML. 頁面只放圖: 每張圖附上圖例與一行說明, 最後列出假設. 圖由 <a href="https://pele.run/">Pele</a> 繪製; Pele 內嵌在頁面裡, 所以不需要網路. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/graph/</code> 裡的頁面. 只有使用者輸入 <code>/mreq-graph</code> 才會執行.</p>
+  <p class="lede">把使用者的描述畫成 Mermaid 圖表, 放在一頁離線 HTML. 描述可以是流程, 系統, 生命週期, 時程或一組關聯, 也可以指到要依據的檔案或程式碼. 頁面只放圖: 每張圖附上圖例與一行說明, 最後列出假設. 對專案是 read-only: 唯一的寫入是 session root 底下 <code>.mreq/graph/</code> 裡的頁面. 只有使用者輸入 <code>/mreq-graph</code> 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -1287,14 +1497,27 @@ flowchart TD
     <figcaption>mreq-graph 的 5 個步驟. 新主題的追問從 Step 1 重新開始; 修改頁面的追問只重走 Step 4</figcaption>
   </figure>
 
-  <h3>Step 1 與 Step 2</h3>
+  <h3>Step 1: 確認需求</h3>
+  <table>
+    <tr><th>重述欄位</th><th>內容</th></tr>
+    <tr><td>Subject</td><td>圖要呈現什麼</td></tr>
+    <tr><td>Diagrams</td><td>計畫的每張圖, 它的 Mermaid 類型, 與它呈現什麼</td></tr>
+    <tr><td>Assumptions</td><td>描述沒說清楚的地方, 與 agent 的選擇. 沒有時省略</td></tr>
+  </table>
   <ul>
-    <li>描述有多種解讀, 或兩種圖的類型都適合時, 每種一個選項, 最可能的排第一. 選了一種就是確認.</li>
+    <li>描述有多種解讀, 或兩種圖的類型都適合時, 每種一個選項, 最可能的排第一, 它的圖寫在說明. 選了一種就是確認.</li>
     <li>其他情況: <code>Correct, draw it</code> 排第一, 再來是 <code>Correct, also draw &lt;X&gt;</code>; X 是使用者最可能也想要的圖. 沒有這樣的圖時, 第二個選項是 <code>Stop</code>.</li>
-    <li>確認前只讀命名主題需要的東西: 使用者指到的檔案的名稱. 不畫圖, 不執行 <code>page.py</code>.</li>
+    <li>自由回答的修正就是修正: 再重述一次. 只有確認解讀的選擇才往下走.</li>
+    <li>確認前只讀命名主題需要的東西: 使用者指到的檔案, 只看名稱. 不畫圖, 不執行 <code>page.py</code>.</li>
+    <li>只有明確要求跳過確認 (例: "don't ask, just draw") 才跳過. 這時把選定的解讀寫在報告的第一句, 並列為頁面的第一個假設.</li>
+  </ul>
+
+  <h3>Step 2: 收集事實</h3>
+  <ul>
+    <li>圖是給讀者看的: 讀頁面, 並判斷圖對不對的人. 用讀者的用語畫.</li>
     <li>描述指到檔案, 程式碼或文件時, 讀它們, 畫它們說的內容. 程式碼與文件不同時, 畫程式碼, 並在頁面上說明.</li>
     <li>只有描述時, 只畫描述說的內容與使用者確認的假設. 不編造步驟, 名稱或數字; 缺少的東西寫進 Assumptions.</li>
-    <li>圖一定需要某個事實, 而沒有來源提供時, 選通常的答案, 並列在 Assumptions.</li>
+    <li>圖一定需要某個事實, 而沒有來源提供時 (例: sequence 圖裡哪一方開啟連線), 選通常的答案, 並列在 Assumptions.</li>
   </ul>
 
   <div class="grid2">
@@ -1302,10 +1525,17 @@ flowchart TD
       <h3>頁面章節 (依序, 只放圖)</h3>
       <ol>
         <li><strong>每張圖一節</strong>: <code>h2</code> 標題, 圖例 (放在圖的正上方), 圖, 一行說明 (圖的範圍).</li>
-        <li><strong>一組相關的圖</strong>: 放在同一節, 例如總覽與細節圖. 每張圖用自己的 <code>h3</code>.</li>
-        <li><strong>Assumptions</strong>: 放最後. 描述沒說清楚, 由 agent 選擇的部分, 沒有來源的事實, 以及圖省略的細節. 沒有時不放.</li>
+        <li><strong>一組相關的圖</strong>: 放在同一節, 例如總覽與細節圖. <code>h2</code> 是這一組的名稱; 每張圖用自己的 <code>h3</code>.</li>
+        <li><strong>Assumptions</strong>: 放最後. 描述沒說清楚, 由 agent 選擇的部分, 沒有來源的事實, 以及圖省略的細節或步驟. 沒有時不放.</li>
       </ol>
-      <p>不寫 overview, 逐步說明, 結論, 或圖旁的註記. 讀圖需要的資訊放在標籤, 圖例, 或說明裡. 標籤用讀者的用語; 每張圖大約 20 個箭頭以內; sequence 最多 6 個參與者, 15 則訊息.</p>
+      <p>不寫介紹, 逐步說明, 結論, 或圖旁的註記. 讀圖需要的資訊放在標籤, 圖例, 或說明裡. 標籤用讀者的用語: 不放變數, 函式與資料表的名稱, 除非讀者自己用那段程式碼. 每張圖大約 20 個箭頭以內; sequence 最多 6 個參與者, 15 則訊息.</p>
+      <h3>Step 5: 報告</h3>
+      <ul>
+        <li>回覆只有兩項: 最多 3 句說明頁面畫了什麼, 與頁面的絕對路徑. 不詢問.</li>
+        <li>圖省略了使用者可能預期的東西時, 3 句之一要說明. build 印出 <code>WARN</code> 時, 3 句之一要說明圖沒有被檢查.</li>
+        <li>不重複圖的說明與假設, 不顯示 Mermaid 原始碼. 使用者要求時才開啟頁面.</li>
+        <li>修改頁面的追問重走 Step 4, 這時 3 句說明改了什麼.</li>
+      </ul>
     </div>
     <div>
       <h3>選擇圖的類型</h3>
@@ -1327,53 +1557,115 @@ flowchart TD
         <tr><td>使用者的步驟與感受</td><td><code>journey</code></td></tr>
         <tr><td>分支與合併</td><td><code>gitGraph</code></td></tr>
       </table>
+      <p>選能用最少元素回答需求的類型. 只有第一張圖無法呈現的內容, 才加第二張圖.</p>
+    </div>
+  </div>
+  <div class="callout"><strong>規則:</strong> 使用者確認解讀前, 不畫圖, 除非使用者明確要求跳過確認. 除了 <code>.mreq/graph/</code>, 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它. 只畫描述或來源說的內容; 每個假設都寫在頁面上.</div>
+</section>
+
+<section class="block" id="page-build">
+  <h2><span class="stamp sub" aria-hidden="true">頁</span>頁面與 build</h2>
+  <p><code>mreq-how</code> 與 <code>mreq-graph</code> 用同一套方式產生頁面. agent 只寫內容檔; <code>page.py build</code> 把它套進 <code>skeleton.html</code>, 並內嵌 Pele bundle. 所以頁面不需要網路就能畫圖.</p>
+  <figure class="diagram">
+    <script type="text/x-mermaid">
+flowchart TD
+  N["page.py #lt;how|graph#gt; new slug"]:::script --> N1["建立 .mreq/how/ 或 .mreq/graph/<br>(含 .gitignore)<br>印出內容檔的路徑"]:::doc
+  N1 --> W["agent 用 Write<br>寫內容檔"]:::doc
+  W --> B["page.py #lt;how|graph#gt; build 內容檔"]:::script
+  B --> K1{"內容檔的檢查"}
+  K1 -- "有問題" --> FAIL(["印出 FAIL 行<br>刪除舊的頁面"]):::stop
+  K1 -- "通過" --> K2{"有 Node?"}
+  K2 -- "沒有" --> WARN["印出 WARN:<br>圖沒有被檢查"]
+  K2 -- "有" --> K3{"用 Pele 繪製每張圖"}:::script
+  K3 -- "Mermaid 錯誤, 或<br>圖寬超過 1100 px" --> FAIL
+  K3 -- "全部通過" --> OUT
+  WARN --> OUT["套用 skeleton.html<br>內嵌 Pele bundle<br>寫出頁面"]:::doc
+  OUT --> OK(["印出 ok 與<br>頁面的絕對路徑"])
+  FAIL -- "agent 用 Edit 或 Write<br>修內容檔" --> B
+    </script>
+    <figcaption>new 與 build 做的事. FAIL 時不留下舊的頁面, 所以舊頁面不會被當成這一次的結果</figcaption>
+  </figure>
+  <div class="grid2">
+    <div>
+      <h3>內容檔</h3>
+      <ul>
+        <li>檔名是 <code>&lt;slug&gt;-&lt;yyyyMMdd-HHmmss&gt;.content.html</code>; slug 是 kebab-case. 頁面是同名的 <code>.html</code>.</li>
+        <li>header 四行: <code>lang</code>, <code>title</code>, <code>question</code> (how) 或 <code>request</code> (graph), <code>meta</code>. 前三項必填; <code>meta</code> 可以是空的.</li>
+        <li>header 是純文字, build 會 escape. <code>---</code> 之後是 HTML, 原樣放進頁面, 所以文字裡的 <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code> 要自己 escape.</li>
+        <li><code>---</code> 之後只寫 <code>&lt;section&gt;</code>, 各有 kebab-case 的 <code>id</code> 與一個 <code>h2</code>.</li>
+        <li>每張圖放在自己的 <code>&lt;figure class="diagram"&gt;</code>: Mermaid 原始碼放在 <code>&lt;script type="text/x-mermaid"&gt;</code>, 再來是一行的 <code>figcaption</code>.</li>
+        <li>輸出目錄的 <code>.gitignore</code> 讓頁面不出現在 <code>git status</code>.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>build 檢查的項目</h3>
+      <ul>
+        <li>header 要齊全, <code>---</code> 之後要有 sections.</li>
+        <li>不能有整頁的標籤 (<code>html</code>, <code>head</code>, <code>body</code>, <code>style</code>, <code>meta</code>), Mermaid 以外的 <code>script</code>, 事件屬性 (<code>onclick=</code>, ...), 或從檔案外載入的資源.</li>
+        <li>每個 <code>&lt;!--</code> 與 <code>&lt;textarea&gt;</code> 都要關閉.</li>
+        <li>Mermaid 原始碼是純文字: 不能有 HTML entity (<code>&amp;lt;</code>, <code>&amp;amp;</code>, ...), <code>&lt;/script</code> 或 <code>&lt;!--</code>, 也不能是空的.</li>
+        <li>不寫 <code>classDef</code>, <code>style</code>, <code>linkStyle</code>, <code>%%{init}%%</code>: 固定的顏色在 dark theme 無法閱讀.</li>
+        <li>圖寬超過 1100 px 時失敗, 因為頁面縮小它之後標籤太小; 畫布大約 820 px 寬, 預設用 <code>TD</code>.</li>
+        <li><code>mreq-graph</code> 至少要有一張圖. <code>mreq-how</code> 的頁面可以沒有圖.</li>
+      </ul>
     </div>
   </div>
 
-  <h3>頁面與 build (mreq-how 也相同)</h3>
+  <h3>頁面的外觀與顏色</h3>
   <ul>
-    <li>Pele bundle 內嵌在頁面. CSP 只允許頁面自己的 script, 不載入任何外部資源.</li>
+    <li>CSP 只允許頁面自己的 script, 不載入任何外部資源.</li>
     <li>預設 light theme, 有按鈕可以切換成 dark theme.</li>
-    <li>左側目錄列出每個 <code>h2</code> 與它底下的 <code>h3</code>. 寬度小於 1200px 時收進工具列的按鈕.</li>
-    <li><code>flowchart</code> 與 <code>stateDiagram-v2</code> 的群組顏色: <code>blue</code>, <code>orange</code>, <code>purple</code>, <code>yellow</code>, <code>teal</code>, <code>tan</code>, <code>pink</code>. 標記: <code>primary</code>, <code>success</code>, <code>warning</code>, <code>danger</code>, <code>muted</code>.</li>
-    <li>mindmap 的分支與 timeline 的時期都用同一個中性色. pie, sankey, journey, gitGraph 保留 Pele 的顏色.</li>
-    <li>不寫 <code>classDef</code>, <code>style</code>, <code>linkStyle</code>, <code>%%{init}%%</code>; 有寫時 build 失敗.</li>
-    <li>圖寬超過 1100 px 時 build 失敗, 因為縮小後文字會太小; 預設用 <code>TD</code>.</li>
-    <li>build 也檢查內容檔: header 要齊全; 不能有整頁的標籤 (<code>html</code>, <code>head</code>, <code>body</code>, <code>style</code>, <code>meta</code>), Mermaid 以外的 <code>script</code>, 事件屬性, 或外部資源. <code>mreq-graph</code> 至少要有一張圖.</li>
-    <li>沒有 Node 時仍會產生頁面, 但會印出 <code>WARN</code>: 圖沒有被檢查.</li>
-    <li>同一個 Pele 錯誤在 3 次 build 後仍在時: <code>Simplify the diagram</code>, <code>Try another type</code> (用下一個適合的 Mermaid 類型畫同樣的內容), 或 <code>Stop</code>. 前兩個選項各再 build 最多 3 次.</li>
-    <li>回覆只有: 最多 3 句說明頁面畫了什麼, 與頁面的絕對路徑. 不重複圖的說明與假設, 不顯示 Mermaid 原始碼.</li>
+    <li>左側目錄列出每個 <code>h2</code> 與它底下的 <code>h3</code>, 所以標題要短, 而且互不相同.</li>
+    <li>顏色只在 <code>flowchart</code> 與 <code>stateDiagram-v2</code> 有效. 群組顏色: <code>blue</code>, <code>orange</code>, <code>purple</code>, <code>yellow</code>, <code>teal</code>, <code>tan</code>, <code>pink</code>. 標記: <code>primary</code>, <code>success</code>, <code>warning</code>, <code>danger</code>, <code>muted</code>. 顏色只用來表示意義, 圖例要說明圖用到的每一種顏色.</li>
+    <li>mindmap 的分支與 timeline 的時期都用同一個中性色. pie, sankey, journey, gitGraph 保留 Pele 的顏色, 圖例就是 Pele 自己的標籤.</li>
+    <li>圖例放在圖的正上方. 圖沒有用到顏色 class, 也只用一般的線條時, 才省略圖例.</li>
+    <li>說明只有一行, 寫圖的範圍: 從哪裡開始與結束, 省略了什麼, 或依據哪個檔案. 不重複標題.</li>
   </ul>
-  <div class="callout"><strong>規則:</strong> 使用者確認解讀前, 不畫圖, 除非使用者明確要求跳過確認. 除了 <code>.mreq/graph/</code>, 不在專案內寫任何東西. 除了 <code>page.py</code> 與使用者要求時開啟頁面的指令, 不執行其他指令. 不執行也不 import 專案程式碼, 只讀它. 只畫描述或來源檔案說的內容; 每個假設都寫在頁面上.</div>
+
+  <h3>圖太複雜或太寬時 (Keep it readable)</h3>
+  <ol>
+    <li>對這個問題行為相同的部分, 合併成一個節點.</li>
+    <li>省略問題不需要的細節, 例: 結果不影響任何事的呼叫.</li>
+    <li>省略每個節點都有的箭頭, 並在說明裡寫一次.</li>
+    <li>把圖拆成總覽與細節圖, 各放在自己的 <code>h3</code> 底下.</li>
+  </ol>
+  <p>省略時, 每個節點仍要能從起點沿著箭頭到達, 而且保留問題問到的每個節點與箭頭. 省略的內容列在 Open Questions (<code>mreq-how</code>) 或 Assumptions (<code>mreq-graph</code>).</p>
 </section>
 
 <!-- ============================== 8 ============================== -->
 <section class="block" id="pro">
   <h2><span class="stamp" aria-hidden="true">深</span>mreq-pro</h2>
-  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 對話裡有 <code>mreq-terms</code> 的結果時, 改寫它給的 prompt: 保留術語, 並把它列出的 "沒提到的事" 放進給使用者的問題. 結果只在對話裡, 不寫檔案, 也不執行 script. 只有使用者輸入 <code>/mreq-pro</code> (Codex 是 <code>$mreq-pro</code>) 才會執行. agent 沒有替換 <code>$ARGUMENTS</code> 時, prompt 就是使用者呼叫 skill 時給的文字.</p>
+  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 結果是對話裡的一則回覆. 只有使用者輸入 <code>/mreq-pro</code> (Codex 是 <code>$mreq-pro</code>) 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  S(["/mreq-pro prompt"]):::user --> A{"有給 prompt?"}
-  A -- "否" --> A1["使用最近一次的需求<br>有 mreq-terms 的結果時:<br>使用它改寫的 prompt"]
+  S(["/mreq-pro [prompt]"]):::user --> A{"有給 prompt?"}
   A -- "是" --> B
-  A1 --> B["簡短回答四題<br>每題 2 到 4 行"]
+  A -- "否" --> T{"對話裡有<br>mreq-terms 的回覆?"}
+  T -- "有" --> T1["prompt = 最新那一則回覆<br>code block 裡的新 prompt<br>加上使用者之後要求的修改"]
+  T -- "沒有" --> T2["prompt = 使用者<br>最近一次的需求"]
+  T1 --> B["簡短回答四題<br>每題 2 到 4 行"]
+  T2 --> B
   B --> K{"懂這個領域,<br>能回答每一題?"}
   K -- "否" --> ASK["說明不懂的部分<br>詢問使用者, 不猜測"]:::user
   ASK --> B
   K -- "是" --> C["在一個 code block<br>寫出新 prompt"]
-  C --> D(["逐行列出刪除或縮小的<br>部分與原因"]):::stop
+  C --> D(["逐行列出刪除或縮小的<br>部分與原因<br>最後一行: /mreq-define"]):::stop
     </script>
     <figcaption>mreq-pro 的步驟. 四題的答案, 新 prompt 與刪除清單都在同一則回覆</figcaption>
   </figure>
+  <ul>
+    <li><code>SKILL.md</code> 的 <code>Prompt:</code> 行只有一個 placeholder 字時, 表示 agent 沒有填入參數: prompt 就是使用者呼叫 skill 時給的文字.</li>
+    <li>使用 <code>mreq-terms</code> 的回覆時, 保留它的術語: 不把白話換回去. 它列出的 "使用者沒提到的事" 放進給使用者的問題, 不放進工作內容.</li>
+  </ul>
 
   <div class="grid2">
     <div>
       <h3>四題</h3>
       <table>
         <tr><th>題目</th><th>回答的內容</th></tr>
-        <tr><td>The crux</td><td>決定結果好壞的一個難點. 頂尖專家會怎麼處理, 而原本的 prompt 沒有要求. 新手會在哪裡出錯.</td></tr>
-        <tr><td>Raw material</td><td>專家會從哪個原始來源開始 (原始資料, 原始文件, 原始碼, 直接量測), 不用整理過的版本.</td></tr>
+        <tr><td>The crux</td><td>決定結果好壞的那一個難點. 頂尖專家會怎麼處理, 而原本的 prompt 沒有要求. 新手會在哪裡出錯.</td></tr>
+        <tr><td>Raw material</td><td>專家會從哪個原始來源開始 (原始資料, 原始文件, 原始碼, 直接量測), 不用使用者依賴的摘要或整理過的版本.</td></tr>
         <tr><td>Methods and tools</td><td>具體的方法, 工具或標準, 寫出名稱. 不給一般建議.</td></tr>
         <tr><td>Outside check</td><td>與使用者和 agent 無關的證據: 測試, benchmark, 原始來源, 量測. 寫成開始前就定義好的 pass/fail 條件.</td></tr>
       </table>
@@ -1381,53 +1673,62 @@ flowchart TD
     <div>
       <h3>新 prompt 的條件</h3>
       <ul>
-        <li>要求上面四項: crux, 原始資料, 方法, 外部驗證.</li>
+        <li>要求的內容就是上面四項: crux, 原始資料, 方法, 外部驗證.</li>
         <li>範圍與原本相同, 或更小. 刪除不增加深度的內容. 比原本長時, 每一行新增的內容都要有理由.</li>
         <li>要求 agent 用 prototype 決定實驗能決定的選擇, 並依照觀察結果推薦一個選項.</li>
         <li>實驗不能決定的產品或偏好選擇, 列成問使用者的問題, 不自己決定.</li>
       </ul>
+      <h3>code block 之後</h3>
+      <ul>
+        <li>每一行列出一個從原本的 prompt 刪除或縮小的部分, 與原因.</li>
+        <li>最後一行說明: <code>/mreq-define</code> (Codex 是 <code>$mreq-define</code>) 不給需求, 就會用新 prompt 開始工作.</li>
+      </ul>
     </div>
   </div>
-  <div class="callout"><strong>規則:</strong> 不懂領域時, 說明並詢問使用者, 不猜測. 新 prompt 只放在一個 code block, 讓使用者可以複製. <code>SKILL.md</code> 沒有 "Asking the user" 與 "When a tool call is denied" 兩節, 所以下面的共通規則不適用.</div>
+  <div class="callout"><strong>規則:</strong> 不懂領域, 無法回答某一題時, 說明並詢問使用者, 不猜測. 新 prompt 只放在一個 code block, 讓使用者可以複製. <code>mreq-pro</code> 的 <code>SKILL.md</code> 只是一段 prompt: 沒有 "Steps", "Asking the user" 與 "When a tool call is denied", 也不執行 script. 所以 "共通規則" 不適用.</div>
 </section>
 
 <!-- ============================== 9 ============================== -->
 <section class="block" id="terms">
   <h2><span class="stamp" aria-hidden="true">詞</span>mreq-terms</h2>
-  <p class="lede">使用者有想法, 但缺少專家的術語與背後的知識時使用. 依照使用者的情境, 給出適合而且正確的術語與知識, 讓使用者能說出自己的意思. 情境是指 prompt, 對話裡已有的內容, 以及 prompt 提到的檔案與程式碼; 不從領域的一般介紹開始. 沒有給 prompt 時, 使用使用者最近一次的需求. 會讀檔案, 並打開每個引用的連結來確認. 結果只在對話裡, 不寫檔案, 也不執行 script. 只有使用者輸入 <code>/mreq-terms</code> (Codex 是 <code>$mreq-terms</code>) 才會執行. agent 沒有替換 <code>$ARGUMENTS</code> 時, prompt 就是使用者呼叫 skill 時給的文字.</p>
+  <p class="lede">使用者有想法, 但缺少專家的術語與背後的知識時使用. 它教使用者適合的術語, 讓使用者能說出自己的意思. 它從使用者的情境開始, 不從領域的一般介紹開始. 情境是指 prompt, 對話裡已有的內容, 以及 prompt 提到的檔案與程式碼. 結果是對話裡的一則回覆. 只有使用者輸入 <code>/mreq-terms</code> (Codex 是 <code>$mreq-terms</code>) 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  S(["/mreq-terms prompt"]):::user --> A{"有給 prompt?"}
+  S(["/mreq-terms [prompt]"]):::user --> A{"有給 prompt?"}
   A -- "否" --> A1["使用最近一次的需求"]
   A -- "是" --> R
-  A1 --> R["讀 prompt, 對話, 以及<br>prompt 提到的檔案與程式碼"]:::doc
-  R --> P{"prompt 可能是<br>不只一個問題?"}
-  P -- "是" --> P1["列出 2 到 3 個問題<br>選最可能的一個, 說明原因"]
-  P -- "否" --> K
-  P1 --> K{"懂這個領域,<br>能說出它的術語?"}
-  K -- "否" --> ASK["說明不懂的部分<br>詢問使用者, 不猜測"]:::user
-  ASK --> K
-  K -- "是" --> W["5 到 12 個術語與知識<br>不適合的術語<br>相鄰領域, 沒提到的事"]
+  A1 --> R["讀 prompt, 對話, 以及<br>prompt 提到的檔案與程式碼<br>不依賴它們的摘要"]:::doc
+  R --> K{"懂這個領域,<br>能說出它的術語?"}
+  K -- "否" --> ASK(["說明不懂的部分<br>詢問使用者, 不猜測"]):::user
+  K -- "是" --> P{"prompt 可能是<br>不只一個問題?"}
+  P -- "是" --> P1["列出 2 到 3 個可能的問題<br>選最可能的一個, 說明原因"]
+  P -- "否" --> W
+  P1 --> W["寫五個部分"]
   W --> L{"有開網頁的 tool?"}
   L -- "是" --> L1["打開每個連結確認<br>刪除無法確認的引用"]
   L -- "否" --> L2["不給引用<br>說明一次"]
   L1 --> D
-  L2 --> D(["在一個 code block<br>用術語改寫 prompt<br>提示下一步: /mreq-pro"]):::stop
+  L2 --> D(["code block 之後的一行:<br>/mreq-pro 或 /mreq-define"]):::stop
     </script>
     <figcaption>mreq-terms 的步驟. 五個部分都在同一則回覆</figcaption>
   </figure>
+  <ul>
+    <li><code>SKILL.md</code> 的 <code>Prompt:</code> 行只有一個 placeholder 字時, 表示 agent 沒有填入參數: prompt 就是使用者呼叫 skill 時給的文字.</li>
+    <li>prompt 可能是不只一個問題時, 每個可能的問題各附一個指出它的術語, 與分辨它和其他問題的跡象.</li>
+    <li>每個術語都要對應到使用者材料裡的某個東西.</li>
+  </ul>
 
   <h3>五個部分</h3>
   <table>
     <tr><th>部分</th><th>內容</th></tr>
-    <tr><td>The words</td><td>5 到 12 個會改變成品的術語, 最重要的在前; 下一個術語不會改變成品時就停止. 每個術語: 一句白話的意思, 對應 prompt, 對話或檔案的哪一部分, 專家知道而使用者該知道的事 (它要求做的選擇, 或沒有它時常犯的錯), 一個這樣使用它的實際專案, 論文或系統 (附連結), 以及它讓使用者能向 agent 要求什麼.</td></tr>
-    <tr><td>Words that look right but are not</td><td>最多 3 個使用者可能會用, 但不適合這個情境的術語. 每個: 它真正的意思, 以及該改用哪一個術語. 沒有時略過.</td></tr>
-    <tr><td>Neighboring fields</td><td>2 到 3 個用其他名稱解決同一種問題的領域. 每個領域: 哪些可以沿用, 類比在哪裡失效, 帶回哪些術語.</td></tr>
-    <tr><td>What I left out</td><td>使用者沒提到, 但應該在意的事.</td></tr>
-    <tr><td>My prompt, in the new words</td><td>用術語改寫使用者的 prompt, 放在一個 code block. 只換用詞, 不改變工作內容: 不加入 "What I left out" 的項目.</td></tr>
+    <tr><td>1. The words</td><td>5 到 12 個會改變成品的術語, 最重要的在前; 下一個術語不會改變任何事時就停止. 每個術語: 一句白話的意思; 它對應 prompt, 對話或檔案的哪一部分; 專家知道而使用者該知道的事 (它迫使人做的選擇, 或沒有它時常犯的錯); 一個這樣使用它的實際專案, 論文或系統, 附連結; 以及它讓使用者能向 agent 要求什麼.</td></tr>
+    <tr><td>2. Words that look right but are not</td><td>最多 3 個使用者可能會用, 但不適合這個情境的術語. 每個: 它真正的意思, 以及該改用第 1 部分的哪一個術語. 沒有時略過這個部分.</td></tr>
+    <tr><td>3. Neighboring fields</td><td>2 到 3 個用其他名稱解決同一種問題的領域. 每個領域: 哪些可以沿用, 類比在哪裡失效, 帶回哪些術語.</td></tr>
+    <tr><td>4. What I left out</td><td>使用者沒提到, 但應該在意的事.</td></tr>
+    <tr><td>5. My prompt, in the new words</td><td>用術語改寫使用者的 prompt, 放在一個 code block. 只換用詞, 不改變工作內容: 不加入第 4 部分的項目. code block 之後用一行說明: <code>/mreq-pro</code> 不給 prompt 會加深這個 prompt; <code>/mreq-define</code> 不給需求會用它開始工作.</td></tr>
   </table>
-  <div class="callout"><strong>規則:</strong> 每個術語都要對應到使用者的材料. 每個連結都要打開, 確認那一頁這樣使用該術語; 無法確認的引用要刪除, 術語可以保留. 不自創術語: 領域沒有固定用詞時, 說明並用白話描述. 兩個社群用詞不同時, 兩個都給, 並說明誰用哪一個. 用使用者的語言解說, 術語保留領域的寫法. 不懂領域時, 說明並詢問使用者, 不猜測. 兩個 skill 都只有使用者能呼叫, 所以不會自動接續: 回覆的最後一行提示使用者, 接著輸入 <code>/mreq-pro</code> (不給 prompt) 就會加深這個 prompt. <code>SKILL.md</code> 沒有 "Asking the user" 與 "When a tool call is denied" 兩節, 所以下面的共通規則不適用.</div>
+  <div class="callout"><strong>規則:</strong> 每個連結都要打開, 確認那一頁這樣使用該術語; 無法確認的引用要刪除, 術語可以保留. 沒有能開網頁的 tool 時, 不給引用, 並說明一次. 不自創術語: 領域沒有固定用詞時, 說明並用白話描述. 兩個社群用詞不同時, 兩個都給, 並說明誰用哪一個. 用使用者的語言解說, 術語保留領域的寫法. 不懂領域時, 說明並詢問使用者, 不猜測. 不灌水. <code>mreq-terms</code> 的 <code>SKILL.md</code> 也只是一段 prompt, 所以 "共通規則" 不適用.</div>
 </section>
 
 <!-- ============================== 10 ============================== -->
@@ -1436,19 +1737,29 @@ flowchart TD
   <p class="lede">除了 <code>mreq-pro</code> 與 <code>mreq-terms</code>, 每個 skill 都遵守下面的規則. "Asking the user" 與 "When a tool call is denied" 兩節在六個 <code>SKILL.md</code> 裡一字不差; <code>tests/test_skills.py</code> 檢查這一點.</p>
   <h3>問使用者</h3>
   <ul>
-    <li>agent 有提問 tool 時使用它: Claude Code 的 <code>AskUserQuestion</code>, Grok 的 <code>ask_user_question</code>, Antigravity 的 <code>ask_question</code>, Codex 的 <code>request_user_input</code>. 一次最多 4 個獨立問題 (或 tool 能接受的數量), 推薦選項放第一個, 標示 "(Recommended)".</li>
+    <li>agent 有選項提問的 tool 時使用它: Claude Code 的 <code>AskUserQuestion</code>, Grok 的 <code>ask_user_question</code>, Antigravity 的 <code>ask_question</code>, Codex 的 <code>request_user_input</code>. 一次最多 4 個獨立問題 (或 tool 能接受的數量), 推薦選項放第一個, 標示 "(Recommended)".</li>
     <li>一題的選項比 tool 能接受的多時, 這一題用純文字提問. tool 回傳錯誤時 (Codex 只在 Plan mode 允許), 這個對話的其餘問題都用純文字.</li>
-    <li>沒有提問 tool 時, 用純文字編號清單提問, 推薦選項放第一個, 然後等待回答.</li>
-    <li>用選項讓使用者選, 不讓使用者打字: 每題 2 到 4 個選項, label 1 到 5 個字, 細節放在說明, header 最多 12 個字元.</li>
+    <li>沒有這種 tool 時, 用純文字編號清單提問, 推薦選項放第一個, 然後等待回答.</li>
+    <li>用選項讓使用者選, 不讓使用者打字: 每題 2 到 4 個選項, label 1 到 5 個字, 細節放在說明, <code>header</code> 最多 12 個字元.</li>
     <li>不加 "Other": 這些 tool 每題都有自由回答欄. 答案可能需要選項放不下的值 (路徑, 修正) 時, 在問題裡說明可以在那裡輸入.</li>
-    <li>只有選項放不下的答案 (例: 只有使用者看過的錯誤訊息) 才請使用者輸入. 能猜時, 仍把猜測列為選項.</li>
+    <li>只有選項放不下的答案 (例: 只有使用者看過的錯誤訊息) 才請使用者輸入. 能猜時, 把猜測列為選項.</li>
     <li>skill 的步驟自己會執行的指令, 不叫使用者輸入.</li>
   </ul>
+  <h3>確認題的共同模式</h3>
+  <table>
+    <tr><th>skill</th><th>確認什麼</th><th>明確要求跳過時</th></tr>
+    <tr><td>mreq-define</td><td>Step 4 的重述. 同一題選下一步</td><td>不重述, 直接寫文件; 假設寫進 <code>## Assumptions</code>, Handoff 加 <code>Unconfirmed:</code></td></tr>
+    <tr><td>mreq-grill</td><td>Step 4 的重述. 同一題選下一步</td><td><code>SKILL.md</code> 沒有跳過的規則: 確認前什麼都不寫</td></tr>
+    <tr><td>mreq-how</td><td>Step 1 對問題的解讀</td><td>選最可能的解讀, 寫在報告與 Overview 的第一句</td></tr>
+    <tr><td>mreq-graph</td><td>Step 1 對描述的解讀與計畫的圖</td><td>選最可能的解讀, 寫在報告的第一句與頁面的第一個假設</td></tr>
+    <tr><td>mreq-close</td><td>沒有重述. Step 3 的檢查一定執行</td><td>只有明確要求跳過檢查才跳過; "just close it" 不算</td></tr>
+  </table>
+  <p>在每一個確認題, 自由回答裡的修正就是修正: 處理修正之後, 一定再重述一次.</p>
   <h3>選文件</h3>
   <table>
     <tr><th>skill</th><th>直接使用</th><th>執行</th><th>不詢問的條件</th><th>沒有文件時</th></tr>
     <tr><td>mreq-grill</td><td>使用者給的路徑, 或本對話只談的那一份</td><td><code>list --open</code></td><td>剛好一份, 而且沒有 warning 或 error. 先說明標題與絕對路徑</td><td>說明, 建議 <code>/mreq-define</code></td></tr>
-    <tr><td>mreq-apply</td><td>使用者給的路徑, 或本對話只談的那一份</td><td><code>list --open</code></td><td>剛好一份, 而且沒有 warning 或 error. 路徑由進度的 <code>Using:</code> 行顯示</td><td>說明並停止; <code>/mreq-define</code> 開始新工作</td></tr>
+    <tr><td>mreq-apply</td><td>使用者給的路徑, 或本對話只談的那一份</td><td><code>list --open</code></td><td>剛好一份, 而且沒有 warning 或 error. 路徑由進度的 <code>Using:</code> 行顯示</td><td>說明並停止; <code>/mreq-define &lt;request&gt;</code> 開始新工作</td></tr>
     <tr><td>mreq-close</td><td>使用者給的路徑</td><td><code>list</code></td><td>剛好一份 <code>done</code>, 而且沒有 warning 或 error</td><td>說明並停止, 不寫 <code>Closing:</code> 行</td></tr>
   </table>
   <p>其他情況一律由使用者挑選, agent 不自己選. 給使用者看的文件路徑, 一律用 script 印出的絕對路徑.</p>
@@ -1456,7 +1767,7 @@ flowchart TD
 
 <section class="block" id="common-script">
   <h2><span class="stamp sub" aria-hidden="true">令</span>執行 script 與被拒絕</h2>
-  <p>script 的路徑是 <code>${CLAUDE_SKILL_DIR}/scripts/&lt;script&gt;</code>. 只有 Claude Code 會把變數換成 skill 目錄的絕對路徑. 其他 agent 可能保留原樣: 這時 agent 在第一個用到它的指令或讀檔之前, 自己換成這個 <code>SKILL.md</code> 所在目錄的絕對路徑. Codex 在 skill 的 <code>&lt;path&gt;</code> 給出這個路徑, Grok 在 skill 清單的 <code>Absolute path</code> 給出. 還含有 <code>${</code> 的指令或路徑一律不執行. 錯誤訊息的路徑以 <code>/scripts/</code> 開頭時, 表示變數是空的: 補上路徑, 再執行同一個指令.</p>
+  <p>script 的路徑是 <code>${CLAUDE_SKILL_DIR}/scripts/&lt;script&gt;</code>. <code>${CLAUDE_SKILL_DIR}</code> 是放這個 <code>SKILL.md</code> 的目錄. Claude Code 會把變數換成絕對路徑. 其他 agent 可能保留原樣: 這時 agent 在第一個用到它的指令或讀檔之前, 自己換成這個 <code>SKILL.md</code> 所在目錄的絕對路徑. Codex 在 skill 的 <code>&lt;path&gt;</code> 給出這個路徑, Grok 在 skill 清單的 <code>Absolute path</code> 給出. 還含有 <code>${</code> 的指令或路徑一律不執行, 也不讀取: shell 會把它當成空的變數. 錯誤訊息的路徑以 <code>/scripts/</code> 開頭時, 表示變數是空的: 補上路徑, 再執行同一個指令.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -1475,6 +1786,12 @@ flowchart TD
     </script>
     <figcaption>指令, Write, Edit 被拒絕時都用同一套處理. 其他 agent 的 rule 寫法不同, 所以只給出指令或路徑</figcaption>
   </figure>
+  <ul>
+    <li><code>uv</code> 自己出錯的例子: 它無法建立 cache 目錄, 或 sandbox 封鎖了下載.</li>
+    <li>在 Windows, <code>python</code> 或 <code>python3</code> 什麼都沒印出, 或只印出 Microsoft Store 的提示時, 算找不到.</li>
+    <li>其中一種方式啟動了 script 之後, 這個對話之後的每個 script 指令都用它, 不再嘗試 <code>uv run</code>.</li>
+    <li>不換執行方式的三種情況: script 自己印出的錯誤; script 的路徑不存在 (<code>Failed to spawn</code>, <code>can't open file</code>), 這時修正路徑; 指令被拒絕.</li>
+  </ul>
   <table>
     <tr><th>被拒絕的對象</th><th>allow rule (只在 Claude Code)</th></tr>
     <tr><td><code>mreq.py</code> 指令</td><td><code>Bash(uv run *mreq.py*)</code> 或 <code>PowerShell(uv run *mreq.py*)</code>; 用 python 執行時把 <code>uv run</code> 換成 <code>python</code> 或 <code>python3</code></td></tr>
@@ -1482,9 +1799,16 @@ flowchart TD
     <tr><td>mreq-how 內容檔的 Write / Edit</td><td><code>Edit(./.mreq/how/**)</code></td></tr>
     <tr><td>mreq-graph 內容檔的 Write / Edit</td><td><code>Edit(./.mreq/graph/**)</code></td></tr>
     <tr><td>Skill 交接</td><td>這次呼叫的名稱: <code>Skill(mreq-apply)</code>, 或 plugin 的 <code>Skill(mreq:mreq-apply)</code>. 並給出對應的指令</td></tr>
-    <tr><td>其他指令</td><td>tool 名稱加完整指令, 不用 <code>*</code>. 例: <code>Bash(python -m unittest discover -s tests)</code></td></tr>
+    <tr><td>其他指令</td><td>執行它的 tool 名稱加完整指令, 不用 <code>*</code>. 例: <code>Bash(python -m unittest discover -s tests)</code></td></tr>
   </table>
-  <p>不把兩個被拒絕的指令合併成一條 rule, 也不建議範圍更大的 rule. <code>mreq-close</code> 的 Step 3 是例外: 檢查的指令被拒絕時不停止, 繼續到 Step 4 並詢問. <code>mreq-apply</code> 停止前, 先依 "停止與記錄" 留下紀錄.</p>
+  <p>不把兩個被拒絕的指令合併成一條 rule, 也不建議範圍更大的 rule. 下面是各 skill 在這套處理之外的做法:</p>
+  <table>
+    <tr><th>skill</th><th>被拒絕時另外做的事</th></tr>
+    <tr><td>mreq-define (不寫文件的流程)</td><td>回覆前先補寫文件, 再給出 <code>/mreq-apply &lt;path&gt;</code>. 文件也寫不出來時, 把同樣的紀錄放在回覆裡</td></tr>
+    <tr><td>mreq-apply</td><td>停止前, 先依 "停止與記錄" 留下紀錄. 證明 task 完成的指令被拒絕時, task 保持未勾選, 不設 <code>done</code></td></tr>
+    <tr><td>mreq-close (Step 3)</td><td>檢查的指令被拒絕時不停止: 繼續到 Step 4, 給出指令與 allow rule, 並問 <code>Close anyway</code> 或 <code>Keep it</code></td></tr>
+    <tr><td>mreq-how, mreq-graph</td><td>頁面 build 之前被拒絕時, 只回覆被拒絕的路徑或指令與 allow rule, 然後停止</td></tr>
+  </table>
 </section>
 
 <section class="block" id="common-lang">
@@ -1498,12 +1822,14 @@ flowchart TD
   B -- "否 (grill, apply, close)" --> C["看文件 title<br>與 ## Goal 的語言<br>不看 template 的標題"]:::doc
   C --> L3(["使用文件的語言"])
     </script>
-    <figcaption>每則訊息都用同一種語言, 包括 tool call 之間的短註記. <code>Open:</code> 這類固定標籤保持原樣</figcaption>
+    <figcaption>每則訊息都用同一種語言, 從第一行到報告, 包括 tool call 之間的短註記. <code>Open:</code> 這類固定標籤保持原樣</figcaption>
   </figure>
   <ul>
-    <li>例: 標題 <code>add 輸入 1,000 時當掉</code> 代表正體中文, 即使每個標題都是英文.</li>
+    <li>只選了選項 (<code>1</code>, <code>Accept the code</code>) 或只給路徑的回覆, 不會改變語言.</li>
     <li>第三層只寫在 <code>mreq-grill</code>, <code>mreq-apply</code> 與 <code>mreq-close</code>: 使用者只給了指令或路徑, 還沒寫過自然語言時, 才用文件的語言.</li>
-    <li><code>mreq-define</code> 寫的文件用同一種語言. <code>mreq-how</code> 與 <code>mreq-graph</code> 的頁面與圖的標籤也用同一種語言.</li>
+    <li>文件的語言是 title 與 <code>## Goal</code> 的語言, 不是 template 的標題或文字的語言. 例: 標題 <code>add 輸入 1,000 時當掉</code> 代表正體中文, 即使每個 <code>##</code> 標題都是英文.</li>
+    <li><code>mreq-define</code> 寫的文件, <code>--title</code> 與 <code>--desc</code> 用同一種語言. <code>mreq-how</code> 的頁面, 以及 <code>mreq-graph</code> 的頁面與圖的標籤, 也用同一種語言.</li>
+    <li><code>mreq-terms</code> 用使用者的語言解說, 術語保留領域的寫法.</li>
   </ul>
 </section>
 

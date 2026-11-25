@@ -121,6 +121,12 @@ class SkillTextTest(unittest.TestCase):
             hidden = yaml.is_file() and "allow_implicit_invocation: false" in yaml.read_text(encoding="utf-8")
             self.assertEqual(hidden, user_only, skill.name)
 
+    def test_a_prompt_handoff_is_written_at_both_ends(self):
+        # The earlier skill names the command to type next; the later one says what it takes from that reply.
+        for earlier, later in (("terms", "pro"), ("terms", "define"), ("pro", "define")):
+            self.assertIn(f"`/mreq-{later}` (`$mreq-{later}` in Codex) with no", skill_text(earlier), earlier)
+            self.assertIn(f"reply from mreq-{earlier}", skill_text(later), later)
+
     def test_skill_files_end_lines_with_lf(self):
         for path in SKILLS_DIR.rglob("*"):
             if path.suffix in (".md", ".yaml"):

@@ -28,4 +28,4 @@ Then write the rewritten prompt in a single code block I can copy. It must:
 - Tell the agent to prototype any choice an experiment can settle, and recommend an option based on what it observed.
 - List product or preference choices that no experiment can settle as open questions for me, instead of deciding them.
 
-After the code block, list in one line each what you removed or narrowed from my original, and why.
+After the code block, list in one line each what you removed or narrowed from my original, and why. Then say in one line that `/mreq-define` (`$mreq-define` in Codex) with no request starts this work from the rewritten prompt.
