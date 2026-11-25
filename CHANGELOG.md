@@ -19,6 +19,13 @@
 - `mreq-pro` 的結尾多一行提示: 接著輸入 `/mreq-define` (不給需求), 就會用新 prompt 開始工作.
 - `mreq-terms` 結尾的提示多一個下一步: `/mreq-define` (不給需求).
 - `docs/mreq-flow.html` 的 skill 交接圖補上缺少的交接: `mreq-terms` 與 `mreq-pro` 的提示, `mreq-define` 與 `mreq-close` 只給出 `/mreq-apply <path>` 的情況, 以及 `mreq-apply` 在 template 文件選 `Stop` 的情況.
+- `docs/mreq-flow.html` 對照每個 skill 的檔案重寫.
+  - 新增: 8 個 skill 的一覽表與常見的走法; "需求的來源" 一節; `mreq-close` 哪些檢查要執行的圖; "頁面與 build" 一節; 各 skill 確認題的對照表, 以及各 skill 被拒絕時另外做的事.
+  - 修正: Claude Code, Grok 與 Antigravity 都讀 `disable-model-invocation`, 不是只有 Claude Code.
+  - 修正: `mreq-define` 的 Step 5 補上 `feature` 的 `In:`; `mreq-grill` 的入口補上焦點與路徑的判斷.
+  - 修正: 典型 session 裡, `mreq-close` 不重跑 `mreq-apply` 已經驗證的測試指令與 task 檢查.
+  - 修正: `Unknown skill` 只用指出的名稱重試一次; `mreq-how` 的 explorer 也不執行專案程式碼.
+  - 刪除 skill 沒有寫的說法, 例: "完成時不提醒 commit".
 
 ## 0.25.0
 
