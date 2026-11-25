@@ -11,6 +11,8 @@ Prompt: $ARGUMENTS
 
 When the Prompt line above holds only a placeholder word, not a prompt, my agent did not fill it in: the prompt is the text I gave with this skill.
 
+When no prompt is given and this conversation holds a reply from mreq-terms, the prompt is the rewritten prompt in the code block of the latest such reply, with any change I asked for since. Keep its terms: never put plain words back in their place. Put what that reply says I left out among the open questions for me, not in the work.
+
 First, answer these briefly (2-4 lines each):
 
 1. **The crux.** What is the one hard part of this task that decides whether the result is good? What would a top professional do about it that my prompt doesn't ask for? What would a novice get wrong?
