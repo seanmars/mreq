@@ -87,7 +87,8 @@ skills/           # 只限使用者呼叫的 skill 另有 agents/openai.yaml (Co
 └── mreq-terms/
 shared/           # 複本的來源, 不是 skill: scripts/, vendor/, GRILL.md, MERMAID.md
 tools/
-└── sync.py       # 把 shared/ 的檔案複製到使用它的 skill
+├── sync.py       # 把 shared/ 的檔案複製到使用它的 skill
+└── tokens.py     # 列出每個 skill 的 token 估計量: uv run tools/tokens.py [--files]
 tests/            # python -m unittest discover -s tests
 ```
 
