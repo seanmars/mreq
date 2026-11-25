@@ -285,6 +285,9 @@ flowchart TD
   Q -- "學這件工作<br>的術語" --> TERMS["/mreq-terms"]:::skill
   TERMS --> NEWD(["術語與改寫後的 prompt<br>在對話裡"]):::stop
   Q -- "要做一件工作" --> DEF["/mreq-define<br>分類, 訪談, 重述"]:::skill
+  NEWP -. "接著輸入<br>/mreq-define<br>(不給需求)" .-> DEF
+  NEWD -. "接著輸入<br>/mreq-pro<br>(不給 prompt)" .-> PRO
+  NEWD -. "或 /mreq-define<br>(不給需求)" .-> DEF
   DEF --> C{"確認重述時<br>選的下一步"}:::user
   C -- "直接實作, 不寫文件<br>(小需求時推薦)" --> DIRECT["在 mreq-define 內<br>實作"]
   DIRECT --> DREP(["對照重述回報<br>沒有文件可以 close"]):::stop
@@ -317,25 +320,35 @@ flowchart TD
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
+  TERMS["mreq-terms"]:::skill
+  PRO["mreq-pro"]:::skill
   DEF["mreq-define"]:::skill
   GRILL["mreq-grill"]:::skill
   APPLY["mreq-apply"]:::skill
   CLOSE["mreq-close"]:::skill
   HOW["mreq-how"]:::skill
+  TERMS -. "回覆的最後一行:<br>/mreq-pro" .-> PRO
+  TERMS -. "回覆的最後一行:<br>/mreq-define" .-> DEF
+  PRO -. "回覆的最後一行:<br>/mreq-define" .-> DEF
   DEF -- "撰寫後 grill" --> GRILL
   DEF -- "Continue it,<br>撰寫後實作,<br>補寫文件後接續" --> APPLY
+  DEF -. "不寫文件的流程<br>中途停止:<br>/mreq-apply path" .-> APPLY
   GRILL -- "寫回後實作" --> APPLY
   APPLY -- "Grill it,<br>Grill first" --> GRILL
   CLOSE -- "Continue, Fix now,<br>Fix the code" --> APPLY
+  CLOSE -. "Stop 或 Keep it,<br>有要修的項目:<br>/mreq-apply path" .-> APPLY
   DEF -. "Explain it:<br>/mreq-how 問題" .-> HOW
   APPLY -. "完成:<br>/mreq-close path" .-> CLOSE
   GRILL -. "沒有文件, 或<br>New document:<br>/mreq-define" .-> DEF
-  APPLY -. "沒有文件:<br>/mreq-define" .-> DEF
+  APPLY -. "沒有文件, 或<br>template 文件選 Stop:<br>/mreq-define" .-> DEF
     </script>
-    <figcaption>實線: 自動接續. 虛線: 只給出或建議指令, 由使用者執行. 完整的條件見下表</figcaption>
+    <figcaption>實線: 自動接續. 虛線: 只給出或建議指令, 由使用者執行. 同一對 skill 之間可以兩種都有. 完整的條件見下表</figcaption>
   </figure>
   <table class="cmd pair">
     <tr><th>從</th><th>到</th><th>何時</th><th>方式</th></tr>
+    <tr><td>mreq-terms</td><td>mreq-pro</td><td>每一次回覆的最後一行</td><td>提示 <code>/mreq-pro</code> (不給 prompt) 會加深新 prompt, 由使用者執行. <code>mreq-pro</code> 從對話讀取 <code>mreq-terms</code> 的結果</td></tr>
+    <tr><td>mreq-terms</td><td>mreq-define</td><td>每一次回覆的最後一行</td><td>提示 <code>/mreq-define</code> (不給需求) 會用新 prompt 開始工作, 由使用者執行. <code>mreq-define</code> 從對話讀取 <code>mreq-terms</code> 的結果</td></tr>
+    <tr><td>mreq-pro</td><td>mreq-define</td><td>每一次回覆的最後一行</td><td>提示 <code>/mreq-define</code> (不給需求) 會用新 prompt 開始工作, 由使用者執行. <code>mreq-define</code> 從對話讀取 <code>mreq-pro</code> 的結果</td></tr>
     <tr><td>mreq-define</td><td>mreq-apply</td><td>Step 1 選 <code>Continue it</code>; Step 4 選 "撰寫後實作"; 不寫文件的流程選 <code>Write the document, continue with mreq-apply</code></td><td>自動接續</td></tr>
     <tr><td>mreq-define</td><td>mreq-grill</td><td>Step 4 選 "撰寫後 grill"</td><td>自動接續</td></tr>
     <tr><td>mreq-define</td><td>mreq-how</td><td>Step 1 選 <code>Explain it</code></td><td>給出 <code>/mreq-how &lt;問題&gt;</code>, 停止</td></tr>
@@ -461,7 +474,7 @@ stateDiagram-v2
   <p>每個 skill 都帶著自己需要的檔案, 不讀其他 skill 的目錄. 所以可以只安裝部分 skill. 多個 skill 使用的檔案, 每個 skill 各有一份複本. 執行 skill 時, 不修改這些檔案.</p>
   <table>
     <tr><th>skill</th><th>輸入</th><th>使用者</th><th>agent</th><th>front matter</th></tr>
-    <tr><td><code>mreq-define</code></td><td><code>&lt;request&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
+    <tr><td><code>mreq-define</code></td><td><code>[&lt;request&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-grill</code></td><td><code>[&lt;path&gt;] [&lt;focus&gt;]</code></td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
     <tr><td><code>mreq-apply</code></td><td><code>[&lt;path&gt;]</code>, 或 findings</td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
     <tr><td><code>mreq-close</code></td><td><code>[&lt;path&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
@@ -554,11 +567,14 @@ flowchart TD
 <!-- ============================== 2 ============================== -->
 <section class="block" id="define">
   <h2><span class="stamp" aria-hidden="true">立</span>mreq-define</h2>
-  <p class="lede">把一個需求變成一份確認過的任務文件. 它不實作任何東西, 只寫 <code>.mreq/</code> 底下的文件. 唯一的例外是使用者在 Step 4 選了不寫文件: 這時它直接實作重述的內容. 只有使用者輸入 <code>/mreq-define</code> 才會執行.</p>
+  <p class="lede">把一個需求變成一份確認過的任務文件. 它不實作任何東西, 只寫 <code>.mreq/</code> 底下的文件. 唯一的例外是使用者在 Step 4 選了不寫文件: 這時它直接實作重述的內容. 對話裡有 <code>mreq-pro</code> 或 <code>mreq-terms</code> 的結果, 而且沒有給需求時, 需求就是最新那一個結果裡的新 prompt. 只有使用者輸入 <code>/mreq-define</code> 才會執行.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
-  S(["/mreq-define 需求"]):::user --> B1{"只是問程式碼<br>怎麼運作?"}
+  S(["/mreq-define 需求"]):::user --> P0{"對話裡有 mreq-pro 或<br>mreq-terms 的結果,<br>而且沒有給需求?"}
+  P0 -- "是 (給的就是它的<br>新 prompt 也算)" --> P1["需求 = 最新那一個<br>結果的新 prompt<br>沿用它的答案"]
+  P1 --> B1
+  P0 -- 否 --> B1{"只是問程式碼<br>怎麼運作?"}
   B1 -- 是 --> B1q{"問一次"}:::user
   B1q -- "Explain it" --> X3(["給出 /mreq-how 問題<br>停止"]):::stop
   B1q -- "Treat it<br>as a task" --> A1
@@ -613,6 +629,26 @@ flowchart TD
     <li>追問每個答案隱含, 但沒人說出口的事.</li>
     <li>使用者說 "之後再決定" 也算回答. 它留在 Open, 不再追問.</li>
   </ul>
+
+  <h3>來自 mreq-pro 或 mreq-terms 的需求</h3>
+  <p>對話裡有 <code>mreq-pro</code> 或 <code>mreq-terms</code> 的結果, 而且使用者沒有給需求 (或給的就是那個新 prompt) 時, <code>mreq-define</code> 直接使用最新的那一個結果, 不論它來自哪一個 skill. 需求是結果裡的新 prompt, 加上使用者之後要求的修改. 結果已經回答的事不重新回答, 也不問使用者. 重述時術語保留原文, 不改寫成 agent 自己的話. 使用者給了其他需求時, 使用那個需求.</p>
+  <table>
+    <tr><th>mreq-terms 的結果</th><th>mreq-define 的用法</th></tr>
+    <tr><td>新 prompt (code block)</td><td>就是需求.</td></tr>
+    <tr><td>What I left out</td><td>在 Step 3 問. 對話裡已經決定的不問. 沒有使用者的回答, 不加進範圍.</td></tr>
+    <tr><td>選定的問題 (prompt 可能是不只一個問題時)</td><td>寫進 Assumptions, 除非使用者已經確認.</td></tr>
+    <tr><td>Words that look right but are not</td><td>每一則訊息與文件都不使用. 改用結果給的術語.</td></tr>
+  </table>
+  <table>
+    <tr><th>mreq-pro 的結果</th><th>mreq-define 的用法</th></tr>
+    <tr><td>新 prompt (code block)</td><td>就是需求. 方法, 工具與 pass/fail 條件在重述時也保留原文. 四題不重新回答.</td></tr>
+    <tr><td>crux 的做法, 原始資料, 方法與工具</td><td>寫進 Decided, 各附結果給的理由.</td></tr>
+    <tr><td>pass/fail 條件 (Outside check)</td><td>寫進 Goal. 它也是最後一個 task 的檢查方式.</td></tr>
+    <tr><td>要用 prototype 決定的選擇</td><td>不問使用者: 由實驗決定. 寫進 Decided. 每個選擇是一個 task, 排在依賴它的 task 之前; 檢查方式是實驗的結果.</td></tr>
+    <tr><td>留給使用者的問題</td><td>在 Step 3 問. 對話裡已經回答的不問.</td></tr>
+    <tr><td>刪除或縮小的部分</td><td>寫進 Out of scope.</td></tr>
+  </table>
+  <p>兩種來源的 Step 1 都照常讀程式碼. <code>mreq-pro</code> 不讀程式碼, 所以它的答案與程式碼衝突時, 以程式碼為準, 並在重述時說明. Step 4 的確認不會跳過.</p>
 </section>
 
 <section class="block" id="define-confirm">
@@ -1350,7 +1386,7 @@ flowchart TD
 <!-- ============================== 8 ============================== -->
 <section class="block" id="pro">
   <h2><span class="stamp" aria-hidden="true">深</span>mreq-pro</h2>
-  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 對話裡有 <code>mreq-terms</code> 的結果時, 改寫它給的 prompt: 保留術語, 並把它列出的 "沒提到的事" 放進給使用者的問題. 結果只在對話裡, 不寫檔案, 也不執行 script. 只有使用者輸入 <code>/mreq-pro</code> (Codex 是 <code>$mreq-pro</code>) 才會執行. agent 沒有替換 <code>$ARGUMENTS</code> 時, prompt 就是使用者呼叫 skill 時給的文字.</p>
+  <p class="lede">改寫一個 prompt, 要求頂尖專家的做法: 更深, 不是更大. 更深是指更好的判斷, 更好的原始資料, 更強的方法與外部驗證. 不是更多交付物, 章節或步驟. 沒有給 prompt 時, 改寫使用者最近一次的需求. 對話裡有 <code>mreq-terms</code> 的結果時, 改寫它給的 prompt: 保留術語, 並把它列出的 "沒提到的事" 放進給使用者的問題. 回覆的最後一行提示下一步: 接著輸入 <code>/mreq-define</code> (不給需求), 就會用新 prompt 開始工作. 結果只在對話裡, 不寫檔案, 也不執行 script. 只有使用者輸入 <code>/mreq-pro</code> (Codex 是 <code>$mreq-pro</code>) 才會執行. agent 沒有替換 <code>$ARGUMENTS</code> 時, prompt 就是使用者呼叫 skill 時給的文字.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -1362,7 +1398,7 @@ flowchart TD
   K -- "否" --> ASK["說明不懂的部分<br>詢問使用者, 不猜測"]:::user
   ASK --> B
   K -- "是" --> C["在一個 code block<br>寫出新 prompt"]
-  C --> D(["逐行列出刪除或縮小的<br>部分與原因"]):::stop
+  C --> D(["逐行列出刪除或縮小的<br>部分與原因<br>提示下一步: /mreq-define"]):::stop
     </script>
     <figcaption>mreq-pro 的步驟. 四題的答案, 新 prompt 與刪除清單都在同一則回覆</figcaption>
   </figure>
@@ -1413,7 +1449,7 @@ flowchart TD
   L -- "是" --> L1["打開每個連結確認<br>刪除無法確認的引用"]
   L -- "否" --> L2["不給引用<br>說明一次"]
   L1 --> D
-  L2 --> D(["在一個 code block<br>用術語改寫 prompt<br>提示下一步: /mreq-pro"]):::stop
+  L2 --> D(["在一個 code block<br>用術語改寫 prompt<br>提示下一步: /mreq-pro<br>或 /mreq-define"]):::stop
     </script>
     <figcaption>mreq-terms 的步驟. 五個部分都在同一則回覆</figcaption>
   </figure>
@@ -1427,7 +1463,7 @@ flowchart TD
     <tr><td>What I left out</td><td>使用者沒提到, 但應該在意的事.</td></tr>
     <tr><td>My prompt, in the new words</td><td>用術語改寫使用者的 prompt, 放在一個 code block. 只換用詞, 不改變工作內容: 不加入 "What I left out" 的項目.</td></tr>
   </table>
-  <div class="callout"><strong>規則:</strong> 每個術語都要對應到使用者的材料. 每個連結都要打開, 確認那一頁這樣使用該術語; 無法確認的引用要刪除, 術語可以保留. 不自創術語: 領域沒有固定用詞時, 說明並用白話描述. 兩個社群用詞不同時, 兩個都給, 並說明誰用哪一個. 用使用者的語言解說, 術語保留領域的寫法. 不懂領域時, 說明並詢問使用者, 不猜測. 兩個 skill 都只有使用者能呼叫, 所以不會自動接續: 回覆的最後一行提示使用者, 接著輸入 <code>/mreq-pro</code> (不給 prompt) 就會加深這個 prompt. <code>SKILL.md</code> 沒有 "Asking the user" 與 "When a tool call is denied" 兩節, 所以下面的共通規則不適用.</div>
+  <div class="callout"><strong>規則:</strong> 每個術語都要對應到使用者的材料. 每個連結都要打開, 確認那一頁這樣使用該術語; 無法確認的引用要刪除, 術語可以保留. 不自創術語: 領域沒有固定用詞時, 說明並用白話描述. 兩個社群用詞不同時, 兩個都給, 並說明誰用哪一個. 用使用者的語言解說, 術語保留領域的寫法. 不懂領域時, 說明並詢問使用者, 不猜測. <code>mreq-pro</code> 與 <code>mreq-define</code> 都只有使用者能呼叫, 所以不會自動接續: 回覆的最後一行提示使用者, 接著輸入 <code>/mreq-pro</code> (不給 prompt) 就會加深這個 prompt, 輸入 <code>/mreq-define</code> (不給需求) 就會用它開始工作. <code>SKILL.md</code> 沒有 "Asking the user" 與 "When a tool call is denied" 兩節, 所以下面的共通規則不適用.</div>
 </section>
 
 <!-- ============================== 10 ============================== -->

@@ -1,7 +1,7 @@
 ---
 name: mreq-define
 description: Start a new piece of work. Classify what the user wants (feature, issue, refactor, or another task), interview until the goal is clear, get the user to confirm a restatement, then write a task document under .mreq/ that tracks progress and hands off to the next agent. For a small request, or when the user asks for no document, implement the confirmed restatement directly instead. Use for /mreq-define.
-argument-hint: "<request>"
+argument-hint: "[<request>]"
 disable-model-invocation: true
 ---
 
@@ -11,7 +11,7 @@ Run only when the user invoked this skill: typed `/mreq-define` (`/mreq:mreq-def
 
 Turn a request into one confirmed task document. Do not implement anything: `mreq-apply` does that, after the user chooses it. The one exception is "Without a document": the user chooses in step 4 to implement the restatement here, with no document.
 
-**Input**: What the user wants: a feature, a bug, a refactor, or any other task. It can be vague.
+**Input**: What the user wants: a feature, a bug, a refactor, or any other task. It can be vague. It can also be the prompt mreq-pro or mreq-terms wrote in this conversation: see "A request from mreq-pro or mreq-terms".
 
 ## Language
 
@@ -53,6 +53,21 @@ When the skill is not installed (the skill tool knows no such skill and names no
 When the call is denied, give the user the command that runs it, for example `/mreq-apply <path>`, and the Claude Code allow rule for the name you called, for example `Skill(mreq:mreq-apply)`, then stop. After a denied call, never read the skill's SKILL.md and follow it yourself: the user decides.
 
 When you give the user a command to type, write it the way their agent runs a skill: `/mreq-close <path>` in Claude Code, Grok and Antigravity (`/mreq:mreq-close <path>` also works with the plugin), `$mreq-close <path>` in Codex.
+
+## A request from mreq-pro or mreq-terms
+
+Do this when this conversation holds a reply from mreq-pro or mreq-terms, and the user gave no request or gave that reply's rewritten prompt as the request. Use the latest such reply, whichever of the two wrote it. The request is the rewritten prompt in its code block, with any change the user asked for since. Use the reply as it is written: do not work out again what it answers, and do not ask the user for it. In step 4, keep the terms as the prompt writes them: "in your own words" does not replace them.
+
+**A reply from mreq-pro** changes the steps as follows. Do not answer its four questions again.
+- **Step 1**: read the code as for any request. mreq-pro read no code, so the code can contradict the reply. Then the code wins: name the difference in step 4.
+- **Step 3**: ask each question the reply leaves for the user that the conversation has not answered since. Never ask about a choice the prompt says to prototype: an experiment settles it, not the user.
+- **Step 4**: keep the methods, the tools and the pass/fail condition as the prompt names them, as you keep the terms. Write the pass/fail condition in **Goal**. Write under **Decided**, each with the reply's reason: what to do about the crux, the raw material to start from, the methods and tools, and each choice to prototype. Write what the reply removed or narrowed under **Out of scope**.
+- **The tasks** (`## Tasks` in step 5, the task list in "Without a document"): each choice to prototype is one task, before the tasks that depend on it. Its check is what the experiment showed. The pass/fail condition is the check of the last task.
+
+**A reply from mreq-terms** changes the steps as follows.
+- **Step 3**: ask about each thing the reply says the user left out, unless the conversation has settled it since. Never put one in scope without the user's answer.
+- **Step 4**: when the reply picked one problem out of several the prompt could name, and the user has not confirmed the pick, write it under **Assumptions**.
+- **Every message and the document**: never use a term the reply says does not fit the user's situation. Use the term it gives in its place.
 
 ## Steps
 

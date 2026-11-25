@@ -24,7 +24,7 @@ If my prompt could name more than one problem, first list the two or three probl
 2. **Words that look right but are not.** Name up to 3 terms I might reach for that do not fit my situation. For each: what it really means, and which term from 1 to use instead. Skip this part when there is none.
 3. **Neighboring fields.** Pick 2 or 3 fields that solved the same shape of problem under other names. For each: what carries over, where the analogy breaks, and which terms come back.
 4. **What I left out.** Name what I didn't mention but should care about.
-5. **My prompt, in the new words.** Rewrite my prompt with the terms, in a single code block I can copy. Change the words, not the work: add nothing from 4. After the code block, say in one line that `/mreq-pro` (`$mreq-pro` in Codex) with no prompt sharpens this prompt next.
+5. **My prompt, in the new words.** Rewrite my prompt with the terms, in a single code block I can copy. Change the words, not the work: add nothing from 4. After the code block, say in one line that `/mreq-pro` (`$mreq-pro` in Codex) with no prompt sharpens this prompt next, and that `/mreq-define` (`$mreq-define` in Codex) with no request starts the work from it.
 
 Keep the terms correct:
 - Open every link and confirm that the page uses the term that way. Cut any citation you can't confirm; the term can stay without one. When you have no tool that opens web pages, give no citation and say so once.

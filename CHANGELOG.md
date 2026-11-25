@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `mreq-define` 可以直接使用 `mreq-pro` 或 `mreq-terms` 的結果. 對話裡有其中一個的結果, 而且使用者沒有給需求 (或給的就是那個新 prompt) 時, 需求是最新一個結果裡的 prompt, 加上使用者之後要求的修改. 結果已經回答的事不重新回答, 也不問使用者. 重述時術語保留原文.
+- 結果來自 `mreq-terms` 時:
+  - Step 3 問它列出的 "沒提到的事", 對話裡已經決定的不問. 沒有使用者的回答, 不加進範圍.
+  - prompt 可能是不只一個問題時, 它選定的那一個寫進 Assumptions, 除非使用者已經確認.
+  - 它說不適合的術語不使用, 改用它給的術語.
+- 結果來自 `mreq-pro` 時:
+  - 不重新回答四題.
+  - Step 1 照常讀程式碼. `mreq-pro` 不讀程式碼, 所以它的答案與程式碼衝突時, 以程式碼為準, 並在重述時說明.
+  - Step 3 問 `mreq-pro` 留給使用者, 而且對話裡還沒回答的問題. 要用 prototype 決定的選擇不問使用者.
+  - Step 4 保留 prompt 的方法, 工具與 pass/fail 條件, 不改寫成 agent 自己的話. pass/fail 條件寫進 Goal. crux 的做法, 原始資料, 方法與工具, 要 prototype 的選擇寫進 Decided. 刪除或縮小的部分寫進 Out of scope.
+  - 每個要 prototype 的選擇是一個 task, 排在依賴它的 task 之前. pass/fail 條件是最後一個 task 的檢查方式.
+- `mreq-define` 的 `argument-hint` 改為 `[<request>]`.
+- `mreq-pro` 的結尾多一行提示: 接著輸入 `/mreq-define` (不給需求), 就會用新 prompt 開始工作.
+- `mreq-terms` 結尾的提示多一個下一步: `/mreq-define` (不給需求).
+- `docs/mreq-flow.html` 的 skill 交接圖補上缺少的交接: `mreq-terms` 與 `mreq-pro` 的提示, `mreq-define` 與 `mreq-close` 只給出 `/mreq-apply <path>` 的情況, 以及 `mreq-apply` 在 template 文件選 `Stop` 的情況.
+
 ## 0.25.0
 
 ### Added
