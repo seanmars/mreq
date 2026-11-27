@@ -31,6 +31,11 @@
 - `mreq-grill` 修改 `## Tasks` 時保留 `### ` 標題, 新 task 放在所屬的 phase 底下. `refactor` 與 `issue` 文件的第一個 phase 不放其他 task.
 - `mreq-apply` 收到 `mreq-close` 的 findings 時, 文件有 `### ` 標題的話, 把 findings 放在最後一個新標題底下.
 - `mreq-apply` 的 `argument-hint` 改為 `[<path>] [--orch]`.
+- `mreq-close` 的 Step 3 與 `mreq-apply` 的 verifier 使用相同的稽核規則:
+  - "沒要求的內容" 只列程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法不列. `## Open` 已經有的項目也不列: 它本來就會進報告.
+  - 檢查會寫入檔案時, 新路徑在專案內, 檢查後用一個指令刪除檔案. 刪除被拒絕時, 只在報告列出檔案.
+  - 需要修改之前的程式碼的檢查 (例: `refactor` 的 pin 的第一次執行, `issue` 在修正之前的重現) 不執行, 也不建立副本. 它不詢問使用者, 只列在報告裡, 而且不算通過.
+  - `issue` 的 Repro 在 close 時要顯示 Expected.
 
 ## 0.26.0
 

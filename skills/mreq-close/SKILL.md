@@ -75,17 +75,18 @@ When you give the user a command to type, write it the way their agent runs a sk
       - Judge only from the document and the code as you read them now, not from what you remember of this conversation.
       - Read the document and every file it cites in full: this is an audit, not a search.
       - For `## Goal`, each `### Dn:` in `## Decisions`, and each checked task: does the code do it? Answer done, partly done, done differently, or missing, with `path:line`.
-      - A finding is code that contradicts the document or misses something it asked for. Code that adds a detail the document did not mention, without contradicting it, goes in the not-asked-for list.
-      - Note anything the code does that the document never asked for.
+      - A finding is code that contradicts the document or misses something it asked for.
+      - Behavior the code adds that the document did not mention (an input it accepts, an output, an error text), without contradicting it, goes in the not-asked-for list. How the code is built (a helper function, a name, one more test case) does not go there. Leave out an item that `## Open` already names: step 5 puts it in the report.
       - Run no command that executes the project's code or writes a file.
    2. **Run.** After the audit, run the checks the document names, and only those.
-      - **What to run**: its test command (when it names none, the one in the project's README or agent instruction files); for `issue`, the `## Symptom` repro; for `refactor`, the `## Behavior Pin`; and the check a task names.
+      - **What to run**: its test command (when it names none, the one in the project's README or agent instruction files); for `issue`, the `## Symptom` repro, which must show the Expected behavior now; for `refactor`, the `## Behavior Pin`; and the check a task names.
       - **When mreq-apply already verified the work**: when the document's front matter `status` is `done` and `## Handoff` says how the work was verified (the tests or commands it ran), skip the test command and each task's own check: `mreq-apply` sets `done` only after every task is checked and the related tests pass. Do not look for another test command then. A Handoff that says the work is done but not how it was verified does not count. Still run the `issue` Repro and the `refactor` Behavior Pin: they prove the goal itself.
       - **When to skip the test command**: skip it when a checked task's work is to run the related tests (for example the `issue` template's "Run the related tests"): `mreq-apply` ran them to check that task off. Do not look for another test command then. A task that only says how it is checked, or an unchecked one, does not count. This skips only the test command: still run the repro, the Behavior Pin, and each task's own check.
       - **As written**: run each command exactly as written: add no `uv run`, and use no `python -c` in its place. When a check needs a script, run it inline.
-      - **Off the real data**: when a check writes or changes files beyond caches (a data file, a database), keep it off the project's real data: point it at a new path the command accepts (for example a `--file` option), or give it to the user to run. That new path is the only change you make to a command.
+      - **Off the real data**: when a check writes or changes files beyond caches (a data file, a database), keep it off the project's real data: point it at a new path the command accepts (for example a `--file` option), or give it to the user to run. That new path is the only change you make to a command. Give a path inside the project, never outside it (no `/tmp`, no `$TEMP`). After the check, remove what it wrote there, with one command: the file was not there before, so this is no edit of the project.
+      - **A check that cannot run now**: A check that needs a state the project is not in now (the code as it was before a change: the first run of a `refactor` pin, an `issue` reproduction before the fix) cannot run after the work. Do not run it, and build no copy of that state: it goes to **Checks that cannot run now** in step 4.
       - **No checks of your own**: add none, not even to confirm a finding: the audit's `path:line` is the evidence.
-      - **A denied command**: when any command you ran in this step is denied, do not retry it another way, and do not stop: it goes to **Tests not run** in step 4.
+      - **A denied command**: when any command you ran in this step is denied, do not retry it another way, and do not stop: it goes to **Tests not run** in step 4. The removal of a file a check left is no check: when it is denied, only name the file in the report.
 
 4. **Act on the result.**
    - **All done, tests pass**: go to step 5.
@@ -93,6 +94,7 @@ When you give the user a command to type, write it the way their agent runs a sk
    - **Tests already run by a task** (step 3 skipped the test command because a checked task ran it): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: name it in the report with the task number.
    - **Failing tests**: name each failure, and ask once: **Fix now (mreq-apply)**, **Close anyway**, or **Stop**.
    - **Tests not run** (a command in step 3 was denied): give the user each command that did not run, exactly as you ran it, with one allow rule for each (see "When a tool call is denied"), and ask once: **Close anyway** or **Keep it**. Never count it as a pass.
+   - **Checks that cannot run now** (step 3 left out a check that needs the code as it was before a change): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: name each check in the report, with the reason.
    - **No test command found** (neither the document, the README nor the agent instruction files give one): this alone asks nothing. When no other case in this list applies, go to step 5. Never call it a pass: say in the report that no test command was found and none ran.
    - **A finding** (partly done, done differently, missing): ask one question per finding. Quote the document's line, say what the code does, and offer **Accept the code** or **Fix the code**.
 
@@ -113,11 +115,12 @@ When you give the user a command to type, write it the way their agent runs a sk
    - Each failing test closed anyway.
    - Each command that did not run.
    - That no test command was found and none ran.
+   - Each check that cannot run now, and why.
    - The test command not rerun, and the task that ran it.
    - The test command and task checks not rerun because the document is `done`, and the verification its Handoff gives.
    - The follow-ups from step 5.
    - Every file a check left behind (other than caches).
-   - Anything the code does that the document never asked for.
+   - Each behavior the code adds that the document never asked for.
 
 ## Handing over to mreq-apply
 

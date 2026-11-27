@@ -1330,7 +1330,7 @@ flowchart TD
     <li>完整讀文件與它引用的每個檔案: 這是稽核, 不是搜尋.</li>
     <li>逐項回答 <code>## Goal</code>, <code>## Decisions</code> 的每個 <code>### Dn:</code>, 與每個已勾選的 task: 程式碼做到了嗎? 答案是 done, partly done, done differently 或 missing, 附 <code>path:line</code>.</li>
     <li>finding: 程式碼和文件矛盾, 或缺少文件要求的東西.</li>
-    <li>文件沒提到, 但不矛盾的細節, 放進 "沒要求的內容" 清單. 程式碼做了而文件沒要求的事, 也記下來.</li>
+    <li>文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字), 而且不矛盾時, 放進 "沒要求的內容" 清單. 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不放. <code>## Open</code> 已經有的項目也不放: Step 5 會把它寫進報告. 這與 <code>mreq-apply</code> 的 verifier 是同一條規則.</li>
     <li>不執行會執行專案程式碼的指令, 也不執行會寫檔案的指令.</li>
   </ul>
 
@@ -1351,7 +1351,7 @@ flowchart TD
   C1 --> T
   C3 --> T
   C4 --> T
-  A1 --> R["issue: Symptom 的 Repro<br>refactor: Behavior Pin<br>一定執行"]:::script
+  A1 --> R["issue: Symptom 的 Repro<br>(現在要顯示 Expected)<br>refactor: Behavior Pin<br>一定執行"]:::script
   T --> R
   R --> NX(["Step 4"])
     </script>
@@ -1361,9 +1361,10 @@ flowchart TD
     <li><code>mreq-apply</code> 只在 task 全部勾選而且相關測試通過時才設定 <code>done</code>. 所以 <code>done</code> 而且 Handoff 寫了驗證方式 (它執行的測試或指令) 時, 不重跑. Handoff 只寫完成, 沒寫怎麼驗證時, 不算.</li>
     <li>"工作就是跑相關測試" 的 task, 例: issue template 的 "Run the related tests". 只說明自己怎麼檢查的 task, 或未勾選的 task, 不算.</li>
     <li>指令照文件原樣執行. 不加 <code>uv run</code>, 不用 <code>python -c</code> 代替. 檢查需要 script 時, 直接 inline 執行.</li>
-    <li>檢查會寫入或修改 cache 以外的檔案 (資料檔, 資料庫) 時, 不碰專案的真實資料: 指向指令接受的新路徑 (例: <code>--file</code> 選項), 或交給使用者執行. 這個新路徑是唯一能對指令做的修改.</li>
+    <li>檢查會寫入或修改 cache 以外的檔案 (資料檔, 資料庫) 時, 不碰專案的真實資料: 指向指令接受的新路徑 (例: <code>--file</code> 選項), 或交給使用者執行. 這個新路徑是唯一能對指令做的修改. 新路徑在專案內, 不用 <code>/tmp</code> 或 <code>$TEMP</code>. 檢查後用一個指令刪除它寫的檔案.</li>
+    <li>需要專案現在沒有的狀態的檢查不能執行, 例: refactor 的 pin 的第一次執行, 或 issue 在修正之前的重現. 不執行它, 也不建立那個狀態的副本; 它歸到 Step 4 的 "現在不能執行的檢查".</li>
     <li>不加自己的檢查, 即使是為了確認 finding. Audit 的 <code>path:line</code> 就是證據.</li>
-    <li>這一步的指令被拒絕時, 不換方式重試, 也不停止; 它歸到 Step 4 的 "測試沒執行".</li>
+    <li>這一步的指令被拒絕時, 不換方式重試, 也不停止; 它歸到 Step 4 的 "測試沒執行". 刪除檢查留下的檔案不是檢查: 它被拒絕時, 只在報告列出那個檔案.</li>
   </ul>
 </section>
 
@@ -1392,12 +1393,13 @@ flowchart TD
     <tr><td>全部完成, 測試通過</td><td>不詢問</td><td></td><td>檢查結果</td></tr>
     <tr><td>檢查已由 mreq-apply 執行 (文件是 <code>done</code>, Handoff 寫了驗證方式, Step 3 跳過測試指令與 task 的檢查)</td><td>不詢問</td><td></td><td>沒重跑的檢查與 Handoff 寫的驗證方式. 不算通過</td></tr>
     <tr><td>測試指令已由 task 執行 (Step 3 跳過)</td><td>不詢問</td><td></td><td>沒重跑的指令與 task 編號. 不算通過</td></tr>
+    <tr><td>現在不能執行的檢查 (Step 3 略過了需要修改之前的程式碼的檢查)</td><td>不詢問</td><td></td><td>每個這種檢查與原因. 不算通過</td></tr>
     <tr><td>找不到測試指令 (文件, README, agent 指示檔都沒有)</td><td>不詢問</td><td></td><td>找不到測試指令, 沒有執行. 不算通過</td></tr>
     <tr><td>測試失敗</td><td>列出每個失敗, 問一次</td><td><code>Fix now (mreq-apply)</code> / <code>Close anyway</code> / <code>Stop</code></td><td>選了 Close anyway 的失敗測試</td></tr>
     <tr><td>測試沒執行 (Step 3 的指令被拒絕)</td><td>原樣給出每個沒執行的指令, 各附一條 allow rule, 問一次</td><td><code>Close anyway</code> / <code>Keep it</code></td><td>沒執行的指令. 不算通過</td></tr>
     <tr><td>finding (partly done, done differently, missing)</td><td>每個 finding 一題: 引用文件的那一行, 說明程式碼做了什麼</td><td><code>Accept the code</code> / <code>Fix the code</code></td><td>接受的 finding 列為 accepted departure</td></tr>
   </table>
-  <p>"不算通過" 而且不詢問的三種結果, 單獨出現時直接到 Step 5. 同時有其他結果時, 依其他結果處理.</p>
+  <p>"不算通過" 而且不詢問的四種結果, 單獨出現時直接到 Step 5. 同時有其他結果時, 依其他結果處理.</p>
   <p>Step 4 的問題一起問, 測試的問題排前面, 一次最多 4 題; 超過時, 等使用者回答後再問下一批. 使用者選了 <code>Stop</code> 或 <code>Keep it</code> 後, 不再問剩下的問題. 然後依序套用第一條符合的規則:</p>
   <ol>
     <li>任一 <code>Stop</code> 或 <code>Keep it</code>: 停止, 不刪除. 給出 <code>/mreq-apply &lt;path&gt;</code>, 附上沒有選 Close anyway 的失敗, 選了 Fix the code 的 finding, 與還沒問到的 finding. 都沒有時只停止.</li>
@@ -1423,11 +1425,12 @@ flowchart TD
       <li>找不到測試指令, 而且沒有執行.</li>
     </ul>
     <ul>
+      <li>每個現在不能執行的檢查, 與原因.</li>
       <li>沒重跑的測試指令, 與執行它的 task.</li>
       <li>文件是 <code>done</code> 而沒重跑的測試指令與 task 檢查, 與 Handoff 寫的驗證方式.</li>
       <li>Step 5 收集的 follow-up.</li>
       <li>檢查留下的每個檔案 (cache 除外).</li>
-      <li>程式碼做了, 但文件沒要求的事.</li>
+      <li>程式碼加上, 但文件沒要求的每個行為.</li>
     </ul>
   </div>
 

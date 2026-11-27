@@ -39,6 +39,20 @@ IMPLEMENTER_RULES = (
     "- **`task`**: do the task as `## Goal` describes it.",
 )
 
+# mreq-close audits a whole document and the verifier one phase of it, under these same rules.
+AUDIT_RULES = (
+    "this is an audit, not a search.",
+    "does the code do it? Answer done, partly done, done differently, or missing, with `path:line`.",
+    "Behavior the code adds that the document did not mention (an input it accepts, an output, an error text), without contradicting it, goes",
+    "How the code is built (a helper function, a name, one more test case) does not go there.",
+    "add no `uv run`, and use no `python -c` in its place.",
+    "keep it off the project's real data: point it at a new path the command accepts (for example a `--file` option)",
+    "That new path is the only change you make to a command. Give a path inside the project, never outside it (no `/tmp`, no `$TEMP`). After the check, remove what it wrote there, with one command: the file was not there before, so this is no edit of the project.",
+    "check that needs a state the project is not in now",
+    "build no copy of that state",
+    "the document's line, what the code does, and its `path:line` or the failing command",
+)
+
 
 def skill_text(name: str) -> str:
     return (SKILLS_DIR / f"mreq-{name}" / "SKILL.md").read_text(encoding="utf-8")
@@ -173,6 +187,22 @@ class SkillTextTest(unittest.TestCase):
         for rule in IMPLEMENTER_RULES:
             self.assertIn(rule, skill_text("apply"), rule)
             self.assertIn(rule, implementer, rule)
+
+    def test_the_verifier_and_mreq_close_audit_by_the_same_rules(self):
+        # A phase the verifier passed must not fail in mreq-close because one of the two got a newer rule.
+        verifier = brief_text("VERIFIER.md")
+        for rule in AUDIT_RULES:
+            self.assertIn(rule, skill_text("close"), rule)
+            self.assertIn(rule, verifier, rule)
+
+    def test_mreq_close_reports_a_check_it_cannot_run(self):
+        # A pin's first run or a reproduction before the fix cannot run after the work, and a denied command is another case.
+        close = skill_text("close")
+        self.assertIn("it goes to **Checks that cannot run now** in step 4", close)
+        self.assertIn("**Checks that cannot run now** (step 3 left out a check that needs the code as it was before a change): this alone asks nothing.", close)
+        self.assertIn("- Each check that cannot run now, and why.", close)
+        self.assertIn("The removal of a file a check left is no check: when it is denied, only name the file in the report.", close)
+        self.assertIn("Leave out an item that `## Open` already names", close)
 
     def test_only_the_orchestrator_writes_the_document(self):
         # Two writers of one document lose each other's edits: update rewrites the whole file.
