@@ -81,7 +81,7 @@ npx skills add seanmars/mreq --skill '*' -a codex
 skills/           # 只限使用者呼叫的 skill 另有 agents/openai.yaml (Codex)
 ├── mreq-define/  # SKILL.md, EXPLORER.md, templates/, 複本: scripts/mreq.py, GRILL.md
 ├── mreq-grill/   # 複本: scripts/mreq.py, GRILL.md
-├── mreq-apply/   # SKILL.md, IMPLEMENTER.md, VERIFIER.md, 複本: scripts/mreq.py
+├── mreq-apply/   # SKILL.md, ORCHESTRATOR.md, IMPLEMENTER.md, VERIFIER.md, 複本: scripts/mreq.py
 ├── mreq-close/   # 複本: scripts/mreq.py
 ├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html, 複本: scripts/page.py, scripts/check.mjs, vendor/ (Pele), MERMAID.md
 ├── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html, 複本同 mreq-how

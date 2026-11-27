@@ -571,7 +571,7 @@ flowchart TD
     <tr><td><code>MERMAID.md</code></td><td>圖的寫法: figure 的格式, 大小, 顏色, Mermaid 規則, 圖例</td><td>how, graph</td></tr>
   </table>
   <p>這些檔案的來源在 repository 的 <code>shared/</code>. <code>tools/sync.py</code> 把它們複製到各 skill; <code>tests/test_sync.py</code> 檢查每份複本和來源相同. 所以只修改 <code>shared/</code> 的檔案, 不修改複本.</p>
-  <p>只有一個 skill 使用的檔案: <code>mreq-define/EXPLORER.md</code>, <code>templates/</code> (每種 schema 一份 template, <code>mreq.py new</code> 讀取); <code>mreq-how/EXPLORER.md</code>, <code>WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-graph/WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-apply/IMPLEMENTER.md</code>, <code>VERIFIER.md</code> (orchestrate 模式的兩份 brief, 由 subagent 讀取). 兩個 <code>EXPLORER.md</code>, 兩個 <code>WRITING.md</code> 與兩個 <code>skeleton.html</code> 的內容各不相同.</p>
+  <p>只有一個 skill 使用的檔案: <code>mreq-define/EXPLORER.md</code>, <code>templates/</code> (每種 schema 一份 template, <code>mreq.py new</code> 讀取); <code>mreq-how/EXPLORER.md</code>, <code>WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-graph/WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-apply/ORCHESTRATOR.md</code> (orchestrate 模式的迴圈, 由主 agent 讀取), <code>IMPLEMENTER.md</code>, <code>VERIFIER.md</code> (兩份 brief, 由 subagent 讀取). 兩個 <code>EXPLORER.md</code>, 兩個 <code>WRITING.md</code> 與兩個 <code>skeleton.html</code> 的內容各不相同.</p>
 
   <h3>mreq.py 指令</h3>
   <table class="cmd">
@@ -1125,7 +1125,8 @@ flowchart TD
 flowchart TD
   S(["mreq-apply --orch"]):::user --> C0{"能 spawn 可以寫入檔案<br>並執行指令的 subagent?"}
   C0 -- 否 --> N0(["用一行說明<br>改用 Step 4"]):::stop
-  C0 -- 是 --> A{"還有 phase 有<br>未勾選的 task?"}
+  C0 -- 是 --> RD["完整讀 ORCHESTRATOR.md"]:::doc
+  RD --> A{"還有 phase 有<br>未勾選的 task?"}
   A -- 是 --> I["派 implementer<br>prompt: 文件路徑, phase,<br>讀 IMPLEMENTER.md"]:::skill
   I --> R{"implementer<br>的回報"}
   R -- "Blocked 有問題" --> Q["依 '何時停下來問'<br>問使用者, 寫進文件"]:::user
@@ -1158,11 +1159,12 @@ flowchart TD
   </figure>
   <table>
     <tr><th>角色</th><th>讀的檔案</th><th>可以做</th><th>不可以做</th></tr>
-    <tr><td>orchestrator (主 agent)</td><td><code>SKILL.md</code></td><td>寫文件, 執行 <code>mreq.py</code>, 問使用者, 派 subagent</td><td>修改, 閱讀或執行專案的程式碼</td></tr>
+    <tr><td>orchestrator (主 agent)</td><td><code>SKILL.md</code>, <code>ORCHESTRATOR.md</code></td><td>寫文件, 執行 <code>mreq.py</code>, 問使用者, 派 subagent</td><td>修改, 閱讀或執行專案的程式碼</td></tr>
     <tr><td>implementer</td><td><code>IMPLEMENTER.md</code></td><td>修改程式碼, 執行指令, 讀文件</td><td>修改 <code>.mreq/</code> 的檔案, 問使用者, 做其他 phase 的 task</td></tr>
     <tr><td>verifier</td><td><code>VERIFIER.md</code></td><td>讀文件與程式碼, 執行文件指名的檢查, 刪除檢查在新路徑留下的檔案</td><td>修改程式碼或文件, 自己建立檔案, 問使用者, 加自己的檢查</td></tr>
   </table>
   <ul>
+    <li><code>SKILL.md</code> 只寫開啟條件, fallback 與各 Step 的改變. phase 與迴圈的規則寫在 <code>ORCHESTRATOR.md</code>: orchestrator 在派第一個 subagent 之前完整讀它. 取下一個 phase 時, 迴圈不在 context 裡的話, 再讀一次. 模式關閉時不讀這個檔案.</li>
     <li>phase 是 <code>## Tasks</code> 裡一個 <code>### </code> 標題底下的 task, 到下一個 <code>### </code> 標題為止. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.</li>
     <li>refactor 的 pin task (第一個 task) 永遠自成一個 phase: verifier 只有在其他 task 開始之前, 才能在沒有修改的程式碼上執行 pin. 文件把其他 task 放在同一個 phase, 或沒有標題時, 把那個 phase 拆成兩個: 先 pin task, 再其他 task. prompt 用 task 編號指名拆開的部分 (例: <code>task 1</code>, <code>tasks 2-3</code>).</li>
     <li>Step 2 不讀文件引用的程式碼, 也不執行 git 指令: implementer 會做這兩件事. Step 4 的 "一次 Edit 只勾一個 task" 不適用: 這裡的單位是 phase. Step 5 以最後一個 verifier 的測試結果為準, 不重跑測試.</li>

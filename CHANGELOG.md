@@ -9,6 +9,7 @@
   - phase 是 `## Tasks` 裡一個 `### ` 標題底下的 task. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.
   - `refactor` 文件的 pin task (第一個 task) 永遠自成一個 phase. 文件把其他 task 放在同一個 phase, 或沒有標題時, orchestrator 把那個 phase 拆成兩個: 先 pin task, 再其他 task. verifier 在整個 phase 完成後才檢查, 所以 pin 與修改在同一個 phase 時, 它無法在修改前的程式碼上執行 pin.
   - 只有 orchestrator 寫文件: 打勾, `## Handoff`, `## Root Cause`, `## Open` 與 `update`. implementer 與 verifier 不修改 `.mreq/` 的任何檔案.
+  - 迴圈的規則寫在 `ORCHESTRATOR.md`. orchestrator 在派第一個 subagent 之前完整讀它; 取下一個 phase 時, 迴圈不在 context 裡的話, 再讀一次. 模式關閉時, `mreq-apply` 不讀這個檔案.
   - implementer 讀 `IMPLEMENTER.md`, verifier 讀 `VERIFIER.md`. verifier 只拿到文件路徑, phase 與 implementer 修改的檔案清單, 不拿到 implementer 的結論. 清單的每一行只有路徑與 `created`, `changed` 或 `deleted`. implementer 為了檢查修改後又還原的檔案不在清單裡, 寫在它的 **Commands**.
   - verifier 判定 `pass` 時, orchestrator 才把這個 phase 的 task 打勾. 判定 `fail` 而且有 finding 時, finding 交給 implementer 修正. 同一個 phase 第二次因為 finding 驗證失敗時, 問使用者: 再試一次, 自己實作, 或停止. 次數只在這一次執行內計算, 沒有 finding 的 `fail` 不計入.
   - verifier 在 **Not run** 的每一項寫出原因: `denied` (指令被拒絕), `cannot reproduce` (檢查需要專案現在沒有的狀態, 例: 修改之前的程式碼), 或 `no safe path` (檢查會寫入檔案, 而且指令不接受新的路徑). `fail` 沒有 finding 時, orchestrator 依原因處理. 有 `denied` 時, 依指令被拒絕的情況停止. 只有其他兩種時, 不再派 verifier, 也不在 verifier 的 prompt 加指示, 問使用者: 自己實作 (**Work it here**), 接受閱讀的結論 (**Accept by reading**), 或停止. verifier 不建立檔案, 所以不用副本重現檢查.

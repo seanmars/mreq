@@ -61,6 +61,10 @@ def orchestrate_mode() -> str:
     return section(skill_text("apply"), "## Orchestrate mode")
 
 
+def orchestrator_loop() -> str:
+    return brief_text("ORCHESTRATOR.md")
+
+
 class SkillTextTest(unittest.TestCase):
     def test_shared_sections_are_word_for_word_the_same(self):
         for heading in SHARED_SECTIONS:
@@ -115,7 +119,7 @@ class SkillTextTest(unittest.TestCase):
         # A bare file name leaves the agent to guess the start; it often takes the project root.
         for path in SKILLS_DIR.rglob("*.md"):
             self.assertNotIn("from this skill's directory", path.read_text(encoding="utf-8"), path.as_posix())
-        references = (("define", "GRILL.md"), ("grill", "GRILL.md"), ("how", "MERMAID.md"), ("graph", "MERMAID.md"), *(("apply", brief) for brief in BRIEFS))
+        references = (("define", "GRILL.md"), ("grill", "GRILL.md"), ("how", "MERMAID.md"), ("graph", "MERMAID.md"), ("apply", "ORCHESTRATOR.md"))
         for name, reference in references:
             self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/{reference}`", skill_text(name), name)
             self.assertTrue((SKILLS_DIR / f"mreq-{name}" / reference).is_file(), name)
@@ -150,10 +154,18 @@ class SkillTextTest(unittest.TestCase):
             self.assertIn(f"`/mreq-{later}` (`$mreq-{later}` in Codex) with no", skill_text(earlier), earlier)
             self.assertIn(f"reply from mreq-{earlier}", skill_text(later), later)
 
-    def test_the_orchestrate_briefs_are_read_by_an_absolute_path(self):
+    def test_the_orchestrator_loop_is_written_once(self):
+        # A loop in SKILL.md costs its tokens in every run of the skill, also with the mode off.
         mode = orchestrate_mode()
+        self.assertIn("read that file in full before you spawn the first subagent", mode)
+        self.assertIn("read it again when you take a phase and the loop is no longer in your context", mode)
+        self.assertNotIn("**Act on the verdict.**", skill_text("apply"))
+        self.assertIn("**Act on the verdict.**", orchestrator_loop())
+
+    def test_the_orchestrate_briefs_are_read_by_an_absolute_path(self):
+        loop = orchestrator_loop()
         for brief in BRIEFS:
-            self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/{brief}`, written as an absolute path", mode, brief)
+            self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/{brief}`, written as an absolute path", loop, brief)
         self.assertIn('argument-hint: "[<path>] [--orch]"', skill_text("apply"))
 
     def test_the_implementer_brief_keeps_the_rules_it_copies(self):
@@ -169,10 +181,10 @@ class SkillTextTest(unittest.TestCase):
         self.assertIn("not the source code, not the document", brief_text("VERIFIER.md"))
 
     def test_the_verifier_is_not_told_what_the_implementer_concluded(self):
-        mode = orchestrate_mode()
-        self.assertIn("Give it nothing else from the implementer's report", mode)
+        loop = orchestrator_loop()
+        self.assertIn("Give it nothing else from the implementer's report", loop)
         # The file list is the one part of that report the verifier gets, so a line holds a path and the kind of change only.
-        self.assertIn("(each path with `created`, `changed` or `deleted`, and no other word from a line)", mode)
+        self.assertIn("(each path with `created`, `changed` or `deleted`, and no other word from a line)", loop)
         implementer = brief_text("IMPLEMENTER.md")
         self.assertIn("its path, then `created`, `changed` or `deleted`, and nothing else", implementer)
         self.assertIn("A file you changed for a check and then restored is not in this list", implementer)
@@ -194,9 +206,9 @@ class SkillTextTest(unittest.TestCase):
         # A verifier comes after the whole phase: it can run the pin against the unchanged code only when no other task shares the phase.
         self.assertIn("the pin task alone under the first one", skill_text("define"))
         self.assertIn("the pin task stays alone in the first phase", skill_text("grill"))
-        mode = orchestrate_mode()
-        self.assertIn("the pin task (the first task) is always a phase of its own", mode)
-        self.assertIn("split that phase in two", mode)
+        loop = orchestrator_loop()
+        self.assertIn("the pin task (the first task) is always a phase of its own", loop)
+        self.assertIn("split that phase in two", loop)
         template = (SKILLS_DIR / "mreq-define" / "templates" / "refactor.md").read_text(encoding="utf-8")
         phases = re.split(r"(?m)^### .*\n", section(template, "## Tasks"))[1:]
         self.assertEqual(len(phases), 2)
@@ -206,20 +218,20 @@ class SkillTextTest(unittest.TestCase):
         # Only a denied command is solved by an allow rule. A check the verifier's rules keep it from needs the user's choice.
         verifier = brief_text("VERIFIER.md")
         report = section(verifier, "### Not run")
-        mode = orchestrate_mode()
+        loop = orchestrator_loop()
         for reason in ("denied", "cannot reproduce", "no safe path"):
             self.assertIn(f"under **Not run** as `{reason}`", verifier, reason)
             self.assertIn(f"`{reason}` (", report, reason)
-        self.assertIn("Any item is `denied`: it is the denied-command case of \"When to stop and ask\"", mode)
-        self.assertIn("Otherwise (`cannot reproduce`, `no safe path`)", mode)
-        self.assertIn("add nothing to a verifier's prompt", mode)
-        self.assertIn("**Work it here** (work the phase yourself as step 4 gives), **Accept by reading**", mode)
+        self.assertIn("Any item is `denied`: it is the denied-command case of \"When to stop and ask\"", loop)
+        self.assertIn("Otherwise (`cannot reproduce`, `no safe path`)", loop)
+        self.assertIn("add nothing to a verifier's prompt", loop)
+        self.assertIn("**Work it here** (work the phase yourself as step 4 gives), **Accept by reading**", loop)
 
     def test_what_the_verifier_found_unasked_reaches_the_document(self):
         # Only the orchestrator reads the verifier's report: what it does not write down, the user never learns.
-        mode = orchestrate_mode()
-        self.assertIn("Write each item under the verifier's **Not asked for** the same way, and say in it that the document did not ask for it.", mode)
-        self.assertIn("Write no item that `## Open` already holds.", mode)
+        loop = orchestrator_loop()
+        self.assertIn("Write each item under the verifier's **Not asked for** the same way, and say in it that the document did not ask for it.", loop)
+        self.assertIn("Write no item that `## Open` already holds.", loop)
         # Each item costs the user a decision, so how the code is built stays out.
         verifier = brief_text("VERIFIER.md")
         self.assertIn("Behavior the code adds that the document did not mention", verifier)
@@ -250,15 +262,15 @@ class SkillTextTest(unittest.TestCase):
         self.assertIn("The removal of a scratch file is the one exception", implementer)
         self.assertIn("name the file under **Left behind** and go on", implementer)
         self.assertIn("A command or an edit is denied, except the removal of a scratch file", implementer)
-        mode = orchestrate_mode()
-        self.assertIn("write each file under **Left behind**, in either report, into `## Open` as `- Follow-up: remove <path>`", mode)
-        self.assertIn("A file left behind is no finding and no reason to stop.", mode)
+        loop = orchestrator_loop()
+        self.assertIn("write each file under **Left behind**, in either report, into `## Open` as `- Follow-up: remove <path>`", loop)
+        self.assertIn("A file left behind is no finding and no reason to stop.", loop)
 
     def test_the_second_failed_verification_is_counted_in_one_run(self):
         # The document holds no counter, so a count across sessions would rest on how an agent reads the Handoff.
-        mode = orchestrate_mode()
-        self.assertIn("the second verification of the same phase that fails with findings", mode)
-        self.assertIn("Count only this run of the skill, and only a `fail` with findings.", mode)
+        loop = orchestrator_loop()
+        self.assertIn("the second verification of the same phase that fails with findings", loop)
+        self.assertIn("Count only this run of the skill, and only a `fail` with findings.", loop)
 
     def test_skill_files_end_lines_with_lf(self):
         for path in SKILLS_DIR.rglob("*"):
