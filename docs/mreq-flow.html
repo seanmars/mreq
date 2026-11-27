@@ -1146,11 +1146,10 @@ flowchart TD
   M --> A
   L -- "Stop" --> ST
   J -- "fail<br>沒有 findings" --> NR{"Not run<br>的原因"}
-  NR -- "有 denied" --> D(["指令被拒絕的情況<br>(見 '停止與記錄')"]):::stop
+  NR -- "有 denied:<br>指令被拒絕的情況" --> ST
   NR -- "只有 cannot reproduce<br>或 no safe path" --> L2{"問一次<br>不再派 verifier"}:::user
   L2 -- "Work it here" --> M
-  L2 -- "Accept by reading" --> W2["同 pass<br>Handoff 寫出沒有執行的<br>檢查與原因"]:::doc
-  W2 --> U
+  L2 -- "Accept by reading:<br>Handoff 也寫出沒有執行的<br>檢查與原因" --> W
   L2 -- "Stop" --> ST
   A -- 否 --> F2["update --status done<br>不重跑測試"]:::script
   F2 --> F3(["給出 /mreq-close #lt;path#gt;<br>不自己執行"]):::stop
@@ -1166,7 +1165,7 @@ flowchart TD
   <ul>
     <li>phase 是 <code>## Tasks</code> 裡一個 <code>### </code> 標題底下的 task, 到下一個 <code>### </code> 標題為止. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.</li>
     <li>refactor 的 pin task (第一個 task) 永遠自成一個 phase: verifier 只有在其他 task 開始之前, 才能在沒有修改的程式碼上執行 pin. 文件把其他 task 放在同一個 phase, 或沒有標題時, 把那個 phase 拆成兩個: 先 pin task, 再其他 task. prompt 用 task 編號指名拆開的部分 (例: <code>task 1</code>, <code>tasks 2-3</code>).</li>
-    <li>Step 2 不讀文件引用的程式碼, 也不執行 git 指令: implementer 會做這兩件事. Step 4 的 "一次 Edit 只勾一個 task" 不適用: 這裡的單位是 phase.</li>
+    <li>Step 2 不讀文件引用的程式碼, 也不執行 git 指令: implementer 會做這兩件事. Step 4 的 "一次 Edit 只勾一個 task" 不適用: 這裡的單位是 phase. Step 5 以最後一個 verifier 的測試結果為準, 不重跑測試.</li>
     <li>兩個 prompt 都只寫列出的內容, 並用絕對路徑指示讀 brief. 不把 brief 貼進 prompt.</li>
     <li>兩份 brief 寫明: 指令從專案根目錄 (有 <code>.mreq/</code> 的目錄) 開始, 所以指令不加路徑. 每個指令單獨執行, 不用 <code>cd</code>, <code>git -C &lt;path&gt;</code> 或 <code>git -c &lt;setting&gt;</code>. 理由也寫在 brief: allow rule 以指令開頭的字比對, <code>git -C &lt;path&gt; status</code> 對不上 <code>git status</code> 的 rule.</li>
     <li>implementer 的指令或 Edit 被拒絕時, 它不換方式重試: 它停止, 並把指令原樣寫在 <strong>Blocked</strong>. orchestrator 依指令被拒絕的情況停止. 例外是刪除暫存檔: 刪除不能證明工作, 所以 implementer 把檔案寫在 <strong>Left behind</strong>, 然後繼續.</li>
@@ -1175,10 +1174,7 @@ flowchart TD
     <li>verifier 的回報要有每個指令的原文, exit code 與輸出的最後幾行. Handoff 記下這些指令與結果, <code>mreq-close</code> 依它決定是否重跑.</li>
     <li>verifier 在 <strong>Not asked for</strong> 回報文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不回報. <code>pass</code> 時, orchestrator 把每一項寫進 <code>## Open</code>, 格式是 <code>- Follow-up: &lt;what&gt;</code>, 與 implementer 的 Follow-ups 相同, 並寫明文件沒有要求. <code>## Open</code> 已經有的項目不重複寫. <code>mreq-close</code> 在刪除文件前把 <code>## Open</code> 的項目放進報告.</li>
     <li>檢查會寫入檔案 (資料檔, 資料庫) 時, verifier 把它指到專案內的新路徑, 檢查後用一個指令刪除那個檔案. 刪除被拒絕時, 檔案寫在 <strong>Left behind</strong>, 並附上刪除指令的原文: 刪除不是檢查, 所以它不進 <strong>Not run</strong>, 也不影響 verdict. 不論 verdict, orchestrator 把兩份回報的 <strong>Left behind</strong> 寫進 <code>## Open</code>, 格式是 <code>- Follow-up: remove &lt;path&gt;</code>. 留下的檔案不是 finding, 也不是停止的理由.</li>
-    <li>"第二次失敗" 只計算這一次執行裡有 findings 的 <code>fail</code>. 沒有 findings 的 <code>fail</code> 與之前的執行都不計入.</li>
-    <li>verifier 在 <strong>Not run</strong> 的每一項寫出原因: <code>denied</code> (指令被拒絕), <code>cannot reproduce</code> (檢查需要專案現在沒有的狀態, 例: 修改之前的程式碼), 或 <code>no safe path</code> (檢查會寫入檔案, 而且指令不接受新的路徑). verifier 不建立檔案, 所以不用副本重現檢查.</li>
-    <li><code>fail</code> 沒有 findings 時, 依 <strong>Not run</strong> 的原因處理. 有 <code>denied</code> 時是指令被拒絕的情況. 只有其他兩種時, verifier 的規則讓它無法執行那個檢查, 所以不再派 verifier, 也不在 verifier 的 prompt 加指示; 問使用者: <strong>Work it here</strong> (自己依 Step 4 實作這個 phase), <strong>Accept by reading</strong> (同 <code>pass</code>, 並在 Handoff 寫出沒有執行的檢查與原因) 或 <strong>Stop</strong>.</li>
-    <li>Step 5 以最後一個 verifier 的測試結果為準, 不重跑測試.</li>
+    <li>verifier 在 <strong>Not run</strong> 的每一項寫出原因: <code>denied</code> (指令被拒絕), <code>cannot reproduce</code> (檢查需要專案現在沒有的狀態, 例: 修改之前的程式碼), 或 <code>no safe path</code> (檢查會寫入檔案, 而且指令不接受新的路徑). verifier 不建立檔案, 所以不用副本重現檢查. 只有後兩種原因時, verifier 的規則讓它無法執行那個檢查, 所以 orchestrator 不再派 verifier, 也不在 verifier 的 prompt 加指示.</li>
     <li>停止時依 "停止與記錄": <code>Resume:</code> 行把 implementer 回報完成, 但沒有 verifier 判定通過的 task 寫成 <code>implemented, not verified</code>.</li>
   </ul>
 
@@ -1188,10 +1184,9 @@ flowchart TD
     <li>Audit: 完整讀文件, prompt 清單裡的每個檔案, 與這個 phase 的 task 引用的每個檔案: 這是稽核, 不是搜尋. <code>git status</code> 與 <code>git diff</code> 顯示的變更檔案不在清單裡時, 它也在稽核範圍.</li>
     <li>Audit: 逐項回答這個 phase 的每個 task, 與 task 實現的每個 <code>### Dn:</code>: 程式碼做到了嗎? 答案是 done, partly done, done differently 或 missing, 附 <code>path:line</code>.</li>
     <li>finding: 程式碼和文件矛盾, 或缺少這個 phase 的 task 要求的東西. 這次修改刪除, 跳過或弱化的測試也是 finding. 之後的 phase 還沒做的 task 不是 finding.</li>
-    <li>Run: 只執行這些: 這個 phase 的每個 task 指名的檢查; 測試指令; <code>issue</code> 的 <code>## Symptom</code> Repro (這個 phase 有修正之後, 它要顯示預期的行為); <code>refactor</code> 的 <code>## Behavior Pin</code> (它仍然要是綠的).</li>
+    <li>Run: 只執行這些: 這個 phase 的每個 task 指名的檢查; 測試指令; <code>issue</code> 的 <code>## Symptom</code> Repro (這個 phase 有修正之後, 它要顯示預期的行為); <code>refactor</code> 的 <code>## Behavior Pin</code> (它仍然要是綠的). verifier 不加自己的檢查: 其餘的部分用閱讀判斷.</li>
     <li>測試指令來自文件; 文件沒有時, 來自專案的 README 或 agent 指示檔. 都沒有時, 在 <strong>Commands</strong> 說明: 這不算 finding.</li>
     <li>每個指令照原文執行: 不加 <code>uv run</code>, 不用 <code>python -c</code> 取代. 唯一可以改的地方, 是會寫入檔案的檢查的新路徑.</li>
-    <li>verifier 不加自己的檢查來讓 phase 通過或失敗: 其餘的部分用閱讀判斷.</li>
     <li><code>pass</code> 的條件: 這個 phase 的 task 全部 done, 執行的指令全部通過, 而且 <strong>Not run</strong> 是空的. 所以沒有 findings 的 <code>fail</code> 表示有檢查沒有執行.</li>
   </ul>
 </section>

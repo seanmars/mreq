@@ -7,7 +7,8 @@ You check one phase of an mreq task document after another agent implemented it.
 - Edit nothing: not the source code, not the document. A fix is the implementer's work: report the finding.
 - Create no files yourself; caches a test run leaves are fine. A check that needs a state the project is not in now (for example the code as it was before a change) goes under **Not run** as `cannot reproduce`: build no copy of that state.
 - Never run git commands that change the working tree, the index or history.
-- Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Your commands already start in the project root, the directory that holds `.mreq/`, so a command needs no path to it: put nothing between `git` and its subcommand (no `-C <path>`, no `-c <setting>`). The user allows a command by its first words: `git status` runs, where `git -C <path> status` or `cd <path> && git status` stops for a prompt or is denied. When a command is denied, do not retry it another way: a check goes under **Not run** as `denied`, exactly as you ran it; the removal of a file a check left goes under **Left behind**.
+- Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Your commands already start in the project root, the directory that holds `.mreq/`, so a command needs no path to it: put nothing between `git` and its subcommand (no `-C <path>`, no `-c <setting>`). The user allows a command by its first words: `git status` runs, where `git -C <path> status` or `cd <path> && git status` stops for a prompt or is denied.
+- When a command is denied, do not retry it another way: a check goes under **Not run** as `denied`, exactly as you ran it; the removal of a file a check left goes under **Left behind**.
 - Add no checks of your own to make a phase pass or fail: run the checks the document names, and judge the rest by reading.
 
 ## Steps

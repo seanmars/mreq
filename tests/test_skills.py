@@ -25,18 +25,40 @@ HANDOFF_SKILLS = ("define", "grill", "apply", "close")
 HANDOFF_SECTION = "## Running another mreq skill"
 # Only the user starts these. Each agent marks that its own way.
 USER_ONLY = ("define", "close", "how", "graph", "pro", "terms")
+# The briefs the two subagents of mreq-apply's orchestrate mode read.
+BRIEFS = ("IMPLEMENTER.md", "VERIFIER.md")
+# A subagent reads only its brief, so the implementer's brief repeats these rules of mreq-apply word for word.
+IMPLEMENTER_RULES = (
+    "Never delete, skip, or weaken a test to get to green. Fix the code.",
+    "To prove a test catches the bug, revert the fix by editing the file, run the test, then restore it.",
+    "Write scratch files for a check inside the project, never outside it (no `/tmp`, no `$TEMP`). When the document names a scratch file, use that name.",
+    "Prove it works by running something: a test, the repro, or a command that would fail if you were wrong. Reading the code is not proof. When nothing you can run reaches the behavior, say so in the report.",
+    "- **`feature`**: build only what `## Scope` puts in. Add no flexibility for later.",
+    "Fix the cause, not the symptom; when a shared function causes it, fix that function and check its other callers.",
+    "pin the behavior first (the `## Behavior Pin` test or command) and keep it green after every step. Change no behavior.",
+    "- **`task`**: do the task as `## Goal` describes it.",
+)
 
 
 def skill_text(name: str) -> str:
     return (SKILLS_DIR / f"mreq-{name}" / "SKILL.md").read_text(encoding="utf-8")
 
 
+def brief_text(name: str) -> str:
+    return (SKILLS_DIR / "mreq-apply" / name).read_text(encoding="utf-8")
+
+
 def section(text: str, heading: str) -> str:
-    """The lines from a "## " heading up to the next one."""
-    for part in re.split(r"(?m)^(?=## )", text):
+    """The lines from a "## " or "### " heading up to the next heading of its level or above."""
+    level = len(heading) - len(heading.lstrip("#"))
+    for part in re.split(rf"(?m)^(?=#{{2,{level}}} )", text):
         if part.split("\n", 1)[0] == heading:
             return part.strip()
     return ""
+
+
+def orchestrate_mode() -> str:
+    return section(skill_text("apply"), "## Orchestrate mode")
 
 
 class SkillTextTest(unittest.TestCase):
@@ -93,9 +115,10 @@ class SkillTextTest(unittest.TestCase):
         # A bare file name leaves the agent to guess the start; it often takes the project root.
         for path in SKILLS_DIR.rglob("*.md"):
             self.assertNotIn("from this skill's directory", path.read_text(encoding="utf-8"), path.as_posix())
-        for name, shared in (("define", "GRILL.md"), ("grill", "GRILL.md"), ("how", "MERMAID.md"), ("graph", "MERMAID.md")):
-            self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/{shared}`", skill_text(name), name)
-            self.assertTrue((SKILLS_DIR / f"mreq-{name}" / shared).is_file(), name)
+        references = (("define", "GRILL.md"), ("grill", "GRILL.md"), ("how", "MERMAID.md"), ("graph", "MERMAID.md"), *(("apply", brief) for brief in BRIEFS))
+        for name, reference in references:
+            self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/{reference}`", skill_text(name), name)
+            self.assertTrue((SKILLS_DIR / f"mreq-{name}" / reference).is_file(), name)
 
     def test_a_skill_uses_only_the_files_in_its_own_directory(self):
         # A path that leaves the skill directory makes the skill need another one.
@@ -127,32 +150,36 @@ class SkillTextTest(unittest.TestCase):
             self.assertIn(f"`/mreq-{later}` (`$mreq-{later}` in Codex) with no", skill_text(earlier), earlier)
             self.assertIn(f"reply from mreq-{earlier}", skill_text(later), later)
 
-    def test_the_orchestrate_briefs_are_read_from_the_skill_directory(self):
-        mode = section(skill_text("apply"), "## Orchestrate mode")
-        for brief in ("IMPLEMENTER.md", "VERIFIER.md"):
+    def test_the_orchestrate_briefs_are_read_by_an_absolute_path(self):
+        mode = orchestrate_mode()
+        for brief in BRIEFS:
             self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/{brief}`, written as an absolute path", mode, brief)
-            self.assertTrue((SKILLS_DIR / "mreq-apply" / brief).is_file(), brief)
         self.assertIn('argument-hint: "[<path>] [--orch]"', skill_text("apply"))
+
+    def test_the_implementer_brief_keeps_the_rules_it_copies(self):
+        implementer = brief_text("IMPLEMENTER.md")
+        for rule in IMPLEMENTER_RULES:
+            self.assertIn(rule, skill_text("apply"), rule)
+            self.assertIn(rule, implementer, rule)
 
     def test_only_the_orchestrator_writes_the_document(self):
         # Two writers of one document lose each other's edits: update rewrites the whole file.
-        apply_dir = SKILLS_DIR / "mreq-apply"
-        self.assertIn("only you write the document", section(skill_text("apply"), "## Orchestrate mode"))
-        self.assertIn("Never edit the document", (apply_dir / "IMPLEMENTER.md").read_text(encoding="utf-8"))
-        self.assertIn("not the source code, not the document", (apply_dir / "VERIFIER.md").read_text(encoding="utf-8"))
+        self.assertIn("only you write the document", orchestrate_mode())
+        self.assertIn("Never edit the document", brief_text("IMPLEMENTER.md"))
+        self.assertIn("not the source code, not the document", brief_text("VERIFIER.md"))
 
     def test_the_verifier_is_not_told_what_the_implementer_concluded(self):
-        mode = section(skill_text("apply"), "## Orchestrate mode")
+        mode = orchestrate_mode()
         self.assertIn("Give it nothing else from the implementer's report", mode)
         # The file list is the one part of that report the verifier gets, so a line holds a path and the kind of change only.
         self.assertIn("(each path with `created`, `changed` or `deleted`, and no other word from a line)", mode)
-        implementer = (SKILLS_DIR / "mreq-apply" / "IMPLEMENTER.md").read_text(encoding="utf-8")
+        implementer = brief_text("IMPLEMENTER.md")
         self.assertIn("its path, then `created`, `changed` or `deleted`, and nothing else", implementer)
         self.assertIn("A file you changed for a check and then restored is not in this list", implementer)
 
     def test_orchestrate_mode_needs_a_request_not_only_the_word(self):
         # The mode costs more tokens, so a document about an orchestrator must not turn it on.
-        mode = section(skill_text("apply"), "## Orchestrate mode")
+        mode = orchestrate_mode()
         self.assertIn("The mode is on when the input holds `--orch`, or when the user asks for this mode", mode)
         self.assertIn("The word alone does not turn it on", mode)
         self.assertIn("When you cannot tell, the mode is off.", mode)
@@ -167,7 +194,7 @@ class SkillTextTest(unittest.TestCase):
         # A verifier comes after the whole phase: it can run the pin against the unchanged code only when no other task shares the phase.
         self.assertIn("the pin task alone under the first one", skill_text("define"))
         self.assertIn("the pin task stays alone in the first phase", skill_text("grill"))
-        mode = section(skill_text("apply"), "## Orchestrate mode")
+        mode = orchestrate_mode()
         self.assertIn("the pin task (the first task) is always a phase of its own", mode)
         self.assertIn("split that phase in two", mode)
         template = (SKILLS_DIR / "mreq-define" / "templates" / "refactor.md").read_text(encoding="utf-8")
@@ -177,13 +204,12 @@ class SkillTextTest(unittest.TestCase):
 
     def test_a_check_that_did_not_run_names_its_reason(self):
         # Only a denied command is solved by an allow rule. A check the verifier's rules keep it from needs the user's choice.
-        verifier = (SKILLS_DIR / "mreq-apply" / "VERIFIER.md").read_text(encoding="utf-8")
-        rules, report = verifier.split("### Not run")
-        mode = section(skill_text("apply"), "## Orchestrate mode")
+        verifier = brief_text("VERIFIER.md")
+        report = section(verifier, "### Not run")
+        mode = orchestrate_mode()
         for reason in ("denied", "cannot reproduce", "no safe path"):
-            self.assertIn(f"under **Not run** as `{reason}`", rules, reason)
+            self.assertIn(f"under **Not run** as `{reason}`", verifier, reason)
             self.assertIn(f"`{reason}` (", report, reason)
-            self.assertIn(f"`{reason}`", mode, reason)
         self.assertIn("Any item is `denied`: it is the denied-command case of \"When to stop and ask\"", mode)
         self.assertIn("Otherwise (`cannot reproduce`, `no safe path`)", mode)
         self.assertIn("add nothing to a verifier's prompt", mode)
@@ -191,43 +217,46 @@ class SkillTextTest(unittest.TestCase):
 
     def test_what_the_verifier_found_unasked_reaches_the_document(self):
         # Only the orchestrator reads the verifier's report: what it does not write down, the user never learns.
-        mode = section(skill_text("apply"), "## Orchestrate mode")
-        self.assertIn("and each item under the verifier's **Not asked for**", mode)
+        mode = orchestrate_mode()
+        self.assertIn("Write each item under the verifier's **Not asked for** the same way, and say in it that the document did not ask for it.", mode)
         self.assertIn("Write no item that `## Open` already holds.", mode)
         # Each item costs the user a decision, so how the code is built stays out.
-        verifier = (SKILLS_DIR / "mreq-apply" / "VERIFIER.md").read_text(encoding="utf-8")
+        verifier = brief_text("VERIFIER.md")
         self.assertIn("Behavior the code adds that the document did not mention", verifier)
         self.assertIn("How the code is built (a helper function, a name, one more test case) does not go there.", verifier)
-        self.assertIn("Each behavior the code adds that the document never asked for", verifier.split("### Not asked for")[1])
+        self.assertIn("Each behavior the code adds that the document never asked for", section(verifier, "### Not asked for"))
 
     def test_the_briefs_say_where_commands_start(self):
         # A subagent that is not sure of its directory puts a path in front of its first command, and no allow rule matches that.
-        for brief in ("IMPLEMENTER.md", "VERIFIER.md"):
-            text = (SKILLS_DIR / "mreq-apply" / brief).read_text(encoding="utf-8")
-            self.assertIn("Your commands already start in the project root, the directory that holds `.mreq/`", text, brief)
-            self.assertIn("put nothing between `git` and its subcommand (no `-C <path>`, no `-c <setting>`)", text, brief)
-            self.assertIn("The user allows a command by its first words", text, brief)
-            self.assertIn("no `-C`, no `-c`, no `cd` in front", text, brief)
+        run_rule = "- Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`."
+        self.assertIn(run_rule.removeprefix("- "), section(skill_text("apply"), "## When a tool call is denied"))
+        rules = [next(line for line in brief_text(brief).splitlines() if line.startswith(run_rule)) for brief in BRIEFS]
+        self.assertEqual(*rules)
+        self.assertIn("Your commands already start in the project root, the directory that holds `.mreq/`", rules[0])
+        self.assertIn("put nothing between `git` and its subcommand (no `-C <path>`, no `-c <setting>`)", rules[0])
+        self.assertIn("The user allows a command by its first words", rules[0])
+        for brief in BRIEFS:
+            self.assertIn("no `-C`, no `-c`, no `cd` in front", brief_text(brief), brief)
 
     def test_a_file_a_check_left_does_not_fail_the_phase(self):
         # A removal proves nothing about the work: when it is denied, every check may still have passed.
-        verifier = (SKILLS_DIR / "mreq-apply" / "VERIFIER.md").read_text(encoding="utf-8")
+        verifier = brief_text("VERIFIER.md")
         self.assertIn("After the check, remove what it wrote there, with one command", verifier)
         self.assertIn("Give a path inside the project, never outside it", verifier)
         self.assertIn("the removal of a file a check left goes under **Left behind**", verifier)
         self.assertIn("**Left behind** does not change the verdict", verifier)
         self.assertIn("### Left behind\n", verifier)
-        implementer = (SKILLS_DIR / "mreq-apply" / "IMPLEMENTER.md").read_text(encoding="utf-8")
+        implementer = brief_text("IMPLEMENTER.md")
         self.assertIn("The removal of a scratch file is the one exception", implementer)
         self.assertIn("name the file under **Left behind** and go on", implementer)
         self.assertIn("A command or an edit is denied, except the removal of a scratch file", implementer)
-        mode = section(skill_text("apply"), "## Orchestrate mode")
+        mode = orchestrate_mode()
         self.assertIn("write each file under **Left behind**, in either report, into `## Open` as `- Follow-up: remove <path>`", mode)
         self.assertIn("A file left behind is no finding and no reason to stop.", mode)
 
     def test_the_second_failed_verification_is_counted_in_one_run(self):
         # The document holds no counter, so a count across sessions would rest on how an agent reads the Handoff.
-        mode = section(skill_text("apply"), "## Orchestrate mode")
+        mode = orchestrate_mode()
         self.assertIn("the second verification of the same phase that fails with findings", mode)
         self.assertIn("Count only this run of the skill, and only a `fail` with findings.", mode)
 

@@ -9,7 +9,8 @@ You implement one phase of an mreq task document. The prompt that sent you here 
 - Never delete, skip, or weaken a test to get to green. Fix the code.
 - Never run git commands that change the working tree, the index or history (stash, checkout, reset, restore, commit). To prove a test catches the bug, revert the fix by editing the file, run the test, then restore it.
 - Write scratch files for a check inside the project, never outside it (no `/tmp`, no `$TEMP`). When the document names a scratch file, use that name. Remove them before you report.
-- Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Your commands already start in the project root, the directory that holds `.mreq/`, so a command needs no path to it: put nothing between `git` and its subcommand (no `-C <path>`, no `-c <setting>`). The user allows a command by its first words: `git status` runs, where `git -C <path> status` or `cd <path> && git status` stops for a prompt or is denied. When a command or an edit is denied, do not retry it another way: stop and report it under **Blocked**, exactly as you ran it. The removal of a scratch file is the one exception: it proves nothing about the work, so name the file under **Left behind** and go on.
+- Run every command on its own: no `cd`, `&&`, `||`, `;`, `|` or `$()`. Your commands already start in the project root, the directory that holds `.mreq/`, so a command needs no path to it: put nothing between `git` and its subcommand (no `-C <path>`, no `-c <setting>`). The user allows a command by its first words: `git status` runs, where `git -C <path> status` or `cd <path> && git status` stops for a prompt or is denied.
+- When a command or an edit is denied, do not retry it another way: stop and report it under **Blocked**, exactly as you ran it. The removal of a scratch file is the one exception: it proves nothing about the work, so name the file under **Left behind** and go on.
 
 ## Steps
 
