@@ -14,10 +14,12 @@
   - verifier 判定 `pass` 時, orchestrator 才把這個 phase 的 task 打勾. 判定 `fail` 而且有 finding 時, finding 交給 implementer 修正. 同一個 phase 第二次因為 finding 驗證失敗時, 問使用者: 再試一次, 自己實作, 或停止. 次數只在這一次執行內計算, 沒有 finding 的 `fail` 不計入.
   - verifier 在 **Not run** 的每一項寫出原因: `denied` (指令被拒絕), `cannot reproduce` (檢查需要專案現在沒有的狀態, 例: 修改之前的程式碼), 或 `no safe path` (檢查會寫入檔案, 而且指令不接受新的路徑). `fail` 沒有 finding 時, orchestrator 依原因處理. 有 `denied` 時, 依指令被拒絕的情況停止. 只有其他兩種時, 不再派 verifier, 也不在 verifier 的 prompt 加指示, 問使用者: 自己實作 (**Work it here**), 接受閱讀的結論 (**Accept by reading**), 或停止. verifier 不建立檔案, 所以不用副本重現檢查.
   - 兩份 brief 寫明指令從專案根目錄 (有 `.mreq/` 的目錄) 開始, 所以指令不加路徑: 不用 `cd`, `git -C <path>` 或 `git -c <setting>`. 理由也寫在 brief: allow rule 以指令開頭的字比對, `git -C <path> status` 對不上 `git status` 的 rule.
-  - 檢查會寫入檔案時, verifier 把它指到專案內的新路徑, 檢查後刪除那個檔案. 刪除被拒絕時, 檔案寫在 **Left behind**: 它不進 **Not run**, 也不影響 verdict. orchestrator 把兩份報告的 **Left behind** 寫進 `## Open`, 格式是 `- Follow-up: remove <path>`.
-  - verifier 在 **Not asked for** 回報文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不回報. `pass` 時, orchestrator 把每一項寫進 `## Open`, 格式是 `- Follow-up: <what>`, 與 implementer 的 Follow-ups 相同, 並寫明文件沒有要求. `## Open` 已經有的項目不重複寫.
+  - 檢查會寫入檔案時, verifier 把它指到專案內的新路徑, 檢查後刪除那個檔案. 刪除被拒絕時, 檔案寫在 **Left behind**: 它不進 **Not run**, 也不影響 verdict.
+  - orchestrator 讀到一份回報後, 在處理它之前, 先把 implementer 的 **Follow-ups** (`- Follow-up: <what>`) 與兩份回報的 **Left behind** (`- Follow-up: remove <path>`) 寫進 `## Open`. 接下來是提問, 驗證失敗或停止時也會寫, 所以失敗的嘗試找到的 bug 不會遺失.
+  - verifier 在 **Not asked for** 回報文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不回報. `pass` 時, orchestrator 把每一項寫進 `## Open`, 格式是 `- Follow-up: <what>`, 並寫明文件沒有要求. `fail` 時不寫: 程式碼還會修改. `## Open` 已經有的項目不重複寫.
   - subagent 不能問使用者. implementer 遇到問題時停止並回報, orchestrator 問使用者後再派發.
-  - orchestrator 不讀程式碼, 不執行專案的程式碼. 最後一個 verifier 的測試結果就是 `done` 的依據, 不重跑.
+  - orchestrator 不讀程式碼, 不執行專案的程式碼. 例外是使用者選 **Work it here** 的 phase: 這個 phase 離開迴圈, orchestrator 先讀文件引用的程式碼並執行 `git status` 與 `git diff`, 再依 Step 4 自己實作. 沒有 verifier 檢查這個 phase.
+  - verifier 執行過測試指令而且通過, 之後也沒有修改程式碼時, 這次執行就是 `done` 的依據, 不重跑. 之後 orchestrator 自己實作過一個 phase 時, 它依 Step 5 執行測試. 使用者選 **Accept by reading** 的 phase, 沒有執行的檢查是測試指令時, 不設 `done`; 沒有執行的只是某個 task 自己的檢查時, 可以設 `done`.
   - agent 不能 spawn 可以寫入檔案的 subagent 時, 改用一般模式.
 
 ### Changed

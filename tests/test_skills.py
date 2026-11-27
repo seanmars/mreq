@@ -225,12 +225,12 @@ class SkillTextTest(unittest.TestCase):
         self.assertIn("Any item is `denied`: it is the denied-command case of \"When to stop and ask\"", loop)
         self.assertIn("Otherwise (`cannot reproduce`, `no safe path`)", loop)
         self.assertIn("add nothing to a verifier's prompt", loop)
-        self.assertIn("**Work it here** (work the phase yourself as step 4 gives), **Accept by reading**", loop)
+        self.assertIn('**Work it here** (see "Work it here"), **Accept by reading**', loop)
 
     def test_what_the_verifier_found_unasked_reaches_the_document(self):
         # Only the orchestrator reads the verifier's report: what it does not write down, the user never learns.
         loop = orchestrator_loop()
-        self.assertIn("Write each item under the verifier's **Not asked for** the same way, and say in it that the document did not ask for it.", loop)
+        self.assertIn("Write each item under the verifier's **Not asked for** into `## Open` as `- Follow-up: <what>`, and say in it that the document did not ask for it", loop)
         self.assertIn("Write no item that `## Open` already holds.", loop)
         # Each item costs the user a decision, so how the code is built stays out.
         verifier = brief_text("VERIFIER.md")
@@ -263,8 +263,33 @@ class SkillTextTest(unittest.TestCase):
         self.assertIn("name the file under **Left behind** and go on", implementer)
         self.assertIn("A command or an edit is denied, except the removal of a scratch file", implementer)
         loop = orchestrator_loop()
-        self.assertIn("write each file under **Left behind**, in either report, into `## Open` as `- Follow-up: remove <path>`", loop)
+        self.assertIn("each file under **Left behind**, in either report, as `- Follow-up: remove <path>`", loop)
         self.assertIn("A file left behind is no finding and no reason to stop.", loop)
+
+    def test_what_a_report_found_is_written_before_the_orchestrator_acts(self):
+        # A new implementer gets only the findings, and a stop ends the run: what is not in the document by then is lost.
+        leaves = section(orchestrator_loop(), "## What a report leaves in the document")
+        self.assertIn("As soon as you read a report, and before you act on it", leaves)
+        self.assertIn("each of the implementer's **Follow-ups**, as `- Follow-up: <what>`", leaves)
+        loop = section(orchestrator_loop(), "## The loop")
+        for step in ("2. **Act on its report.**", "4. **Act on the verdict.**"):
+            self.assertIn(f'{step} First do as "What a report leaves in the document" gives.', loop, step)
+
+    def test_working_a_phase_here_lifts_the_rule_against_editing(self):
+        # The loop offers the answer, so the rule that forbids its work must name it.
+        self.assertIn("The one exception is a phase the user tells you to work yourself (**Work it here** in that file).", orchestrate_mode())
+        here = section(orchestrator_loop(), "## Work it here")
+        self.assertIn("For this phase the rule against reading and editing source code does not apply.", here)
+        self.assertIn("Do what step 2 left out", here)
+        self.assertIn("A task the implementer reported done is not proved.", here)
+
+    def test_done_needs_a_test_run_after_the_last_change(self):
+        # A verifier's run proves the code it saw. A phase worked or accepted later is not in that proof.
+        finish = section(orchestrator_loop(), "## Step 5 in this mode")
+        self.assertIn("counts when it passed and no code changed after it", finish)
+        self.assertIn("You worked a phase yourself after that run: run the related tests as step 5 gives.", finish)
+        self.assertIn("the check that did not run is the test command: the tests have not passed. Do not set `done`.", finish)
+        self.assertIn("does not keep the document from `done`", finish)
 
     def test_the_second_failed_verification_is_counted_in_one_run(self):
         # The document holds no counter, so a count across sessions would rest on how an agent reads the Handoff.

@@ -89,7 +89,7 @@ The mode is on when the input holds `--orch`, or when the user asks for this mod
 
 When you cannot spawn a subagent that can edit files and run commands (your agent has none, or you are a subagent yourself), say so in one line and work as step 4 gives.
 
-**What changes in the steps.** In step 2, do not read the code the document cites, and run no git command: the implementer does both. In place of step 4, follow the loop in `${CLAUDE_SKILL_DIR}/ORCHESTRATOR.md`: read that file in full before you spawn the first subagent, and read it again when you take a phase and the loop is no longer in your context. In step 5, the last verifier's test run counts: do not run the tests again. Never edit source code in this mode, and never read it or run the project's code to check a report: a verifier does that.
+**What changes in the steps.** In step 2, do not read the code the document cites, and run no git command: the implementer does both. In place of step 4, follow the loop in `${CLAUDE_SKILL_DIR}/ORCHESTRATOR.md`: read that file in full before you spawn the first subagent, and read it again when you take a phase and the loop is no longer in your context. In step 5, a verifier's test run counts as that file gives. Never edit source code in this mode, and never read it or run the project's code to check a report: a verifier does that. The one exception is a phase the user tells you to work yourself (**Work it here** in that file).
 
 ## Schema rules
 
