@@ -18,6 +18,7 @@
   - 檢查會寫入檔案時, verifier 把它指到專案內的新路徑, 檢查後刪除那個檔案. 刪除被拒絕時, 檔案寫在 **Left behind**: 它不進 **Not run**, 也不影響 verdict.
   - orchestrator 讀到一份回報後, 在處理它之前, 先把 implementer 的 **Follow-ups** (`- Follow-up: <what>`) 與兩份回報的 **Left behind** (`- Follow-up: remove <path>`) 寫進 `## Open`. 接下來是提問, 驗證失敗或停止時也會寫, 所以失敗的嘗試找到的 bug 不會遺失.
   - verifier 在 **Not asked for** 回報文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不回報. `pass` 時, orchestrator 把每一項寫進 `## Open`, 格式是 `- Follow-up: <what>`, 並寫明文件沒有要求. `fail` 時不寫: 程式碼還會修改. `## Open` 已經有的項目不重複寫.
+  - `pass` 時, orchestrator 在 `## Handoff` 為這個 phase 加一行 `Verified: <phase>: <path> <created|changed|deleted>, ...`, 並保留之前 phase 的 `Verified:` 行. 整個執行不 commit, 所以後面的 verifier 會看到前面每個 phase 的修改. verifier 只稽核不在 prompt 的清單, 也不在 `Verified:` 行的變更檔案; 只有 `Verified:` 行提到的檔案, 在這個 phase 的 task 引用它時才讀. 這避免成本隨 phase 數的平方成長.
   - subagent 不能問使用者. implementer 遇到問題時停止並回報, orchestrator 問使用者後再派發.
   - orchestrator 不讀程式碼, 不執行專案的程式碼. 例外是使用者選 **Work it here** 的 phase: 這個 phase 離開迴圈, orchestrator 先讀文件引用的程式碼並執行 `git status` 與 `git diff`, 再依 Step 4 自己實作. 沒有 verifier 檢查這個 phase.
   - verifier 執行過測試指令而且通過, 之後也沒有修改程式碼時, 這次執行就是 `done` 的依據, 不重跑. 之後 orchestrator 自己實作過一個 phase 時, 它依 Step 5 執行測試. 使用者選 **Accept by reading** 的 phase, 沒有執行的檢查是測試指令時, 不設 `done`; 沒有執行的只是某個 task 自己的檢查時, 可以設 `done`.

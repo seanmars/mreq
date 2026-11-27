@@ -1138,7 +1138,7 @@ flowchart TD
   RC --> V["派 verifier<br>prompt: 文件路徑, phase,<br>Files changed 清單,<br>讀 VERIFIER.md"]:::skill
   V --> LB["verifier 回報的 Left behind<br>寫進 Open"]:::doc
   LB --> J{"verdict"}
-  J -- "pass" --> W["勾選這個 phase 的 task<br>Not asked for 寫進 Open<br>改寫 Handoff"]:::doc
+  J -- "pass" --> W["勾選這個 phase 的 task<br>Not asked for 寫進 Open<br>改寫 Handoff,<br>加這個 phase 的 Verified 行"]:::doc
   W --> U["mreq.py update"]:::script
   U --> A
   J -- "fail<br>有 findings" --> K{"這個 phase 在這一次執行<br>第二次有 findings 的 fail?"}
@@ -1184,6 +1184,7 @@ flowchart TD
     <li>verifier 不拿到 implementer 回報的其他內容: 被告知工作已通過的 verifier 傾向同意. Files changed 清單的每一行只有路徑與 <code>created</code>, <code>changed</code> 或 <code>deleted</code>. implementer 為了檢查修改後又還原的檔案不在清單裡, 寫在它的 <strong>Commands</strong>.</li>
     <li>驗證失敗後, 下一個 implementer 的 prompt 加上 verifier 的 findings, 原文不改. 回答問題後, 加上使用者的答案; agent 能接續同一個 subagent 時, 把答案送給原本的 implementer.</li>
     <li>verifier 的回報要有每個指令的原文, exit code 與輸出的最後幾行. Handoff 記下這些指令與結果, <code>mreq-close</code> 依它決定是否重跑.</li>
+    <li><code>pass</code> 時, Handoff 為這個 phase 加一行: <code>Verified: &lt;phase&gt;: &lt;path&gt; &lt;created|changed|deleted&gt;, ...</code>, 內容來自 Files changed 清單; 沒有檔案時寫 <code>no files</code>. 之前 phase 的 <code>Verified:</code> 行保留. 理由: 整個執行不 commit, 所以後面的 verifier 會看到前面每個 phase 的修改; 這幾行告訴它哪些檔案已經稽核過.</li>
     <li>verifier 在 <strong>Not asked for</strong> 回報文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不回報. <code>pass</code> 時, orchestrator 把每一項寫進 <code>## Open</code>, 格式是 <code>- Follow-up: &lt;what&gt;</code>, 並寫明文件沒有要求. <code>fail</code> 時不寫: 程式碼還會修改, 項目可能過期. <code>## Open</code> 已經有的項目不重複寫. <code>mreq-close</code> 在刪除文件前把 <code>## Open</code> 的項目放進報告.</li>
     <li>檢查會寫入檔案 (資料檔, 資料庫) 時, verifier 把它指到專案內的新路徑, 檢查後用一個指令刪除那個檔案. 刪除被拒絕時, 檔案寫在 <strong>Left behind</strong>, 並附上刪除指令的原文: 刪除不是檢查, 所以它不進 <strong>Not run</strong>, 也不影響 verdict. 留下的檔案不是 finding, 也不是停止的理由.</li>
     <li>verifier 在 <strong>Not run</strong> 的每一項寫出原因: <code>denied</code> (指令被拒絕), <code>cannot reproduce</code> (檢查需要專案現在沒有的狀態, 例: 修改之前的程式碼), 或 <code>no safe path</code> (檢查會寫入檔案, 而且指令不接受新的路徑). verifier 不建立檔案, 所以不用副本重現檢查. 只有後兩種原因時, verifier 的規則讓它無法執行那個檢查, 所以 orchestrator 不再派 verifier, 也不在 verifier 的 prompt 加指示.</li>
@@ -1193,7 +1194,7 @@ flowchart TD
   <h3>verifier 的 Audit 與 Run</h3>
   <p>verifier 沒有參與實作: 它只依照現在讀到的文件與程式碼判斷. 它先 Audit, 再 Run.</p>
   <ul>
-    <li>Audit: 完整讀文件, prompt 清單裡的每個檔案, 與這個 phase 的 task 引用的每個檔案: 這是稽核, 不是搜尋. <code>git status</code> 與 <code>git diff</code> 顯示的變更檔案不在清單裡時, 它也在稽核範圍.</li>
+    <li>Audit: 完整讀文件, prompt 清單裡的每個檔案, 與這個 phase 的 task 引用的每個檔案: 這是稽核, 不是搜尋. <code>git status</code> 與 <code>git diff</code> 也顯示之前 phase 的修改. 變更的檔案不在 prompt 的清單, 也不在 Handoff 的 <code>Verified:</code> 行時, 它在稽核範圍: 沒有人回報它. 只有 <code>Verified:</code> 行提到的檔案已經和它的 phase 一起稽核過: 這個 phase 的 task 引用它時才讀.</li>
     <li>Audit: 逐項回答這個 phase 的每個 task, 與 task 實現的每個 <code>### Dn:</code>: 程式碼做到了嗎? 答案是 done, partly done, done differently 或 missing, 附 <code>path:line</code>.</li>
     <li>finding: 程式碼和文件矛盾, 或缺少這個 phase 的 task 要求的東西. 這次修改刪除, 跳過或弱化的測試也是 finding. 之後的 phase 還沒做的 task 不是 finding.</li>
     <li>issue 的 "確認 root cause" task: <code>## Root Cause</code> 有原因與驗證方式, 而且它指出的程式碼位置顯示這個原因時, 才算 done. <code>## Root Cause</code> 還寫著 <code>Not verified yet</code> 是 finding.</li>

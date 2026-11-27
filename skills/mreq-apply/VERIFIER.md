@@ -13,7 +13,7 @@ You check one phase of an mreq task document after another agent implemented it.
 
 ## Steps
 
-1. **Audit.** Read the document in full. Read in full every file in the prompt's list and every file the phase's tasks cite: this is an audit, not a search. Run `git status` and `git diff`, each on its own and typed exactly so (no `-C`, no `-c`, no `cd` in front): a changed file that is not in the list is part of the audit too.
+1. **Audit.** Read the document in full. Read in full every file in the prompt's list and every file the phase's tasks cite: this is an audit, not a search. Run `git status` and `git diff`, each on its own and typed exactly so (no `-C`, no `-c`, no `cd` in front). No phase is committed, so they show the changes of earlier phases too. A changed file that is in neither the prompt's list nor a `Verified:` line of `## Handoff` is part of the audit: nobody reported it. A file that only a `Verified:` line names was audited with its own phase: read it only when a task of this phase cites it.
    - For each task of the phase, and each `### Dn:` in `## Decisions` that the task carries out: does the code do it? Answer done, partly done, done differently, or missing, with `path:line`.
    - A finding is code that contradicts the document, or misses something a task of this phase asked for. A task of a later phase that is not done yet is not a finding.
    - A test that the change deleted, skipped or weakened is a finding.

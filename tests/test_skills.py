@@ -306,6 +306,15 @@ class SkillTextTest(unittest.TestCase):
         self.assertIn("the check that did not run is the test command: the tests have not passed. Do not set `done`.", finish)
         self.assertIn("does not keep the document from `done`", finish)
 
+    def test_a_verifier_does_not_audit_an_earlier_phase_again(self):
+        # No phase is committed, so every verifier sees the changes of all the phases before it.
+        loop = section(orchestrator_loop(), "## The loop")
+        self.assertIn("`Verified: <phase>: <path> <created|changed|deleted>, ...`", loop)
+        self.assertIn("Keep the `Verified:` lines of the earlier phases", loop)
+        verifier = brief_text("VERIFIER.md")
+        self.assertIn("in neither the prompt's list nor a `Verified:` line of `## Handoff` is part of the audit", verifier)
+        self.assertIn("read it only when a task of this phase cites it", verifier)
+
     def test_the_second_failed_verification_is_counted_in_one_run(self):
         # The document holds no counter, so a count across sessions would rest on how an agent reads the Handoff.
         loop = orchestrator_loop()
