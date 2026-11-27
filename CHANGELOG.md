@@ -7,7 +7,8 @@
 - `mreq-apply` 的 orchestrate 模式: `/mreq-apply [<path>] --orch`. 主 agent 是 orchestrator, 只管理文件. 每個 phase 由一個 subagent 實作, 再由另一個 subagent 驗證.
   - 開啟方式: 輸入有 `--orch`, 或使用者在對話裡用自己的話要求這個模式 (例: "orch mode", "用 orchestrator", "交給 subagent 做"). 這些字只出現在文件, findings 或工作的主題時不開啟. 無法判斷時不開啟. 開啟時, 進度訊息會說明. 已知的限制: Claude Code (2.1.332) 目前不會顯示 `mreq-apply` 的進度訊息, 畫面只有一行摘要; 這在 orchestrate 模式之前就存在.
   - phase 是 `## Tasks` 裡一個 `### ` 標題底下的 task. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.
-  - `refactor` 文件的 pin task (第一個 task) 永遠自成一個 phase. 文件把其他 task 放在同一個 phase, 或沒有標題時, orchestrator 把那個 phase 拆成兩個: 先 pin task, 再其他 task. verifier 在整個 phase 完成後才檢查, 所以 pin 與修改在同一個 phase 時, 它無法在修改前的程式碼上執行 pin.
+  - 證明修改之前的程式碼的 task 永遠自成一個 phase: `refactor` 的 pin task (第一個 task), 與 `issue` 的重現 bug 和確認 root cause (前兩個 task). 文件把其他 task 放在同一個 phase, 或沒有標題時, orchestrator 把那個 phase 拆成兩個: 先這些 task, 再其他 task. verifier 在整個 phase 完成後才檢查, 所以它們與修改在同一個 phase 時, 它無法在修改前的程式碼上執行 pin 或 Repro.
+  - `issue`: implementer 完成 phase 之後, orchestrator 先把它回報的 **Root cause** 寫進 `## Root Cause`, 再派 verifier. verifier 對照程式碼檢查這個原因; `## Root Cause` 還寫著 `Not verified yet` 是 finding. Repro 在修正之前的 phase 要顯示 Actual (bug 存在), 在有修正的 phase 要顯示 Expected.
   - 只有 orchestrator 寫文件: 打勾, `## Handoff`, `## Root Cause`, `## Open` 與 `update`. implementer 與 verifier 不修改 `.mreq/` 的任何檔案.
   - 迴圈的規則寫在 `ORCHESTRATOR.md`. orchestrator 在派第一個 subagent 之前完整讀它; 取下一個 phase 時, 迴圈不在 context 裡的話, 再讀一次. 模式關閉時, `mreq-apply` 不讀這個檔案.
   - implementer 讀 `IMPLEMENTER.md`, verifier 讀 `VERIFIER.md`. verifier 只拿到文件路徑, phase 與 implementer 修改的檔案清單, 不拿到 implementer 的結論. 清單的每一行只有路徑與 `created`, `changed` 或 `deleted`. implementer 為了檢查修改後又還原的檔案不在清單裡, 寫在它的 **Commands**.
@@ -24,9 +25,9 @@
 
 ### Changed
 
-- `mreq-define` 寫文件時, task 可以分成能各自檢查的階段時, 用 `### <phase 名稱>` 標題分組. task 編號跨 phase 連續. 4 個 task 以下, 或沒有這種階段時, 不寫標題. `refactor` 是例外.
-- `refactor` 的 template 有兩個 phase 標題: `### Pin` 與 `### Refactor`. `mreq-define` 一律保留這兩個標題, 並改用文件的語言命名: pin task 單獨在第一個 phase, 修改程式碼的步驟在之後的 phase.
-- `mreq-grill` 修改 `## Tasks` 時保留 `### ` 標題, 新 task 放在所屬的 phase 底下. `refactor` 文件的 pin task 保持單獨一個 phase.
+- `mreq-define` 寫文件時, task 可以分成能各自檢查的階段時, 用 `### <phase 名稱>` 標題分組. task 編號跨 phase 連續. 4 個 task 以下, 或沒有這種階段時, 不寫標題. `refactor` 與 `issue` 是例外.
+- `refactor` 的 template 有兩個 phase 標題: `### Pin` 與 `### Refactor`. `issue` 的 template 也有兩個: `### Reproduce` (重現 bug, 確認 root cause) 與 `### Fix` (修正, 執行相關測試). `mreq-define` 一律保留這兩個標題, 並改用文件的語言命名: 第一個 phase 只放對照修改之前的程式碼來證明的 task, 修改程式碼的 task 在之後的 phase.
+- `mreq-grill` 修改 `## Tasks` 時保留 `### ` 標題, 新 task 放在所屬的 phase 底下. `refactor` 與 `issue` 文件的第一個 phase 不放其他 task.
 - `mreq-apply` 收到 `mreq-close` 的 findings 時, 文件有 `### ` 標題的話, 把 findings 放在最後一個新標題底下.
 - `mreq-apply` 的 `argument-hint` 改為 `[<path>] [--orch]`.
 

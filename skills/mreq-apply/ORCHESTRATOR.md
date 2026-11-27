@@ -4,7 +4,7 @@ You are the orchestrator of mreq-apply's orchestrate mode: one subagent implemen
 
 ## Phases
 
-A `### ` heading in `## Tasks` starts a phase: the tasks under it, up to the next `### ` heading. Tasks above the first heading are a phase of their own. With no `### ` heading, all the tasks are one phase. For `refactor`, the pin task (the first task) is always a phase of its own: a verifier can run the pin against the unchanged code only before the other tasks start. When the document puts other tasks in its phase, or has no heading, split that phase in two: the pin task first, then the other tasks.
+A `### ` heading in `## Tasks` starts a phase: the tasks under it, up to the next `### ` heading. Tasks above the first heading are a phase of their own. With no `### ` heading, all the tasks are one phase. Some tasks prove a fact about the code as it is before the work changes it: for `refactor` the pin task (the first task), for `issue` the tasks that reproduce the bug and confirm its root cause (the first two tasks). A verifier can check them only before the other tasks start, so they are always a phase of their own. When the document puts other tasks in their phase, or has no heading, split that phase in two: these tasks first, then the other tasks.
 
 ## What a report leaves in the document
 
@@ -22,10 +22,10 @@ Take the first phase that has an unchecked task.
 2. **Act on its report.** First do as "What a report leaves in the document" gives.
    - **Blocked** holds a question: it is a case of "When to stop and ask". Ask the user as that section gives, and write into the document what it says to write. Then send the answer to the same implementer when your agent can continue a subagent; otherwise spawn a new one.
    - A task is not done and **Blocked** holds none: treat it as an error you cannot resolve.
-   - Every task of the phase is done: go on.
+   - Every task of the phase is done: for `issue`, write the implementer's **Root cause** into `## Root Cause` when the section does not hold that cause yet. The verifier reads it there and checks it against the code. Then go on.
 3. **Verify.** Spawn one subagent that can run commands. Its prompt holds only: the document's absolute path, the phase, the implementer's **Files changed** list (each path with `created`, `changed` or `deleted`, and no other word from a line), and the instruction to read `${CLAUDE_SKILL_DIR}/VERIFIER.md`, written as an absolute path, and report in its shape. Give it nothing else from the implementer's report: a verifier that is told the work passed tends to agree.
 4. **Act on the verdict.** First do as "What a report leaves in the document" gives.
-   - **`pass`**: check off every task of the phase and delete their `Resume:` lines. For `issue`, write the implementer's **Root cause** into `## Root Cause`. Write each item under the verifier's **Not asked for** into `## Open` as `- Follow-up: <what>`, and say in it that the document did not ask for it; the code may still change after a `fail`, so these wait for a `pass`. Write no item that `## Open` already holds. Rewrite `## Handoff`: what is done, each command the verifier ran with its result, and the next phase. Run `update <path>`. Then take the next phase.
+   - **`pass`**: check off every task of the phase and delete their `Resume:` lines. Write each item under the verifier's **Not asked for** into `## Open` as `- Follow-up: <what>`, and say in it that the document did not ask for it; the code may still change after a `fail`, so these wait for a `pass`. Write no item that `## Open` already holds. Rewrite `## Handoff`: what is done, each command the verifier ran with its result, and the next phase. Run `update <path>`. Then take the next phase.
    - **`fail` with findings**: check off nothing, and go back to 1 with the findings. When it is the second verification of the same phase that fails with findings, ask instead: **Try again** (go back to 1), **Work it here** (see "Work it here") or **Stop**. Count only this run of the skill, and only a `fail` with findings.
    - **`fail` with no findings**: check off nothing. Every item under **Not run** names its reason:
      - Any item is `denied`: it is the denied-command case of "When to stop and ask".

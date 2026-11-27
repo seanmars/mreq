@@ -85,7 +85,7 @@ When you give the user a command to type, write it the way their agent runs a sk
      - **Assumptions now explicit**: `## Assumptions`, one bullet each.
      - **Claims that fell**: correct the section that states them (`## Goal`, `## Scope`, `## Context`, or the schema's own sections). Change those sections nowhere else, except where the user corrected them.
      - **Still open**: `## Open`, one `- Open: <question>` bullet each. A follow-up you found goes there too, as `- Follow-up: <what>`.
-   - Change `## Tasks` when a decision changes the work. Never uncheck or reword a done task; put the correction in a new task or in `## Open`. Keep each `### ` heading in `## Tasks`: it names a phase. Put a new task under the phase it belongs to. In a `refactor` document, the pin task stays alone in the first phase: put no other task under its heading.
+   - Change `## Tasks` when a decision changes the work. Never uncheck or reword a done task; put the correction in a new task or in `## Open`. Keep each `### ` heading in `## Tasks`: it names a phase. Put a new task under the phase it belongs to. In a `refactor` or `issue` document, the first phase holds only the tasks proved against the code before it changes (the pin task; the tasks that reproduce the bug and confirm its root cause): put no other task under its heading.
    - Delete an `Unconfirmed:` line in `## Handoff`: the user has now confirmed a restatement.
    - Run `update <path>`. For a reopened `done` document, run `update <path> --status active`.
 

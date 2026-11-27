@@ -202,17 +202,32 @@ class SkillTextTest(unittest.TestCase):
         for name in ("grill", "apply"):
             self.assertIn("`### ` heading in `## Tasks`", skill_text(name), name)
 
-    def test_the_refactor_pin_is_a_phase_of_its_own(self):
-        # A verifier comes after the whole phase: it can run the pin against the unchanged code only when no other task shares the phase.
-        self.assertIn("the pin task alone under the first one", skill_text("define"))
-        self.assertIn("the pin task stays alone in the first phase", skill_text("grill"))
-        loop = orchestrator_loop()
-        self.assertIn("the pin task (the first task) is always a phase of its own", loop)
-        self.assertIn("split that phase in two", loop)
-        template = (SKILLS_DIR / "mreq-define" / "templates" / "refactor.md").read_text(encoding="utf-8")
-        phases = re.split(r"(?m)^### .*\n", section(template, "## Tasks"))[1:]
-        self.assertEqual(len(phases), 2)
-        self.assertEqual(re.findall(r"(?m)^- \[ \] (\d+)\.", phases[0]), ["1"])
+    def test_tasks_proved_before_the_code_changes_are_a_phase_of_their_own(self):
+        # A verifier comes after the whole phase: it can run a pin or a reproduction against the unchanged code only when no task that changes the code shares the phase.
+        define, grill, phases = skill_text("define"), skill_text("grill"), section(orchestrator_loop(), "## Phases")
+        self.assertIn("Under the first one go only the tasks that are proved against the code before it changes", define)
+        self.assertIn("the first phase holds only the tasks proved against the code before it changes", grill)
+        self.assertIn("Some tasks prove a fact about the code as it is before the work changes it", phases)
+        self.assertIn("split that phase in two", phases)
+        for schema, first, text in (("refactor", ["1"], "the pin task"), ("issue", ["1", "2"], "the tasks that reproduce the bug and confirm its root cause")):
+            for copy in (define, grill, phases):
+                self.assertIn(text, copy, schema)
+            template = (SKILLS_DIR / "mreq-define" / "templates" / f"{schema}.md").read_text(encoding="utf-8")
+            template_phases = re.split(r"(?m)^### .*\n", section(template, "## Tasks"))[1:]
+            self.assertEqual(len(template_phases), 2, schema)
+            self.assertEqual(re.findall(r"(?m)^- \[ \] (\d+)\.", template_phases[0]), first, schema)
+
+    def test_the_verifier_can_read_the_root_cause_it_checks(self):
+        # Only the orchestrator writes the document. A cause written after the verdict leaves the verifier with "Not verified yet".
+        loop = section(orchestrator_loop(), "## The loop")
+        self.assertIn("write the implementer's **Root cause** into `## Root Cause` when the section does not hold that cause yet", loop)
+        self.assertLess(loop.index("**Root cause** into `## Root Cause`"), loop.index("3. **Verify.**"))
+        verifier = brief_text("VERIFIER.md")
+        self.assertIn("A `## Root Cause` that still says `Not verified yet` is a finding.", verifier)
+        self.assertIn("In a phase that comes before the fix, it must show the Actual behavior", verifier)
+        self.assertIn("Once the phase holds the fix, the Repro must show the Expected behavior.", verifier)
+        self.assertIn("(a Repro before the fix must show the bug)", section(verifier, "### Verdict"))
+        self.assertIn("when `## Root Cause` already holds a verified cause, start from it", brief_text("IMPLEMENTER.md"))
 
     def test_a_check_that_did_not_run_names_its_reason(self):
         # Only a denied command is solved by an allow rule. A check the verifier's rules keep it from needs the user's choice.

@@ -24,7 +24,7 @@ You implement one phase of an mreq task document. The prompt that sent you here 
 The document's front matter gives its `schema`.
 
 - **`feature`**: build only what `## Scope` puts in. Add no flexibility for later.
-- **`issue`**: reproduce the bug before you change code. Verify the root cause before you fix it, and report the cause and how you verified it under **Root cause**. Fix the cause, not the symptom; when a shared function causes it, fix that function and check its other callers. When two fixes fail, stop: the root cause is probably wrong. Report it under **Blocked**.
+- **`issue`**: reproduce the bug before you change code. Verify the root cause before you fix it, and report the cause and how you verified it under **Root cause**; when `## Root Cause` already holds a verified cause, start from it. Fix the cause, not the symptom; when a shared function causes it, fix that function and check its other callers. When two fixes fail, stop: the root cause is probably wrong. Report it under **Blocked**.
 - **`refactor`**: pin the behavior first (the `## Behavior Pin` test or command) and keep it green after every step. Change no behavior. When you find a bug, report it under **Follow-ups** and do not fix it.
 - **`task`**: do the task as `## Goal` describes it.
 
@@ -51,7 +51,7 @@ Every file you created, changed or deleted, one on a line: its path, then `creat
 Each command you ran to prove the work, exactly as you ran it, with its result. Tests that did not run have not passed: say so.
 
 ### Root cause
-For `issue` only: the cause, and how you verified it.
+For `issue` only: the cause, and how you verified it. When you used the cause `## Root Cause` already holds, say so.
 
 ### Follow-ups
 Each bug or piece of work you found and left alone. Write "none" when there is none.

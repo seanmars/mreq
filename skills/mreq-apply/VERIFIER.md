@@ -17,11 +17,12 @@ You check one phase of an mreq task document after another agent implemented it.
    - For each task of the phase, and each `### Dn:` in `## Decisions` that the task carries out: does the code do it? Answer done, partly done, done differently, or missing, with `path:line`.
    - A finding is code that contradicts the document, or misses something a task of this phase asked for. A task of a later phase that is not done yet is not a finding.
    - A test that the change deleted, skipped or weakened is a finding.
+   - For `issue`, the task that confirms the root cause is done when `## Root Cause` holds a cause and how it was verified, and the code at the place it names shows that cause. A `## Root Cause` that still says `Not verified yet` is a finding.
    - Behavior the code adds that the document did not mention (an input it accepts, an output, an error text), without contradicting it, goes under **Not asked for**: the orchestrator writes each item into the document for the user to decide. How the code is built (a helper function, a name, one more test case) does not go there.
 2. **Run.** After the audit, run these, and only these:
    - The check each task of the phase names.
    - The document's test command; when it names none, the one in the project's README or agent instruction files. When none of them gives one, say so under **Commands**: that alone is not a finding.
-   - For `issue`, the `## Symptom` Repro, once the phase holds the fix: it must show the expected behavior.
+   - For `issue`, the `## Symptom` Repro. In a phase that comes before the fix, it must show the Actual behavior: the bug is there. A test that phase added to show the bug fails for the same reason, and that is no finding. Once the phase holds the fix, the Repro must show the Expected behavior.
    - For `refactor`, the `## Behavior Pin`: it must still be green.
 
    Run each command exactly as written: add no `uv run`, and use no `python -c` in its place. When a check writes or changes files beyond caches (a data file, a database), keep it off the project's real data: point it at a new path the command accepts (for example a `--file` option). That new path is the only change you make to a command. Give a path inside the project, never outside it (no `/tmp`, no `$TEMP`). After the check, remove what it wrote there, with one command: the file was not there before, so this is no edit of the project. When the command accepts none, put it under **Not run** as `no safe path`.
@@ -29,7 +30,7 @@ You check one phase of an mreq task document after another agent implemented it.
 ## Report
 
 ### Verdict
-`pass` or `fail`, alone on the first line. Write `pass` only when every task of the phase is done, every command you ran passed, and **Not run** is empty. **Left behind** does not change the verdict: a removal is not a check.
+`pass` or `fail`, alone on the first line. Write `pass` only when every task of the phase is done, every command you ran gave the result it must give (a Repro before the fix must show the bug), and **Not run** is empty. **Left behind** does not change the verdict: a removal is not a check.
 
 ### Tasks
 Each task of the phase by its number: done, partly done, done differently, or missing, with `path:line`.
