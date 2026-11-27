@@ -149,6 +149,7 @@ Do this when this conversation holds a reply from mreq-pro or mreq-terms, and th
    - Replace every `<!-- -->` hint with content, or delete it when a section does not apply.
    - Keep the `##` headings as they are: other mreq skills look for them.
    - Write `## Tasks` as small steps, each with how to check it. Keep the template's fixed steps for `issue` and `refactor`.
+   - When the tasks fall into stages that each leave the code working and can be checked alone (for example the data layer, then the API), group them into phases: put each stage's tasks under a `### <phase name>` heading in `## Tasks`, and keep the task numbers running from one phase to the next. `mreq-apply --orch` implements and verifies one phase at a time. Write no heading when there are 4 tasks or fewer, or no such stages.
    - Write each step 4 field into its section:
      - **Type**: the `--schema` of `new`.
      - **Goal**: `## Goal`.

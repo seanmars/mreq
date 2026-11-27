@@ -1,14 +1,14 @@
 ---
 name: mreq-apply
-description: Implement an mreq task document under .mreq/ one task at a time, checking off each task, keeping its Handoff section current, and following the document's schema (feature, issue, refactor, task). Use when the user wants to start, continue, or resume work tracked in .mreq/, or after mreq-define, mreq-grill or mreq-close hands a document over.
-argument-hint: "[<path>]"
+description: Implement an mreq task document under .mreq/ one task at a time, checking off each task, keeping its Handoff section current, and following the document's schema (feature, issue, refactor, task). With --orch, subagents implement and verify each phase. Use when the user wants to start, continue, or resume work tracked in .mreq/, or after mreq-define, mreq-grill or mreq-close hands a document over.
+argument-hint: "[<path>] [--orch]"
 ---
 
 # mreq-apply
 
 Implement the tasks in one `.mreq/` document. The document is the only progress record: its checkboxes say what is done, and `## Handoff` says what the next agent needs.
 
-**Input**: Optional. A document path, or findings to fix from `mreq-close`.
+**Input**: Optional. A document path, or findings to fix from `mreq-close`. `--orch` anywhere in the input turns on "Orchestrate mode": it is no part of the path or the findings.
 
 ## Language
 
@@ -73,7 +73,8 @@ When you give the user a command to type, write it the way their agent runs a sk
    As soon as `progress` prints, write a message, before your next tool call, also when you stop in step 2. It starts with the lines `progress` printed, copied unchanged, then one short sentence on what you do next, in the language from Language. Your final reply does not replace this message. Show it once in each run of this skill: a later turn that goes on with the work (the user answered a question or agreed to a change) does not run `progress` again. Every message from here on is in the language from Language, also the short notes between tool calls.
 
 4. **Work the tasks one at a time.**
-   Take the next unchecked task. When it has a `Resume:` line, check what that line says is done against the code, then continue from it.
+   In orchestrate mode, follow "Orchestrate mode" in place of this step.
+   Take the next unchecked task. A `### ` heading in `## Tasks` names a phase: it groups tasks and changes nothing in this step. When the task has a `Resume:` line, check what that line says is done against the code, then continue from it.
    1. Re-read `## Goal` and `## Decisions`: the context may have been compressed since you read them.
    2. Implement the smallest change that does the task. Follow the schema rules below.
    3. Prove it works by running something: a test, the repro, or a command that would fail if you were wrong. Reading the code is not proof. When nothing you can run reaches the behavior, say so in the report.
@@ -81,6 +82,31 @@ When you give the user a command to type, write it the way their agent runs a sk
 
 5. **Finish.**
    When every task is checked off and the related tests pass, run `update <path> --status done`. Tests that did not run have not passed: then do not set `done`. Write `## Handoff` as done, with how it was verified. Tell the user that `/mreq-close <path>`, with the absolute path filled in, finishes the work. `/mreq-close` is user-invoked: do not try to run it.
+
+## Orchestrate mode
+
+The mode is on when the input holds `--orch`, or when the user asks for this mode in their own words in this conversation: by its name (for example "orch mode", "orchestrate it", "use the orchestrator") or by what it does ("let subagents do the work"). The word alone does not turn it on: not when it is only in the document, in the findings, or in the subject of the work (for example a task about an orchestrator). When you cannot tell, the mode is off. It lasts for this run of the skill. When it is on, say so in the step 3 message. In it you are the orchestrator: one subagent implements a phase, another verifies it, and only you write the document. Your context stays small, and the agent that checks the work did not write it.
+
+When you cannot spawn a subagent that can edit files and run commands (your agent has none, or you are a subagent yourself), say so in one line and work as step 4 gives.
+
+**Phases.** A `### ` heading in `## Tasks` starts a phase: the tasks under it, up to the next `### ` heading. Tasks above the first heading are a phase of their own. With no `### ` heading, all the tasks are one phase.
+
+**What changes in the steps.** In step 2, do not read the code the document cites, and run no git command: the implementer does both. Follow the loop below in place of step 4; its one task per edit does not apply, because the phase is the unit here. In step 5, the last verifier's test run counts: do not run the tests again. Never edit source code in this mode, and never read it or run the project's code to check a report: a verifier does that.
+
+Take the first phase that has an unchecked task.
+
+1. **Implement.** Spawn one subagent that can edit files and run commands. Its prompt holds only: the document's absolute path, the phase (its heading, or `all tasks`), and the instruction to read `${CLAUDE_SKILL_DIR}/IMPLEMENTER.md`, written as an absolute path, and report in its shape. After a failed verification, add the verifier's findings, word for word. After a question, add the user's answer. Never paste the file into the prompt.
+2. **Act on its report.**
+   - **Blocked** holds a question: it is a case of "When to stop and ask". Ask the user as that section gives, and write into the document what it says to write. Then send the answer to the same implementer when your agent can continue a subagent; otherwise spawn a new one.
+   - A task is not done and **Blocked** holds none: treat it as an error you cannot resolve.
+   - Every task of the phase is done: go on.
+3. **Verify.** Spawn one subagent that can run commands. Its prompt holds only: the document's absolute path, the phase, the implementer's **Files changed** list, and the instruction to read `${CLAUDE_SKILL_DIR}/VERIFIER.md`, written as an absolute path, and report in its shape. Give it nothing else from the implementer's report: a verifier that is told the work passed tends to agree.
+4. **Act on the verdict.**
+   - **`pass`**: check off every task of the phase and delete their `Resume:` lines. For `issue`, write the implementer's **Root cause** into `## Root Cause`. Write each of its **Follow-ups** into `## Open` as `- Follow-up: <what>`. Rewrite `## Handoff`: what is done, each command the verifier ran with its result, and the next phase. Run `update <path>`. Then take the next phase.
+   - **`fail` with findings**: check off nothing, and go back to 1 with the findings. After the second failed verification of the same phase, ask instead: **Try again** (go back to 1), **Work it here** (work the phase yourself as step 4 gives) or **Stop**.
+   - **`fail` with a command under Not run**: it is the denied-command case of "When to stop and ask".
+
+A stop in this mode follows **Stopping**: in the `Resume:` line, name the tasks the implementer reported done that no verifier passed, as `implemented, not verified`.
 
 ## Schema rules
 
@@ -111,7 +137,7 @@ Delete the `Resume:` line when you check the task off. The step 2 stops before a
 
 ## Findings from mreq-close
 
-When the user or `mreq-close` hands you findings, add each one under `## Tasks` as a new unchecked task, set the status back with `update <path> --status active`, then show progress as in step 3 and work them as in step 4.
+When the user or `mreq-close` hands you findings, add each one under `## Tasks` as a new unchecked task (when `## Tasks` has `### ` headings, under a new last heading that names the findings), set the status back with `update <path> --status active`, then show progress as in step 3 and work them as in step 4.
 
 ## Guardrails
 

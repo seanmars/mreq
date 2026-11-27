@@ -127,6 +127,37 @@ class SkillTextTest(unittest.TestCase):
             self.assertIn(f"`/mreq-{later}` (`$mreq-{later}` in Codex) with no", skill_text(earlier), earlier)
             self.assertIn(f"reply from mreq-{earlier}", skill_text(later), later)
 
+    def test_the_orchestrate_briefs_are_read_from_the_skill_directory(self):
+        mode = section(skill_text("apply"), "## Orchestrate mode")
+        for brief in ("IMPLEMENTER.md", "VERIFIER.md"):
+            self.assertIn(f"`${{CLAUDE_SKILL_DIR}}/{brief}`, written as an absolute path", mode, brief)
+            self.assertTrue((SKILLS_DIR / "mreq-apply" / brief).is_file(), brief)
+        self.assertIn('argument-hint: "[<path>] [--orch]"', skill_text("apply"))
+
+    def test_only_the_orchestrator_writes_the_document(self):
+        # Two writers of one document lose each other's edits: update rewrites the whole file.
+        apply_dir = SKILLS_DIR / "mreq-apply"
+        self.assertIn("only you write the document", section(skill_text("apply"), "## Orchestrate mode"))
+        self.assertIn("Never edit the document", (apply_dir / "IMPLEMENTER.md").read_text(encoding="utf-8"))
+        self.assertIn("not the source code, not the document", (apply_dir / "VERIFIER.md").read_text(encoding="utf-8"))
+
+    def test_the_verifier_is_not_told_what_the_implementer_concluded(self):
+        mode = section(skill_text("apply"), "## Orchestrate mode")
+        self.assertIn("Give it nothing else from the implementer's report", mode)
+
+    def test_orchestrate_mode_needs_a_request_not_only_the_word(self):
+        # The mode costs more tokens, so a document about an orchestrator must not turn it on.
+        mode = section(skill_text("apply"), "## Orchestrate mode")
+        self.assertIn("The mode is on when the input holds `--orch`, or when the user asks for this mode", mode)
+        self.assertIn("The word alone does not turn it on", mode)
+        self.assertIn("When you cannot tell, the mode is off.", mode)
+
+    def test_every_skill_that_writes_tasks_names_the_phase_heading(self):
+        # mreq-define writes the headings; mreq-grill and mreq-apply must keep them when they add tasks.
+        self.assertIn("`### <phase name>` heading in `## Tasks`", skill_text("define"))
+        for name in ("grill", "apply"):
+            self.assertIn("`### ` heading in `## Tasks`", skill_text(name), name)
+
     def test_skill_files_end_lines_with_lf(self):
         for path in SKILLS_DIR.rglob("*"):
             if path.suffix in (".md", ".yaml"):

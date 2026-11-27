@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `mreq-apply` 的 orchestrate 模式: `/mreq-apply [<path>] --orch`. 主 agent 是 orchestrator, 只管理文件. 每個 phase 由一個 subagent 實作, 再由另一個 subagent 驗證.
+  - 開啟方式: 輸入有 `--orch`, 或使用者在對話裡用自己的話要求這個模式 (例: "orch mode", "用 orchestrator", "交給 subagent 做"). 這些字只出現在文件, findings 或工作的主題時不開啟. 無法判斷時不開啟. 開啟時, 進度訊息會說明.
+  - phase 是 `## Tasks` 裡一個 `### ` 標題底下的 task. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.
+  - 只有 orchestrator 寫文件: 打勾, `## Handoff`, `## Root Cause`, `## Open` 與 `update`. implementer 與 verifier 不修改 `.mreq/` 的任何檔案.
+  - implementer 讀 `IMPLEMENTER.md`, verifier 讀 `VERIFIER.md`. verifier 只拿到文件路徑, phase 與 implementer 修改的檔案清單, 不拿到 implementer 的結論.
+  - verifier 判定 `pass` 時, orchestrator 才把這個 phase 的 task 打勾. 判定 `fail` 時, finding 交給 implementer 修正. 同一個 phase 驗證失敗兩次時, 問使用者: 再試一次, 自己實作, 或停止.
+  - subagent 不能問使用者. implementer 遇到問題時停止並回報, orchestrator 問使用者後再派發.
+  - orchestrator 不讀程式碼, 不執行專案的程式碼. 最後一個 verifier 的測試結果就是 `done` 的依據, 不重跑.
+  - agent 不能 spawn 可以寫入檔案的 subagent 時, 改用一般模式.
+
+### Changed
+
+- `mreq-define` 寫文件時, task 可以分成能各自檢查的階段時, 用 `### <phase 名稱>` 標題分組. task 編號跨 phase 連續. 4 個 task 以下, 或沒有這種階段時, 不寫標題.
+- `mreq-grill` 修改 `## Tasks` 時保留 `### ` 標題, 新 task 放在所屬的 phase 底下.
+- `mreq-apply` 收到 `mreq-close` 的 findings 時, 文件有 `### ` 標題的話, 把 findings 放在最後一個新標題底下.
+- `mreq-apply` 的 `argument-hint` 改為 `[<path>] [--orch]`.
+
 ## 0.26.0
 
 ### Changed

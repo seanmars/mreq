@@ -6,7 +6,7 @@
 |---|---|---|
 | `mreq-define` | 判斷意圖 (feature / issue / refactor / task),訪談,確認後產生文件. 小需求可以不寫文件, 直接實作,  Request for Proposal(RFP). 沒有給需求, 而且對話裡有 `mreq-pro` 或 `mreq-terms` 的結果時, 直接使用最新那一個結果給的 prompt 與答案 | 只有使用者 |
 | `mreq-grill` | 用四象限壓力測試文件,把結論寫回文件 | 使用者, agent |
-| `mreq-apply` | 逐項實作文件的 Tasks,更新 checkbox 和 Handoff | 使用者, agent |
+| `mreq-apply` | 逐項實作文件的 Tasks,更新 checkbox 和 Handoff. 加 `--orch` 改用 orchestrate 模式: 每個 phase 由一個 subagent 實作, 再由另一個 subagent 驗證 | 使用者, agent |
 | `mreq-close` | 核對程式碼與文件,通過後刪除文件 | 只有使用者 |
 | `mreq-how` | 先確認問題的解讀,再產生解說程式碼的離線 HTML,附 Mermaid 圖表與圖例,放在 session root 的 `.mreq/how/`. 加 `--plain` 改寫給企劃, PM 等非程式人員: 用功能名詞, 不放程式碼位置 | 只有使用者 |
 | `mreq-graph` | 先確認描述的解讀,再把描述畫成 Mermaid 圖表,產生附圖例的離線 HTML,放在 session root 的 `.mreq/graph/` | 只有使用者 |
@@ -28,6 +28,8 @@
 skill 之間能自動接續的地方, 不需要輸入指令. `mreq-define` 與 `mreq-grill` 確認重述的那一題同時選下一步, 寫完文件後不再多問一次: `mreq-define` 可接 `mreq-grill` 或 `mreq-apply`, `mreq-grill` 與 `mreq-apply` 可互相接續, `mreq-close` 發現未完成的 task, 失敗的測試或要修正的 finding 時, 可帶著它們接 `mreq-apply`. `mreq-grill` 確認時也可以選「寫回後繼續 grill」: 已確認的結論先寫回文件, 然後直接開始下一輪. 同一個對話的下一輪只 grill 有變更的項目, 仍未決的項目與你指定的焦點. 第一輪也可以指定焦點, 例: `/mreq-grill <path> 錯誤處理`: 四象限仍然全部掃描, 但焦點的部分問得更深, 並先回報. 「只有使用者」能呼叫的 skill 不會被自動接續, 這時 skill 會給出完整的指令讓你執行.
 
 agent 有選項提問的 tool 時, 每個問題都用選項回答: Claude Code 的 `AskUserQuestion`, Grok 的 `ask_user_question`, Antigravity 的 `ask_question`, Codex 的 `request_user_input` (只在 Plan mode). 選項沒有你要的答案時, 在選項下方的文字欄輸入. 沒有這種 tool 時, skill 用編號清單提問.
+
+orchestrate 模式: `/mreq-apply [<path>] --orch`. 也可以在對話裡用自己的話要求, 例: "用 orch mode", "用 orchestrator", "交給 subagent 做". 這些字只出現在文件, findings 或工作的主題時, 不會開啟; 無法判斷時也不開啟. 開啟時, 進度訊息會說明. 主 agent 只管理文件, 不讀程式碼. 每個 phase 派一個 subagent 實作, 再派另一個 subagent 驗證; 驗證通過後, 主 agent 才把這個 phase 的 task 打勾. phase 是 `## Tasks` 裡一個 `### ` 標題底下的 task; 沒有標題時, 全部 task 是一個 phase. task 可以分成能各自檢查的階段時, `mreq-define` 會寫出這些標題. 驗證的 subagent 不會拿到實作的 subagent 的結論. 同一個 phase 驗證失敗兩次時, 主 agent 會問你. 這個模式使用的 token 比較多, 適合 task 多的文件. agent 不能 spawn 可以寫入檔案的 subagent 時, `mreq-apply` 改用一般模式.
 
 `mreq-apply` 不會自己 commit. `mreq-close` 刪除前不檢查 git 狀態, 也不詢問. 沒有指定路徑, 而且只有一份 `done` 的文件時, `/mreq-close` 直接核對那一份. 要保留文件內容, 請先 commit, 再執行 `/mreq-close`.
 
@@ -79,7 +81,7 @@ npx skills add seanmars/mreq --skill '*' -a codex
 skills/           # 只限使用者呼叫的 skill 另有 agents/openai.yaml (Codex)
 ├── mreq-define/  # SKILL.md, EXPLORER.md, templates/, 複本: scripts/mreq.py, GRILL.md
 ├── mreq-grill/   # 複本: scripts/mreq.py, GRILL.md
-├── mreq-apply/   # 複本: scripts/mreq.py
+├── mreq-apply/   # SKILL.md, IMPLEMENTER.md, VERIFIER.md, 複本: scripts/mreq.py
 ├── mreq-close/   # 複本: scripts/mreq.py
 ├── mreq-how/     # SKILL.md, EXPLORER.md, WRITING.md, skeleton.html, 複本: scripts/page.py, scripts/check.mjs, vendor/ (Pele), MERMAID.md
 ├── mreq-graph/   # SKILL.md, WRITING.md, skeleton.html, 複本同 mreq-how
