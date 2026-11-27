@@ -158,6 +158,18 @@ class SkillTextTest(unittest.TestCase):
         for name in ("grill", "apply"):
             self.assertIn("`### ` heading in `## Tasks`", skill_text(name), name)
 
+    def test_the_refactor_pin_is_a_phase_of_its_own(self):
+        # A verifier comes after the whole phase: it can run the pin against the unchanged code only when no other task shares the phase.
+        self.assertIn("the pin task alone under the first one", skill_text("define"))
+        self.assertIn("the pin task stays alone in the first phase", skill_text("grill"))
+        mode = section(skill_text("apply"), "## Orchestrate mode")
+        self.assertIn("the pin task (the first task) is always a phase of its own", mode)
+        self.assertIn("split that phase in two", mode)
+        template = (SKILLS_DIR / "mreq-define" / "templates" / "refactor.md").read_text(encoding="utf-8")
+        phases = re.split(r"(?m)^### .*\n", section(template, "## Tasks"))[1:]
+        self.assertEqual(len(phases), 2)
+        self.assertEqual(re.findall(r"(?m)^- \[ \] (\d+)\.", phases[0]), ["1"])
+
     def test_skill_files_end_lines_with_lf(self):
         for path in SKILLS_DIR.rglob("*"):
             if path.suffix in (".md", ".yaml"):

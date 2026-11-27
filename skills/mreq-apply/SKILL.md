@@ -89,13 +89,13 @@ The mode is on when the input holds `--orch`, or when the user asks for this mod
 
 When you cannot spawn a subagent that can edit files and run commands (your agent has none, or you are a subagent yourself), say so in one line and work as step 4 gives.
 
-**Phases.** A `### ` heading in `## Tasks` starts a phase: the tasks under it, up to the next `### ` heading. Tasks above the first heading are a phase of their own. With no `### ` heading, all the tasks are one phase.
+**Phases.** A `### ` heading in `## Tasks` starts a phase: the tasks under it, up to the next `### ` heading. Tasks above the first heading are a phase of their own. With no `### ` heading, all the tasks are one phase. For `refactor`, the pin task (the first task) is always a phase of its own: a verifier can run the pin against the unchanged code only before the other tasks start. When the document puts other tasks in its phase, or has no heading, split that phase in two: the pin task first, then the other tasks.
 
 **What changes in the steps.** In step 2, do not read the code the document cites, and run no git command: the implementer does both. Follow the loop below in place of step 4; its one task per edit does not apply, because the phase is the unit here. In step 5, the last verifier's test run counts: do not run the tests again. Never edit source code in this mode, and never read it or run the project's code to check a report: a verifier does that.
 
 Take the first phase that has an unchecked task.
 
-1. **Implement.** Spawn one subagent that can edit files and run commands. Its prompt holds only: the document's absolute path, the phase (its heading, or `all tasks`), and the instruction to read `${CLAUDE_SKILL_DIR}/IMPLEMENTER.md`, written as an absolute path, and report in its shape. After a failed verification, add the verifier's findings, word for word. After a question, add the user's answer. Never paste the file into the prompt.
+1. **Implement.** Spawn one subagent that can edit files and run commands. Its prompt holds only: the document's absolute path, the phase (its heading, or `all tasks`; for a part of a split phase, its task numbers, for example `task 1` or `tasks 2-3`), and the instruction to read `${CLAUDE_SKILL_DIR}/IMPLEMENTER.md`, written as an absolute path, and report in its shape. After a failed verification, add the verifier's findings, word for word. After a question, add the user's answer. Never paste the file into the prompt.
 2. **Act on its report.**
    - **Blocked** holds a question: it is a case of "When to stop and ask". Ask the user as that section gives, and write into the document what it says to write. Then send the answer to the same implementer when your agent can continue a subagent; otherwise spawn a new one.
    - A task is not done and **Blocked** holds none: treat it as an error you cannot resolve.

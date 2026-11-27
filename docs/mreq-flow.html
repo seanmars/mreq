@@ -590,7 +590,7 @@ flowchart TD
     <tr><th>schema</th><th>章節</th><th>固定的 Tasks</th></tr>
     <tr><td><code>feature</code></td><td>Goal, Scope (In / Out), Context, Assumptions, Decisions, Tasks, Open, Handoff</td><td>無</td></tr>
     <tr><td><code>issue</code></td><td>Goal, Scope (Out), Symptom (Repro / Expected / Actual), Root Cause, Assumptions, Decisions, Tasks, Open, Handoff</td><td>1. 重現 bug 2. 確認 root cause 3. 修正並證明 Repro 通過 4. 執行相關測試</td></tr>
-    <tr><td><code>refactor</code></td><td>Goal, Scope (Out), Behavior Pin, Target Shape, Assumptions, Decisions, Tasks, Open, Handoff</td><td>1. Pin 目前的行為</td></tr>
+    <tr><td><code>refactor</code></td><td>Goal, Scope (Out), Behavior Pin, Target Shape, Assumptions, Decisions, Tasks, Open, Handoff</td><td>1. Pin 目前的行為. 它單獨在 <code>### Pin</code> phase; 其他步驟在 <code>### Refactor</code> phase</td></tr>
     <tr><td><code>task</code></td><td>Goal, Scope (Out), Context, Assumptions, Decisions, Tasks, Open, Handoff</td><td>無</td></tr>
   </table>
   <p><code>## Open</code> 的每一項是 <code>- Open: &lt;question&gt;</code> 或 <code>- Follow-up: &lt;what&gt;</code>. <code>## Decisions</code> 的每個決策是一個 <code>### Dn:</code>. <code>## Root Cause</code> 在原因驗證之前寫 <code>Not verified yet: &lt;hypothesis&gt;</code>.</p>
@@ -788,7 +788,8 @@ flowchart TD
     <li>先執行 <code>new</code>, 再只用 Edit 逐節改 body. 不重寫整個檔案, 不碰 front matter: 它由 script 管理.</li>
     <li>每個 <code>&lt;!-- --&gt;</code> 提示換成內容; 章節不適用時刪除提示. <code>##</code> 標題保持原樣: 其他 mreq skill 依標題找章節.</li>
     <li><code>## Tasks</code> 寫成小步驟, 每步附檢查方式. issue 與 refactor 保留 template 的固定步驟.</li>
-    <li>task 可以分成能各自檢查, 而且每個階段結束時程式碼都能運作的階段時, 分成 phase: 每個階段的 task 放在 <code>### &lt;phase 名稱&gt;</code> 標題底下, task 編號跨 phase 連續. <code>mreq-apply --orch</code> 一次實作並驗證一個 phase. 4 個 task 以下, 或沒有這種階段時, 不寫標題.</li>
+    <li>task 可以分成能各自檢查, 而且每個階段結束時程式碼都能運作的階段時, 分成 phase: 每個階段的 task 放在 <code>### &lt;phase 名稱&gt;</code> 標題底下, task 編號跨 phase 連續. <code>mreq-apply --orch</code> 一次實作並驗證一個 phase. 4 個 task 以下, 或沒有這種階段時, 不寫標題; refactor 是例外.</li>
+    <li>refactor 一律保留 template 的兩個標題, 並用文件的語言命名: pin task 單獨在第一個標題底下, 修改程式碼的步驟在第二個標題或之後的標題底下. pin 要在修改程式碼之前是綠的, 才能證明它描述的是目前的行為; 而 <code>mreq-apply --orch</code> 在一個 phase 的 task 全部完成後才驗證.</li>
     <li><code>## Handoff</code> 寫: 尚未開始, 第一個要做的 task. 跳過確認時, 加一行 <code>Unconfirmed: the user did not confirm a restatement; check ## Assumptions and ## Decisions with the user first.</code></li>
     <li>文件, <code>--title</code> 與 <code>--desc</code> 都用回覆語言. status 保持 <code>draft</code>.</li>
   </ul>
@@ -1018,7 +1019,7 @@ flowchart TD
     <tr><td>變明確的假設</td><td><code>## Assumptions</code>, 每項一個 bullet</td></tr>
     <tr><td>被推翻的主張</td><td>修正寫到陳述它的章節 (Goal, Scope, Context, 或 schema 專屬章節). 這些章節的其他地方不改, 除非使用者修正了它</td></tr>
     <tr><td>仍未決的事</td><td><code>## Open</code> 的 <code>- Open: &lt;question&gt;</code>; 發現的後續工作寫 <code>- Follow-up: &lt;what&gt;</code></td></tr>
-    <tr><td>改變工作內容的決策</td><td>修改 <code>## Tasks</code>. 不取消勾選, 不改寫已完成的 task; 修正放新 task 或 <code>## Open</code>. 保留 <code>## Tasks</code> 裡的 <code>### </code> 標題 (phase); 新 task 放在所屬的 phase 底下</td></tr>
+    <tr><td>改變工作內容的決策</td><td>修改 <code>## Tasks</code>. 不取消勾選, 不改寫已完成的 task; 修正放新 task 或 <code>## Open</code>. 保留 <code>## Tasks</code> 裡的 <code>### </code> 標題 (phase); 新 task 放在所屬的 phase 底下. refactor 文件的 pin task 保持單獨在第一個 phase</td></tr>
     <tr><td><code>Unconfirmed:</code> 行</td><td>從 <code>## Handoff</code> 刪除: 使用者現在確認過重述了</td></tr>
   </table>
   <p>寫完後執行 <code>update &lt;path&gt;</code>. Reopen 的 <code>done</code> 文件執行 <code>update &lt;path&gt; --status active</code>.</p>
@@ -1154,6 +1155,7 @@ flowchart TD
   </table>
   <ul>
     <li>phase 是 <code>## Tasks</code> 裡一個 <code>### </code> 標題底下的 task, 到下一個 <code>### </code> 標題為止. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.</li>
+    <li>refactor 的 pin task (第一個 task) 永遠自成一個 phase: verifier 只有在其他 task 開始之前, 才能在沒有修改的程式碼上執行 pin. 文件把其他 task 放在同一個 phase, 或沒有標題時, 把那個 phase 拆成兩個: 先 pin task, 再其他 task. prompt 用 task 編號指名拆開的部分 (例: <code>task 1</code>, <code>tasks 2-3</code>).</li>
     <li>Step 2 不讀文件引用的程式碼, 也不執行 git 指令: implementer 會做這兩件事.</li>
     <li>兩個 prompt 都只寫列出的內容, 並用絕對路徑指示讀 brief. 不把 brief 貼進 prompt.</li>
     <li>verifier 不拿到 implementer 回報的其他內容: 被告知工作已通過的 verifier 傾向同意.</li>
