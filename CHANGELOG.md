@@ -5,12 +5,16 @@
 ### Added
 
 - `mreq-apply` 的 orchestrate 模式: `/mreq-apply [<path>] --orch`. 主 agent 是 orchestrator, 只管理文件. 每個 phase 由一個 subagent 實作, 再由另一個 subagent 驗證.
-  - 開啟方式: 輸入有 `--orch`, 或使用者在對話裡用自己的話要求這個模式 (例: "orch mode", "用 orchestrator", "交給 subagent 做"). 這些字只出現在文件, findings 或工作的主題時不開啟. 無法判斷時不開啟. 開啟時, 進度訊息會說明.
+  - 開啟方式: 輸入有 `--orch`, 或使用者在對話裡用自己的話要求這個模式 (例: "orch mode", "用 orchestrator", "交給 subagent 做"). 這些字只出現在文件, findings 或工作的主題時不開啟. 無法判斷時不開啟. 開啟時, 進度訊息會說明. 已知的限制: Claude Code (2.1.332) 目前不會顯示 `mreq-apply` 的進度訊息, 畫面只有一行摘要; 這在 orchestrate 模式之前就存在.
   - phase 是 `## Tasks` 裡一個 `### ` 標題底下的 task. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.
   - `refactor` 文件的 pin task (第一個 task) 永遠自成一個 phase. 文件把其他 task 放在同一個 phase, 或沒有標題時, orchestrator 把那個 phase 拆成兩個: 先 pin task, 再其他 task. verifier 在整個 phase 完成後才檢查, 所以 pin 與修改在同一個 phase 時, 它無法在修改前的程式碼上執行 pin.
   - 只有 orchestrator 寫文件: 打勾, `## Handoff`, `## Root Cause`, `## Open` 與 `update`. implementer 與 verifier 不修改 `.mreq/` 的任何檔案.
-  - implementer 讀 `IMPLEMENTER.md`, verifier 讀 `VERIFIER.md`. verifier 只拿到文件路徑, phase 與 implementer 修改的檔案清單, 不拿到 implementer 的結論.
-  - verifier 判定 `pass` 時, orchestrator 才把這個 phase 的 task 打勾. 判定 `fail` 時, finding 交給 implementer 修正. 同一個 phase 驗證失敗兩次時, 問使用者: 再試一次, 自己實作, 或停止.
+  - implementer 讀 `IMPLEMENTER.md`, verifier 讀 `VERIFIER.md`. verifier 只拿到文件路徑, phase 與 implementer 修改的檔案清單, 不拿到 implementer 的結論. 清單的每一行只有路徑與 `created`, `changed` 或 `deleted`. implementer 為了檢查修改後又還原的檔案不在清單裡, 寫在它的 **Commands**.
+  - verifier 判定 `pass` 時, orchestrator 才把這個 phase 的 task 打勾. 判定 `fail` 而且有 finding 時, finding 交給 implementer 修正. 同一個 phase 第二次因為 finding 驗證失敗時, 問使用者: 再試一次, 自己實作, 或停止. 次數只在這一次執行內計算, 沒有 finding 的 `fail` 不計入.
+  - verifier 在 **Not run** 的每一項寫出原因: `denied` (指令被拒絕), `cannot reproduce` (檢查需要專案現在沒有的狀態, 例: 修改之前的程式碼), 或 `no safe path` (檢查會寫入檔案, 而且指令不接受新的路徑). `fail` 沒有 finding 時, orchestrator 依原因處理. 有 `denied` 時, 依指令被拒絕的情況停止. 只有其他兩種時, 不再派 verifier, 也不在 verifier 的 prompt 加指示, 問使用者: 自己實作 (**Work it here**), 接受閱讀的結論 (**Accept by reading**), 或停止. verifier 不建立檔案, 所以不用副本重現檢查.
+  - 兩份 brief 寫明指令從專案根目錄 (有 `.mreq/` 的目錄) 開始, 所以指令不加路徑: 不用 `cd`, `git -C <path>` 或 `git -c <setting>`. 理由也寫在 brief: allow rule 以指令開頭的字比對, `git -C <path> status` 對不上 `git status` 的 rule.
+  - 檢查會寫入檔案時, verifier 把它指到專案內的新路徑, 檢查後刪除那個檔案. 刪除被拒絕時, 檔案寫在 **Left behind**: 它不進 **Not run**, 也不影響 verdict. orchestrator 把兩份報告的 **Left behind** 寫進 `## Open`, 格式是 `- Follow-up: remove <path>`.
+  - verifier 在 **Not asked for** 回報文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不回報. `pass` 時, orchestrator 把每一項寫進 `## Open`, 格式是 `- Follow-up: <what>`, 與 implementer 的 Follow-ups 相同, 並寫明文件沒有要求. `## Open` 已經有的項目不重複寫.
   - subagent 不能問使用者. implementer 遇到問題時停止並回報, orchestrator 問使用者後再派發.
   - orchestrator 不讀程式碼, 不執行專案的程式碼. 最後一個 verifier 的測試結果就是 `done` 的依據, 不重跑.
   - agent 不能 spawn 可以寫入檔案的 subagent 時, 改用一般模式.

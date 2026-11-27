@@ -29,7 +29,7 @@ skill 之間能自動接續的地方, 不需要輸入指令. `mreq-define` 與 `
 
 agent 有選項提問的 tool 時, 每個問題都用選項回答: Claude Code 的 `AskUserQuestion`, Grok 的 `ask_user_question`, Antigravity 的 `ask_question`, Codex 的 `request_user_input` (只在 Plan mode). 選項沒有你要的答案時, 在選項下方的文字欄輸入. 沒有這種 tool 時, skill 用編號清單提問.
 
-orchestrate 模式: `/mreq-apply [<path>] --orch`. 也可以在對話裡用自己的話要求, 例: "用 orch mode", "用 orchestrator", "交給 subagent 做". 這些字只出現在文件, findings 或工作的主題時, 不會開啟; 無法判斷時也不開啟. 開啟時, 進度訊息會說明. 主 agent 只管理文件, 不讀程式碼. 每個 phase 派一個 subagent 實作, 再派另一個 subagent 驗證; 驗證通過後, 主 agent 才把這個 phase 的 task 打勾. phase 是 `## Tasks` 裡一個 `### ` 標題底下的 task; 沒有標題時, 全部 task 是一個 phase. task 可以分成能各自檢查的階段時, `mreq-define` 會寫出這些標題. 驗證的 subagent 不會拿到實作的 subagent 的結論. 同一個 phase 驗證失敗兩次時, 主 agent 會問你. 這個模式使用的 token 比較多, 適合 task 多的文件. agent 不能 spawn 可以寫入檔案的 subagent 時, `mreq-apply` 改用一般模式.
+orchestrate 模式: `/mreq-apply [<path>] --orch`. 也可以在對話裡用自己的話要求, 例: "用 orch mode", "用 orchestrator", "交給 subagent 做". 這些字只出現在文件, findings 或工作的主題時, 不會開啟; 無法判斷時也不開啟. 開啟時, 進度訊息會說明; Claude Code 目前不會顯示這則訊息, 畫面只有一行摘要. 主 agent 只管理文件, 不讀程式碼. 每個 phase 派一個 subagent 實作, 再派另一個 subagent 驗證; 驗證通過後, 主 agent 才把這個 phase 的 task 打勾. phase 是 `## Tasks` 裡一個 `### ` 標題底下的 task; 沒有標題時, 全部 task 是一個 phase. task 可以分成能各自檢查的階段時, `mreq-define` 會寫出這些標題. 驗證的 subagent 不會拿到實作的 subagent 的結論. 同一個 phase 驗證失敗兩次時, 主 agent 會問你. 驗證的 subagent 無法執行某個檢查時 (例: 檢查需要修改之前的程式碼), 主 agent 也會問你: 由它自己實作這個 phase, 接受閱讀的結論, 或停止. 這個模式使用的 token 比較多, 適合 task 多的文件. agent 不能 spawn 可以寫入檔案的 subagent 時, `mreq-apply` 改用一般模式.
 
 `mreq-apply` 不會自己 commit. `mreq-close` 刪除前不檢查 git 狀態, 也不詢問. 沒有指定路徑, 而且只有一份 `done` 的文件時, `/mreq-close` 直接核對那一份. 要保留文件內容, 請先 commit, 再執行 `/mreq-close`.
 

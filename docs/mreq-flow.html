@@ -1073,6 +1073,7 @@ flowchart TD
     <li>讀文件在任何 <code>update</code> 之前. 先讀 <code>## Handoff</code>: 它說明上一個 agent 停在哪裡. 讀完後, 在其他 tool call 之前執行 <code>progress</code>.</li>
     <li>status 來自 <code>progress</code> 的 <code>Status:</code> 行: 使用者給路徑的文件可能是 <code>done</code>. 不為了 status 執行 <code>list</code>. <code>progress</code> 印出 <code>Warning:</code> 行時, 在進度訊息裡告訴使用者.</li>
     <li><code>progress</code> 印出後, 在下一個 tool call 之前寫一則訊息: 開頭是 <code>progress</code> 印出的各行, 原樣複製, 再加一句接下來做什麼. 在 Step 2 停止時也要寫. 最後的回覆不能取代這則訊息.</li>
+    <li>已知的限制: Claude Code (2.1.332) 目前不會顯示這則訊息. model 把它寫在 thinking 裡, 畫面只有一行摘要, 不一定有文件路徑. skill 的文字無法改變這一點. 工作完成時, 最後的回覆的 <code>/mreq-close &lt;path&gt;</code> 有文件的絕對路徑.</li>
     <li>進度每次執行 skill 只顯示一次. 之後繼續工作的回合 (使用者回答問題, 或同意一個修改) 不再執行 <code>progress</code>.</li>
     <li><code>Go on</code>: 下一次改寫 <code>## Handoff</code> 時, 拿掉 <code>Unconfirmed:</code> 行.</li>
     <li>把文件交給 <code>mreq-grill</code> 之後, <code>mreq-apply</code> 不再做任何事.</li>
@@ -1117,7 +1118,7 @@ flowchart TD
 
 <section class="block" id="apply-orchestrate">
   <h2><span class="stamp sub" aria-hidden="true">派</span>Orchestrate 模式</h2>
-  <p>輸入有 <code>--orch</code>, 或使用者在對話裡用自己的話要求這個模式時開啟: 說出名稱 (例: "orch mode", "用 orchestrator"), 或說出它做的事 ("交給 subagent 做"). 這些字只出現在文件, findings 或工作的主題時不開啟; 無法判斷時也不開啟. 只在這一次執行有效. 開啟時, Step 3 的進度訊息會說明. 主 agent 是 orchestrator: 一個 subagent 實作一個 phase, 另一個 subagent 驗證它, 只有 orchestrator 寫文件. 這個迴圈取代 Step 4.</p>
+  <p>輸入有 <code>--orch</code>, 或使用者在對話裡用自己的話要求這個模式時開啟: 說出名稱 (例: "orch mode", "用 orchestrator"), 或說出它做的事 ("交給 subagent 做"). 這些字只出現在文件, findings 或工作的主題時不開啟; 無法判斷時也不開啟. 只在這一次執行有效. 開啟時, Step 3 的進度訊息會說明; Claude Code 目前不會顯示這則訊息 (見 Step 3 的限制). 主 agent 是 orchestrator: 一個 subagent 實作一個 phase, 另一個 subagent 驗證它, 只有 orchestrator 寫文件. 這個迴圈取代 Step 4.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -1131,17 +1132,23 @@ flowchart TD
   R -- "task 沒完成<br>Blocked 沒有問題" --> E(["當作無法解決的錯誤"]):::stop
   R -- "phase 的 task<br>全部完成" --> V["派 verifier<br>prompt: 文件路徑, phase,<br>Files changed 清單,<br>讀 VERIFIER.md"]:::skill
   V --> J{"verdict"}
-  J -- "pass" --> W["勾選這個 phase 的 task<br>寫 Root Cause 與 Follow-up<br>改寫 Handoff"]:::doc
+  J -- "pass" --> W["勾選這個 phase 的 task<br>寫 Root Cause<br>Follow-ups 與 Not asked for<br>寫進 Open, 改寫 Handoff"]:::doc
   W --> U["mreq.py update"]:::script
   U --> A
-  J -- "fail<br>有 findings" --> K{"這個 phase<br>第二次失敗?"}
+  J -- "fail<br>有 findings" --> K{"這個 phase 在這一次執行<br>第二次有 findings 的 fail?"}
   K -- 否 --> I
   K -- 是 --> L{"問一次"}:::user
   L -- "Try again" --> I
   L -- "Work it here" --> M["自己依 Step 4<br>實作這個 phase"]
   M --> A
   L -- "Stop" --> ST(["停止與記錄"]):::stop
-  J -- "fail<br>Not run 有指令" --> D(["指令被拒絕的情況<br>(見 '停止與記錄')"]):::stop
+  J -- "fail<br>沒有 findings" --> NR{"Not run<br>的原因"}
+  NR -- "有 denied" --> D(["指令被拒絕的情況<br>(見 '停止與記錄')"]):::stop
+  NR -- "只有 cannot reproduce<br>或 no safe path" --> L2{"問一次<br>不再派 verifier"}:::user
+  L2 -- "Work it here" --> M
+  L2 -- "Accept by reading" --> W2["同 pass<br>Handoff 寫出沒有執行的<br>檢查與原因"]:::doc
+  W2 --> U
+  L2 -- "Stop" --> ST
   A -- 否 --> F2["update --status done<br>不重跑測試"]:::script
   F2 --> F3(["給出 /mreq-close #lt;path#gt;<br>不自己執行"]):::stop
     </script>
@@ -1151,16 +1158,21 @@ flowchart TD
     <tr><th>角色</th><th>讀的檔案</th><th>可以做</th><th>不可以做</th></tr>
     <tr><td>orchestrator (主 agent)</td><td><code>SKILL.md</code></td><td>寫文件, 執行 <code>mreq.py</code>, 問使用者, 派 subagent</td><td>修改, 閱讀或執行專案的程式碼</td></tr>
     <tr><td>implementer</td><td><code>IMPLEMENTER.md</code></td><td>修改程式碼, 執行指令, 讀文件</td><td>修改 <code>.mreq/</code> 的檔案, 問使用者, 做其他 phase 的 task</td></tr>
-    <tr><td>verifier</td><td><code>VERIFIER.md</code></td><td>讀文件與程式碼, 執行文件指名的檢查</td><td>修改程式碼或文件, 建立檔案, 問使用者, 加自己的檢查</td></tr>
+    <tr><td>verifier</td><td><code>VERIFIER.md</code></td><td>讀文件與程式碼, 執行文件指名的檢查, 刪除檢查在新路徑留下的檔案</td><td>修改程式碼或文件, 自己建立檔案, 問使用者, 加自己的檢查</td></tr>
   </table>
   <ul>
     <li>phase 是 <code>## Tasks</code> 裡一個 <code>### </code> 標題底下的 task, 到下一個 <code>### </code> 標題為止. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.</li>
     <li>refactor 的 pin task (第一個 task) 永遠自成一個 phase: verifier 只有在其他 task 開始之前, 才能在沒有修改的程式碼上執行 pin. 文件把其他 task 放在同一個 phase, 或沒有標題時, 把那個 phase 拆成兩個: 先 pin task, 再其他 task. prompt 用 task 編號指名拆開的部分 (例: <code>task 1</code>, <code>tasks 2-3</code>).</li>
     <li>Step 2 不讀文件引用的程式碼, 也不執行 git 指令: implementer 會做這兩件事.</li>
     <li>兩個 prompt 都只寫列出的內容, 並用絕對路徑指示讀 brief. 不把 brief 貼進 prompt.</li>
-    <li>verifier 不拿到 implementer 回報的其他內容: 被告知工作已通過的 verifier 傾向同意.</li>
+    <li>verifier 不拿到 implementer 回報的其他內容: 被告知工作已通過的 verifier 傾向同意. Files changed 清單的每一行只有路徑與 <code>created</code>, <code>changed</code> 或 <code>deleted</code>. implementer 為了檢查修改後又還原的檔案不在清單裡, 寫在它的 <strong>Commands</strong>.</li>
     <li>驗證失敗後, 下一個 implementer 的 prompt 加上 verifier 的 findings, 原文不改. 回答問題後, 加上使用者的答案; agent 能接續同一個 subagent 時, 把答案送給原本的 implementer.</li>
     <li>verifier 的回報要有每個指令的原文, exit code 與輸出的最後幾行. Handoff 記下這些指令與結果, <code>mreq-close</code> 依它決定是否重跑.</li>
+    <li>verifier 在 <strong>Not asked for</strong> 回報文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不回報. <code>pass</code> 時, orchestrator 把每一項寫進 <code>## Open</code>, 格式是 <code>- Follow-up: &lt;what&gt;</code>, 與 implementer 的 Follow-ups 相同, 並寫明文件沒有要求. <code>## Open</code> 已經有的項目不重複寫. <code>mreq-close</code> 在刪除文件前把 <code>## Open</code> 的項目放進報告.</li>
+    <li>檢查會寫入檔案 (資料檔, 資料庫) 時, verifier 把它指到專案內的新路徑, 檢查後用一個指令刪除那個檔案. 刪除被拒絕時, 檔案寫在 <strong>Left behind</strong>: 刪除不是檢查, 所以它不進 <strong>Not run</strong>, 也不影響 verdict. 不論 verdict, orchestrator 把兩份報告的 <strong>Left behind</strong> 寫進 <code>## Open</code>, 格式是 <code>- Follow-up: remove &lt;path&gt;</code>.</li>
+    <li>"第二次失敗" 只計算這一次執行裡有 findings 的 <code>fail</code>. 沒有 findings 的 <code>fail</code> 與之前的執行都不計入.</li>
+    <li>verifier 在 <strong>Not run</strong> 的每一項寫出原因: <code>denied</code> (指令被拒絕), <code>cannot reproduce</code> (檢查需要專案現在沒有的狀態, 例: 修改之前的程式碼), 或 <code>no safe path</code> (檢查會寫入檔案, 而且指令不接受新的路徑). verifier 不建立檔案, 所以不用副本重現檢查.</li>
+    <li><code>fail</code> 沒有 findings 時, 依 <strong>Not run</strong> 的原因處理. 有 <code>denied</code> 時是指令被拒絕的情況. 只有其他兩種時, verifier 的規則讓它無法執行那個檢查, 所以不再派 verifier, 也不在 verifier 的 prompt 加指示; 問使用者: <strong>Work it here</strong> (自己依 Step 4 實作這個 phase), <strong>Accept by reading</strong> (同 <code>pass</code>, 並在 Handoff 寫出沒有執行的檢查與原因) 或 <strong>Stop</strong>.</li>
     <li>Step 5 以最後一個 verifier 的測試結果為準, 不重跑測試.</li>
     <li>停止時依 "停止與記錄": <code>Resume:</code> 行把 implementer 回報完成, 但沒有 verifier 判定通過的 task 寫成 <code>implemented, not verified</code>.</li>
   </ul>

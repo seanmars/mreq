@@ -144,6 +144,11 @@ class SkillTextTest(unittest.TestCase):
     def test_the_verifier_is_not_told_what_the_implementer_concluded(self):
         mode = section(skill_text("apply"), "## Orchestrate mode")
         self.assertIn("Give it nothing else from the implementer's report", mode)
+        # The file list is the one part of that report the verifier gets, so a line holds a path and the kind of change only.
+        self.assertIn("(each path with `created`, `changed` or `deleted`, and no other word from a line)", mode)
+        implementer = (SKILLS_DIR / "mreq-apply" / "IMPLEMENTER.md").read_text(encoding="utf-8")
+        self.assertIn("its path, then `created`, `changed` or `deleted`, and nothing else", implementer)
+        self.assertIn("A file you changed for a check and then restored is not in this list", implementer)
 
     def test_orchestrate_mode_needs_a_request_not_only_the_word(self):
         # The mode costs more tokens, so a document about an orchestrator must not turn it on.
@@ -169,6 +174,62 @@ class SkillTextTest(unittest.TestCase):
         phases = re.split(r"(?m)^### .*\n", section(template, "## Tasks"))[1:]
         self.assertEqual(len(phases), 2)
         self.assertEqual(re.findall(r"(?m)^- \[ \] (\d+)\.", phases[0]), ["1"])
+
+    def test_a_check_that_did_not_run_names_its_reason(self):
+        # Only a denied command is solved by an allow rule. A check the verifier's rules keep it from needs the user's choice.
+        verifier = (SKILLS_DIR / "mreq-apply" / "VERIFIER.md").read_text(encoding="utf-8")
+        rules, report = verifier.split("### Not run")
+        mode = section(skill_text("apply"), "## Orchestrate mode")
+        for reason in ("denied", "cannot reproduce", "no safe path"):
+            self.assertIn(f"under **Not run** as `{reason}`", rules, reason)
+            self.assertIn(f"`{reason}` (", report, reason)
+            self.assertIn(f"`{reason}`", mode, reason)
+        self.assertIn("Any item is `denied`: it is the denied-command case of \"When to stop and ask\"", mode)
+        self.assertIn("Otherwise (`cannot reproduce`, `no safe path`)", mode)
+        self.assertIn("add nothing to a verifier's prompt", mode)
+        self.assertIn("**Work it here** (work the phase yourself as step 4 gives), **Accept by reading**", mode)
+
+    def test_what_the_verifier_found_unasked_reaches_the_document(self):
+        # Only the orchestrator reads the verifier's report: what it does not write down, the user never learns.
+        mode = section(skill_text("apply"), "## Orchestrate mode")
+        self.assertIn("and each item under the verifier's **Not asked for**", mode)
+        self.assertIn("Write no item that `## Open` already holds.", mode)
+        # Each item costs the user a decision, so how the code is built stays out.
+        verifier = (SKILLS_DIR / "mreq-apply" / "VERIFIER.md").read_text(encoding="utf-8")
+        self.assertIn("Behavior the code adds that the document did not mention", verifier)
+        self.assertIn("How the code is built (a helper function, a name, one more test case) does not go there.", verifier)
+        self.assertIn("Each behavior the code adds that the document never asked for", verifier.split("### Not asked for")[1])
+
+    def test_the_briefs_say_where_commands_start(self):
+        # A subagent that is not sure of its directory puts a path in front of its first command, and no allow rule matches that.
+        for brief in ("IMPLEMENTER.md", "VERIFIER.md"):
+            text = (SKILLS_DIR / "mreq-apply" / brief).read_text(encoding="utf-8")
+            self.assertIn("Your commands already start in the project root, the directory that holds `.mreq/`", text, brief)
+            self.assertIn("put nothing between `git` and its subcommand (no `-C <path>`, no `-c <setting>`)", text, brief)
+            self.assertIn("The user allows a command by its first words", text, brief)
+            self.assertIn("no `-C`, no `-c`, no `cd` in front", text, brief)
+
+    def test_a_file_a_check_left_does_not_fail_the_phase(self):
+        # A removal proves nothing about the work: when it is denied, every check may still have passed.
+        verifier = (SKILLS_DIR / "mreq-apply" / "VERIFIER.md").read_text(encoding="utf-8")
+        self.assertIn("After the check, remove what it wrote there, with one command", verifier)
+        self.assertIn("Give a path inside the project, never outside it", verifier)
+        self.assertIn("the removal of a file a check left goes under **Left behind**", verifier)
+        self.assertIn("**Left behind** does not change the verdict", verifier)
+        self.assertIn("### Left behind\n", verifier)
+        implementer = (SKILLS_DIR / "mreq-apply" / "IMPLEMENTER.md").read_text(encoding="utf-8")
+        self.assertIn("The removal of a scratch file is the one exception", implementer)
+        self.assertIn("name the file under **Left behind** and go on", implementer)
+        self.assertIn("A command or an edit is denied, except the removal of a scratch file", implementer)
+        mode = section(skill_text("apply"), "## Orchestrate mode")
+        self.assertIn("write each file under **Left behind**, in either report, into `## Open` as `- Follow-up: remove <path>`", mode)
+        self.assertIn("A file left behind is no finding and no reason to stop.", mode)
+
+    def test_the_second_failed_verification_is_counted_in_one_run(self):
+        # The document holds no counter, so a count across sessions would rest on how an agent reads the Handoff.
+        mode = section(skill_text("apply"), "## Orchestrate mode")
+        self.assertIn("the second verification of the same phase that fails with findings", mode)
+        self.assertIn("Count only this run of the skill, and only a `fail` with findings.", mode)
 
     def test_skill_files_end_lines_with_lf(self):
         for path in SKILLS_DIR.rglob("*"):
