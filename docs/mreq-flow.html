@@ -48,7 +48,7 @@ code {
   display: grid;
   grid-template-columns: 270px minmax(0, 1fr);
   gap: 40px;
-  max-width: 1560px;
+  max-width: 1840px;
   margin: 0 auto;
   padding: 40px 40px 120px;
 }
@@ -191,6 +191,8 @@ th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-botto
 th { background: rgba(160, 135, 95, .14); font-weight: 700; white-space: nowrap; }
 tr:last-child td { border-bottom: 0; }
 table.cmd td:first-child { white-space: nowrap; }
+/* 第一欄的 skill name 不在連字號換行 */
+td:first-child > code { white-space: nowrap; }
 table.pair td:nth-child(2) { white-space: nowrap; }
 
 .legend { display: flex; flex-wrap: wrap; gap: 12px 18px; margin: 14px 0 4px; padding: 0; list-style: none; }
@@ -231,6 +233,7 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
     <li class="sub"><a href="#grill-sweep"><span class="stamp sub" aria-hidden="true">掃</span>掃描, 確認與寫回</a></li>
     <li><a href="#apply"><span class="stamp" aria-hidden="true">行</span>mreq-apply</a></li>
     <li class="sub"><a href="#apply-loop"><span class="stamp sub" aria-hidden="true">環</span>Task 迴圈與完成</a></li>
+    <li class="sub"><a href="#apply-orchestrate"><span class="stamp sub" aria-hidden="true">派</span>Orchestrate 模式</a></li>
     <li class="sub"><a href="#apply-schema"><span class="stamp sub" aria-hidden="true">規</span>Schema 規則</a></li>
     <li class="sub"><a href="#apply-stop"><span class="stamp sub" aria-hidden="true">止</span>停止與記錄</a></li>
     <li><a href="#close"><span class="stamp" aria-hidden="true">結</span>mreq-close</a></li>
@@ -279,7 +282,7 @@ footer { color: var(--ink-faint); font-size: 16px; text-align: center; margin-to
     <tr><th>skill</th><th>工作</th><th>產出</th><th>寫入的地方</th></tr>
     <tr><td><code>mreq-define</code></td><td>分類需求, 訪談, 重述, 取得確認</td><td>一份任務文件. 使用者選擇不寫文件時, 直接實作</td><td><code>.mreq/*.md</code>. 只有不寫文件的流程會改程式碼</td></tr>
     <tr><td><code>mreq-grill</code></td><td>用四象限壓力測試一份文件</td><td>寫回文件的決策, 假設與未決事項</td><td>只有被 grill 的那一份文件</td></tr>
-    <tr><td><code>mreq-apply</code></td><td>一次實作一個 task</td><td>程式碼, 勾選的 task, 最新的 <code>## Handoff</code></td><td>程式碼與那一份文件</td></tr>
+    <tr><td><code>mreq-apply</code></td><td>一次實作一個 task. 有 <code>--orch</code> 時, subagent 一次實作並驗證一個 phase</td><td>程式碼, 勾選的 task, 最新的 <code>## Handoff</code></td><td>程式碼與那一份文件</td></tr>
     <tr><td><code>mreq-close</code></td><td>核對程式碼是否做到文件約定的內容</td><td>報告</td><td>不改程式碼, 不改文件. 最後刪除文件</td></tr>
     <tr><td><code>mreq-how</code></td><td>解說一段程式碼怎麼運作</td><td>一頁離線 HTML</td><td>session root 的 <code>.mreq/how/</code></td></tr>
     <tr><td><code>mreq-graph</code></td><td>把描述畫成 Mermaid 圖</td><td>一頁離線 HTML</td><td>session root 的 <code>.mreq/graph/</code></td></tr>
@@ -506,7 +509,7 @@ stateDiagram-v2
     <tr><th>skill</th><th>輸入</th><th>使用者</th><th>agent</th><th>front matter</th></tr>
     <tr><td><code>mreq-define</code></td><td><code>[&lt;request&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-grill</code></td><td><code>[&lt;path&gt;] [&lt;focus&gt;]</code></td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
-    <tr><td><code>mreq-apply</code></td><td><code>[&lt;path&gt;]</code>, 或 findings</td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
+    <tr><td><code>mreq-apply</code></td><td><code>[&lt;path&gt;] [--orch]</code>, 或 findings</td><td>可以</td><td>可以</td><td>沒有限制</td></tr>
     <tr><td><code>mreq-close</code></td><td><code>[&lt;path&gt;]</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-how</code></td><td><code>[--plain] &lt;question&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
     <tr><td><code>mreq-graph</code></td><td><code>&lt;description&gt;</code></td><td>可以</td><td>不行</td><td><code>disable-model-invocation: true</code></td></tr>
@@ -570,7 +573,7 @@ flowchart TD
     <tr><td><code>MERMAID.md</code></td><td>圖的寫法: figure 的格式, 大小, 顏色, Mermaid 規則, 圖例</td><td>how, graph</td></tr>
   </table>
   <p>這些檔案的來源在 repository 的 <code>shared/</code>. <code>tools/sync.py</code> 把它們複製到各 skill; <code>tests/test_sync.py</code> 檢查每份複本和來源相同. 所以只修改 <code>shared/</code> 的檔案, 不修改複本.</p>
-  <p>只有一個 skill 使用的檔案: <code>mreq-define/EXPLORER.md</code>, <code>templates/</code> (每種 schema 一份 template, <code>mreq.py new</code> 讀取); <code>mreq-how/EXPLORER.md</code>, <code>WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-graph/WRITING.md</code>, <code>skeleton.html</code>. 兩個 <code>EXPLORER.md</code>, 兩個 <code>WRITING.md</code> 與兩個 <code>skeleton.html</code> 的內容各不相同.</p>
+  <p>只有一個 skill 使用的檔案: <code>mreq-define/EXPLORER.md</code>, <code>templates/</code> (每種 schema 一份 template, <code>mreq.py new</code> 讀取); <code>mreq-how/EXPLORER.md</code>, <code>WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-graph/WRITING.md</code>, <code>skeleton.html</code>; <code>mreq-apply/ORCHESTRATOR.md</code> (orchestrate 模式的迴圈, 由主 agent 讀取), <code>IMPLEMENTER.md</code>, <code>VERIFIER.md</code> (兩份 brief, 由 subagent 讀取). 兩個 <code>EXPLORER.md</code>, 兩個 <code>WRITING.md</code> 與兩個 <code>skeleton.html</code> 的內容各不相同.</p>
 
   <h3>mreq.py 指令</h3>
   <table class="cmd">
@@ -588,8 +591,8 @@ flowchart TD
   <table>
     <tr><th>schema</th><th>章節</th><th>固定的 Tasks</th></tr>
     <tr><td><code>feature</code></td><td>Goal, Scope (In / Out), Context, Assumptions, Decisions, Tasks, Open, Handoff</td><td>無</td></tr>
-    <tr><td><code>issue</code></td><td>Goal, Scope (Out), Symptom (Repro / Expected / Actual), Root Cause, Assumptions, Decisions, Tasks, Open, Handoff</td><td>1. 重現 bug 2. 確認 root cause 3. 修正並證明 Repro 通過 4. 執行相關測試</td></tr>
-    <tr><td><code>refactor</code></td><td>Goal, Scope (Out), Behavior Pin, Target Shape, Assumptions, Decisions, Tasks, Open, Handoff</td><td>1. Pin 目前的行為</td></tr>
+    <tr><td><code>issue</code></td><td>Goal, Scope (Out), Symptom (Repro / Expected / Actual), Root Cause, Assumptions, Decisions, Tasks, Open, Handoff</td><td>1. 重現 bug 2. 確認 root cause 3. 修正並證明 Repro 通過 4. 執行相關測試. task 1 與 2 在 <code>### Reproduce</code> phase; task 3 與 4 在 <code>### Fix</code> phase</td></tr>
+    <tr><td><code>refactor</code></td><td>Goal, Scope (Out), Behavior Pin, Target Shape, Assumptions, Decisions, Tasks, Open, Handoff</td><td>1. Pin 目前的行為. 它單獨在 <code>### Pin</code> phase; 其他步驟在 <code>### Refactor</code> phase</td></tr>
     <tr><td><code>task</code></td><td>Goal, Scope (Out), Context, Assumptions, Decisions, Tasks, Open, Handoff</td><td>無</td></tr>
   </table>
   <p><code>## Open</code> 的每一項是 <code>- Open: &lt;question&gt;</code> 或 <code>- Follow-up: &lt;what&gt;</code>. <code>## Decisions</code> 的每個決策是一個 <code>### Dn:</code>. <code>## Root Cause</code> 在原因驗證之前寫 <code>Not verified yet: &lt;hypothesis&gt;</code>.</p>
@@ -787,6 +790,8 @@ flowchart TD
     <li>先執行 <code>new</code>, 再只用 Edit 逐節改 body. 不重寫整個檔案, 不碰 front matter: 它由 script 管理.</li>
     <li>每個 <code>&lt;!-- --&gt;</code> 提示換成內容; 章節不適用時刪除提示. <code>##</code> 標題保持原樣: 其他 mreq skill 依標題找章節.</li>
     <li><code>## Tasks</code> 寫成小步驟, 每步附檢查方式. issue 與 refactor 保留 template 的固定步驟.</li>
+    <li>task 可以分成能各自檢查, 而且每個階段結束時程式碼都能運作的階段時, 分成 phase: 每個階段的 task 放在 <code>### &lt;phase 名稱&gt;</code> 標題底下, task 編號跨 phase 連續. <code>mreq-apply --orch</code> 一次實作並驗證一個 phase. 4 個 task 以下, 或沒有這種階段時, 不寫標題; refactor 與 issue 是例外.</li>
+    <li>refactor 與 issue 一律保留 template 的兩個標題, 並用文件的語言命名. 第一個標題底下只放 "對照修改之前的程式碼來證明" 的 task: refactor 是 pin task, issue 是重現 bug 與確認 root cause 的 task. 修改程式碼的 task 在第二個標題或之後的標題底下. pin 或重現要在修改程式碼之前執行才能證明事情; 而 <code>mreq-apply --orch</code> 在一個 phase 的 task 全部完成後才驗證.</li>
     <li><code>## Handoff</code> 寫: 尚未開始, 第一個要做的 task. 跳過確認時, 加一行 <code>Unconfirmed: the user did not confirm a restatement; check ## Assumptions and ## Decisions with the user first.</code></li>
     <li>文件, <code>--title</code> 與 <code>--desc</code> 都用回覆語言. status 保持 <code>draft</code>.</li>
   </ul>
@@ -1016,7 +1021,7 @@ flowchart TD
     <tr><td>變明確的假設</td><td><code>## Assumptions</code>, 每項一個 bullet</td></tr>
     <tr><td>被推翻的主張</td><td>修正寫到陳述它的章節 (Goal, Scope, Context, 或 schema 專屬章節). 這些章節的其他地方不改, 除非使用者修正了它</td></tr>
     <tr><td>仍未決的事</td><td><code>## Open</code> 的 <code>- Open: &lt;question&gt;</code>; 發現的後續工作寫 <code>- Follow-up: &lt;what&gt;</code></td></tr>
-    <tr><td>改變工作內容的決策</td><td>修改 <code>## Tasks</code>. 不取消勾選, 不改寫已完成的 task; 修正放新 task 或 <code>## Open</code></td></tr>
+    <tr><td>改變工作內容的決策</td><td>修改 <code>## Tasks</code>. 不取消勾選, 不改寫已完成的 task; 修正放新 task 或 <code>## Open</code>. 保留 <code>## Tasks</code> 裡的 <code>### </code> 標題 (phase); 新 task 放在所屬的 phase 底下. refactor 與 issue 文件的第一個 phase 只放對照修改之前的程式碼來證明的 task (pin task; 重現 bug 與確認 root cause 的 task): 不把其他 task 放在它的標題底下</td></tr>
     <tr><td><code>Unconfirmed:</code> 行</td><td>從 <code>## Handoff</code> 刪除: 使用者現在確認過重述了</td></tr>
   </table>
   <p>寫完後執行 <code>update &lt;path&gt;</code>. Reopen 的 <code>done</code> 文件執行 <code>update &lt;path&gt; --status active</code>.</p>
@@ -1026,7 +1031,7 @@ flowchart TD
 <!-- ============================== 4 ============================== -->
 <section class="block" id="apply">
   <h2><span class="stamp" aria-hidden="true">行</span>mreq-apply</h2>
-  <p class="lede">一次實作一個 task. 文件是唯一的進度紀錄: checkbox 表示完成了什麼, <code>## Handoff</code> 表示下一個 agent 需要知道什麼. 輸入是選用的: 文件路徑, 或 <code>mreq-close</code> 交來要修的 findings. 使用者與 agent 都能呼叫.</p>
+  <p class="lede">一次實作一個 task. 文件是唯一的進度紀錄: checkbox 表示完成了什麼, <code>## Handoff</code> 表示下一個 agent 需要知道什麼. 輸入是選用的: 文件路徑, 或 <code>mreq-close</code> 交來要修的 findings. 輸入裡的 <code>--orch</code> 開啟 orchestrate 模式: 它不是路徑或 findings 的一部分. 使用者與 agent 都能呼叫.</p>
   <figure class="diagram">
     <script type="text/x-mermaid">
 flowchart TD
@@ -1070,11 +1075,12 @@ flowchart TD
     <li>讀文件在任何 <code>update</code> 之前. 先讀 <code>## Handoff</code>: 它說明上一個 agent 停在哪裡. 讀完後, 在其他 tool call 之前執行 <code>progress</code>.</li>
     <li>status 來自 <code>progress</code> 的 <code>Status:</code> 行: 使用者給路徑的文件可能是 <code>done</code>. 不為了 status 執行 <code>list</code>. <code>progress</code> 印出 <code>Warning:</code> 行時, 在進度訊息裡告訴使用者.</li>
     <li><code>progress</code> 印出後, 在下一個 tool call 之前寫一則訊息: 開頭是 <code>progress</code> 印出的各行, 原樣複製, 再加一句接下來做什麼. 在 Step 2 停止時也要寫. 最後的回覆不能取代這則訊息.</li>
+    <li>已知的限制: Claude Code (2.1.332) 目前不會顯示這則訊息. model 把它寫在 thinking 裡, 畫面只有一行摘要, 不一定有文件路徑. skill 的文字無法改變這一點. 工作完成時, 最後的回覆的 <code>/mreq-close &lt;path&gt;</code> 有文件的絕對路徑.</li>
     <li>進度每次執行 skill 只顯示一次. 之後繼續工作的回合 (使用者回答問題, 或同意一個修改) 不再執行 <code>progress</code>.</li>
     <li><code>Go on</code>: 下一次改寫 <code>## Handoff</code> 時, 拿掉 <code>Unconfirmed:</code> 行.</li>
     <li>把文件交給 <code>mreq-grill</code> 之後, <code>mreq-apply</code> 不再做任何事.</li>
     <li><code>git status</code> 與 <code>git diff</code> 各自單獨執行, 不加 <code>-C</code>, 並和 <code>## Handoff</code> 比較.</li>
-    <li>收到 findings 時 (來自使用者或 <code>mreq-close</code>): 每個 finding 加成 <code>## Tasks</code> 的新 task, 設回 <code>active</code>, 顯示進度, 然後依 Step 4 處理.</li>
+    <li>收到 findings 時 (來自使用者或 <code>mreq-close</code>): 每個 finding 加成 <code>## Tasks</code> 的新 task, 設回 <code>active</code>, 顯示進度, 然後依 Step 4 處理. <code>## Tasks</code> 有 <code>### </code> 標題時, 新 task 放在最後一個新標題底下, 標題說明它們是 findings.</li>
   </ul>
 </section>
 
@@ -1105,10 +1111,103 @@ flowchart TD
     <figcaption>Step 4 到 Step 5. 只讀程式碼不算證明; 沒執行的測試不算通過</figcaption>
   </figure>
   <ul>
-    <li>Handoff 用幾行寫: 完成什麼, 驗證了什麼與方式, 下一個 task. 改寫 Handoff 時, 不移動也不刪除 <code>## Open</code> 的項目.</li>
+    <li><code>## Tasks</code> 裡的 <code>### </code> 標題是 phase 的名稱. 在這個迴圈裡, 它只把 task 分組, 不改變任何步驟.</li>
+    <li>Handoff 用幾行寫: 完成什麼, 驗證了什麼與方式, 下一個 task. 改寫 Handoff 時, 不移動也不刪除 <code>## Open</code> 的項目. 既有的 <code>Not run:</code> 行在 Step 4, Step 5 與停止時都原文保留: <code>mreq-close</code> 會把它放進報告.</li>
     <li>沒有可以執行的東西能觸及這個行為時, 在報告中說明.</li>
     <li>完成時的 Handoff 要寫驗證方式. <code>mreq-close</code> 依它決定是否重跑測試.</li>
     <li>完成時給出 <code>/mreq-close &lt;path&gt;</code>, 路徑是絕對路徑. <code>/mreq-close</code> 只有使用者能呼叫, 所以不嘗試執行.</li>
+  </ul>
+</section>
+
+<section class="block" id="apply-orchestrate">
+  <h2><span class="stamp sub" aria-hidden="true">派</span>Orchestrate 模式</h2>
+  <p>輸入有 <code>--orch</code>, 或使用者在對話裡用自己的話要求這個模式時開啟: 說出名稱 (例: "orch mode", "用 orchestrator"), 或說出它做的事 ("交給 subagent 做"). 這些字只出現在文件, findings 或工作的主題時不開啟; 無法判斷時也不開啟. 只在這一次執行有效. 開啟時, Step 3 的進度訊息會說明; Claude Code 目前不會顯示這則訊息 (見 Step 3 的限制). 主 agent 是 orchestrator: 一個 subagent 實作一個 phase, 另一個 subagent 驗證它, 只有 orchestrator 寫文件. 這個迴圈取代 Step 4.</p>
+  <figure class="diagram">
+    <script type="text/x-mermaid">
+flowchart TD
+  S(["mreq-apply --orch"]):::user --> C0{"能 spawn 可以寫入檔案<br>並執行指令的 subagent?"}
+  C0 -- 否 --> N0(["用一行說明<br>模式關閉: 照原本的 Step 執行"]):::stop
+  C0 -- 是 --> RD["完整讀 ORCHESTRATOR.md"]:::doc
+  RD --> A{"還有 phase 有<br>未勾選的 task?"}
+  A -- 是 --> I["派 implementer<br>prompt: 文件路徑, phase,<br>讀 IMPLEMENTER.md"]:::skill
+  I --> RP["回報的 Follow-ups 與<br>Left behind 寫進 Open"]:::doc
+  RP --> R{"implementer<br>的回報"}
+  R -- "Blocked 有問題" --> Q["依 '何時停下來問'<br>問使用者, 寫進文件"]:::user
+  Q -- "使用者回答" --> I
+  Q -- "使用者選 Stop" --> ST(["停止與記錄"]):::stop
+  R -- "Blocked 有被拒絕的<br>指令或 Edit:<br>不問, 不再派 implementer" --> ST
+  R -- "task 沒完成<br>Blocked 沒有問題" --> E(["當作無法解決的錯誤"]):::stop
+  R -- "phase 的 task<br>全部完成" --> RC["issue: Root cause<br>寫進 ## Root Cause"]:::doc
+  RC --> V["派 verifier<br>prompt: 文件路徑, phase,<br>Files changed 清單,<br>讀 VERIFIER.md"]:::skill
+  V --> LB["verifier 回報的 Left behind<br>寫進 Open"]:::doc
+  LB --> J{"verdict"}
+  J -- "pass" --> W["勾選這個 phase 的 task<br>Not asked for 寫進 Open<br>改寫 Handoff,<br>加這個 phase 的 Verified 行"]:::doc
+  W --> U["mreq.py update"]:::script
+  U --> A
+  J -- "fail<br>有 findings" --> K{"這個 phase 在這一次執行<br>第二次有 findings 的 fail?"}
+  K -- 否 --> I
+  K -- 是 --> L{"問一次"}:::user
+  L -- "Try again" --> I
+  L -- "Work it here" --> M["這個 phase 離開迴圈:<br>讀程式碼, git status, git diff<br>自己依 Step 4 實作"]
+  M --> A
+  L -- "Stop" --> ST
+  J -- "fail<br>沒有 findings" --> NR{"Not run<br>的原因"}
+  NR -- "有 denied:<br>指令被拒絕的情況" --> ST
+  NR -- "只有 cannot reproduce<br>或 no safe path" --> L2{"問一次<br>不再派 verifier"}:::user
+  L2 -- "Work it here" --> M
+  L2 -- "Accept by reading:<br>Handoff 為每個沒有執行的<br>檢查加一行 Not run" --> W
+  L2 -- "Stop" --> ST
+  A -- 否 --> T5{"測試指令"}
+  T5 -- "verifier 執行過而且通過,<br>之後沒有修改程式碼" --> F2["update --status done<br>不重跑測試"]:::script
+  F2 --> F3(["給出 /mreq-close #lt;path#gt;<br>不自己執行"]):::stop
+  T5 -- "之後自己實作過<br>一個 phase" --> F1["依 Step 5 執行測試<br>通過後設 done"]:::script
+  F1 --> F3
+  T5 -- "用閱讀接受,<br>沒有執行" --> X5(["不設 done<br>說明沒執行的指令與原因"]):::stop
+    </script>
+    <figcaption>Orchestrate 模式的 phase 迴圈. verifier 判定 pass 之前, 不勾選任何 task</figcaption>
+  </figure>
+  <table>
+    <tr><th>角色</th><th>讀的檔案</th><th>可以做</th><th>不可以做</th></tr>
+    <tr><td>orchestrator (主 agent)</td><td><code>SKILL.md</code>, <code>ORCHESTRATOR.md</code></td><td>寫文件, 執行 <code>mreq.py</code>, 問使用者, 派 subagent</td><td>修改, 閱讀或執行專案的程式碼. 使用者選 <strong>Work it here</strong> 的 phase 除外</td></tr>
+    <tr><td>implementer</td><td><code>IMPLEMENTER.md</code></td><td>修改程式碼, 執行指令, 讀文件</td><td>修改 <code>.mreq/</code> 的檔案, 問使用者, 做其他 phase 的 task</td></tr>
+    <tr><td>verifier</td><td><code>VERIFIER.md</code></td><td>讀文件與程式碼, 執行文件指名的檢查, 刪除檢查在新路徑留下的檔案</td><td>修改程式碼或文件, 自己建立檔案, 問使用者, 加自己的檢查</td></tr>
+  </table>
+  <ul>
+    <li><code>SKILL.md</code> 只寫開啟條件, fallback 與各 Step 的改變. phase 與迴圈的規則寫在 <code>ORCHESTRATOR.md</code>: orchestrator 在派第一個 subagent 之前完整讀它. 取下一個 phase 時, 迴圈不在 context 裡的話, 再讀一次. 模式關閉時不讀這個檔案.</li>
+    <li>phase 是 <code>## Tasks</code> 裡一個 <code>### </code> 標題底下的 task, 到下一個 <code>### </code> 標題為止. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.</li>
+    <li>有些 task 證明的是修改之前的程式碼: refactor 的 pin task (第一個 task), 與 issue 的重現 bug 和確認 root cause (前兩個 task). verifier 只有在其他 task 開始之前才能檢查它們, 所以它們永遠自成一個 phase. 文件把其他 task 放在同一個 phase, 或沒有標題時, 把那個 phase 拆成兩個: 先這些 task, 再其他 task. prompt 用 task 編號指名拆開的部分 (例: <code>task 1</code>, <code>tasks 2-3</code>).</li>
+    <li>Step 2 不讀文件引用的程式碼, 也不執行 git 指令: implementer 會做這兩件事. Step 4 的 "一次 Edit 只勾一個 task" 不適用: 這裡的單位是 phase.</li>
+    <li>orchestrator 讀到一份回報後, 在處理它之前, 先寫進 <code>## Open</code>: implementer 的每個 <strong>Follow-ups</strong> (<code>- Follow-up: &lt;what&gt;</code>), 與兩份回報的每個 <strong>Left behind</strong> (<code>- Follow-up: remove &lt;path&gt;</code>). 接下來是提問, 驗證失敗或停止時也要寫: 失敗的嘗試找到的 bug 仍然是 bug. <code>## Open</code> 已經有的項目不重複寫.</li>
+    <li><strong>Work it here</strong>: 這個 phase 離開迴圈. 沒有 subagent 實作它, 也沒有 verifier 檢查它, 所以 "不讀也不改程式碼" 的規則對這個 phase 不適用. orchestrator 先做 Step 2 略過的事 (讀文件引用的程式碼, 執行 <code>git status</code> 與 <code>git diff</code>), 再依 Step 4 實作, 一次勾一個 task. implementer 回報完成的 task 還沒有被證明: 對照程式碼與 verifier 的 findings 之後才勾選. 這個 phase 不加 <code>Verified:</code> 行: 沒有 verifier 稽核過它的檔案. 它修改了之前的 <code>Verified:</code> 行提到的檔案時, 從那一行移除這個檔案: 沒有 verifier 稽核過檔案現在的內容, 而下一個 verifier 會略過這種行提到的檔案. 然後回到迴圈, 取下一個 phase.</li>
+    <li>Step 5 需要相關的測試通過. verifier 執行過測試指令而且通過, 之後也沒有修改程式碼時, 這次執行算數, 不重跑. 之後 orchestrator 自己實作過一個 phase 時, 它依 Step 5 執行測試. 使用者用 <strong>Accept by reading</strong> 接受的 phase, 沒有執行的檢查是測試指令時, 測試不算通過: 不設 <code>done</code>, 並告訴使用者哪個指令沒有執行與原因. 沒有執行的只是某個 task 自己的檢查時, 可以設 <code>done</code>.</li>
+    <li>issue: implementer 完成 phase 之後, orchestrator 先把它回報的 <strong>Root cause</strong> 寫進 <code>## Root Cause</code>, 再派 verifier. verifier 從文件讀到原因, 再對照程式碼. <code>## Root Cause</code> 已經有這個原因時不重寫; 負責修正的 implementer 從文件上已驗證的原因開始.</li>
+    <li>兩個 prompt 都只寫列出的內容, 並用絕對路徑指示讀 brief. 不把 brief 貼進 prompt.</li>
+    <li>兩份 brief 寫明: 指令從專案根目錄 (有 <code>.mreq/</code> 的目錄) 開始, 所以指令不加路徑. 每個指令單獨執行, 不用 <code>cd</code>, <code>git -C &lt;path&gt;</code> 或 <code>git -c &lt;setting&gt;</code>. 理由也寫在 brief: allow rule 以指令開頭的字比對, <code>git -C &lt;path&gt; status</code> 對不上 <code>git status</code> 的 rule.</li>
+    <li>implementer 的指令或 Edit 被拒絕時, 它不換方式重試: 它停止, 並把指令原樣寫在 <strong>Blocked</strong>. orchestrator 不問使用者, 也不再派 implementer: 它依指令被拒絕的情況, 給出 implementer 寫的指令或路徑, 然後停止. 例外是刪除暫存檔: 刪除不能證明工作, 所以 implementer 把檔案寫在 <strong>Left behind</strong>, 然後繼續.</li>
+    <li>verifier 不拿到 implementer 回報的其他內容: 被告知工作已通過的 verifier 傾向同意. Files changed 清單的每一行只有路徑與 <code>created</code>, <code>changed</code> 或 <code>deleted</code>. implementer 為了檢查修改後又還原的檔案不在清單裡, 寫在它的 <strong>Commands</strong>.</li>
+    <li>驗證失敗後, 下一個 implementer 的 prompt 加上 verifier 的 findings, 原文不改. 回答問題後, 加上使用者的答案; agent 能接續同一個 subagent 時, 把答案送給原本的 implementer.</li>
+    <li>verifier 的回報要有每個指令的原文, exit code 與輸出的最後幾行. Handoff 記下這些指令與結果, <code>mreq-close</code> 依它決定是否重跑.</li>
+    <li><code>pass</code> 時, Handoff 為這個 phase 加一行: <code>Verified: &lt;phase&gt;: &lt;path&gt; &lt;created|changed|deleted&gt;, ...</code>, 內容來自 Files changed 清單; 沒有檔案時寫 <code>no files</code>. 理由: 整個執行不 commit, 所以後面的 verifier 會看到前面每個 phase 的修改; 這幾行告訴它哪些檔案已經稽核過.</li>
+    <li><strong>Accept by reading</strong> 時, Handoff 為每個沒有執行的檢查加一行: <code>Not run: &lt;phase&gt;: &lt;check&gt;: &lt;reason&gt;</code>.</li>
+    <li>這個模式下每次改寫 Handoff, 都原文保留 <code>Verified:</code> 與 <code>Not run:</code> 開頭的每一行: <code>pass</code> 之後, <strong>Work it here</strong>, 停止時, 與 Step 5. 唯一的例外在 <strong>Work it here</strong>: 它修改的檔案從 <code>Verified:</code> 行移除. <code>Not run:</code> 行是驗證方式的一部分: <code>mreq-close</code> 會跳過 <code>done</code> 文件的 task 檢查, 所以只有 Handoff 能說明某個檢查沒有執行過.</li>
+    <li>verifier 在 <strong>Not asked for</strong> 回報文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不回報. <code>pass</code> 時, orchestrator 把每一項寫進 <code>## Open</code>, 格式是 <code>- Follow-up: &lt;what&gt;</code>, 並寫明文件沒有要求. <code>fail</code> 時不寫: 程式碼還會修改, 項目可能過期. <code>## Open</code> 已經有的項目不重複寫. <code>mreq-close</code> 在刪除文件前把 <code>## Open</code> 的項目放進報告.</li>
+    <li>檢查會寫入檔案 (資料檔, 資料庫) 時, verifier 把它指到專案內的新路徑, 檢查後用一個指令刪除那個檔案. 刪除被拒絕時, 檔案寫在 <strong>Left behind</strong>, 並附上刪除指令的原文: 刪除不是檢查, 所以它不進 <strong>Not run</strong>, 也不影響 verdict. 留下的檔案不是 finding, 也不是停止的理由.</li>
+    <li>verifier 在 <strong>Not run</strong> 的每一項寫出原因: <code>denied</code> (指令被拒絕), <code>cannot reproduce</code> (檢查需要專案現在沒有的狀態, 例: 修改之前的程式碼), 或 <code>no safe path</code> (檢查會寫入檔案, 而且指令不接受新的路徑). verifier 不建立檔案, 所以不用副本重現檢查. 只有後兩種原因時, verifier 的規則讓它無法執行那個檢查, 所以 orchestrator 不再派 verifier, 也不在 verifier 的 prompt 加指示.</li>
+    <li>停止時依 "停止與記錄": <code>Resume:</code> 行把 implementer 回報完成, 但沒有 verifier 判定通過的 task 寫成 <code>implemented, not verified</code>.</li>
+  </ul>
+
+  <h3>verifier 的 Audit 與 Run</h3>
+  <p>verifier 沒有參與實作: 它只依照現在讀到的文件與程式碼判斷. 它先 Audit, 再 Run.</p>
+  <ul>
+    <li>Audit: 完整讀文件, prompt 清單裡的每個檔案, 與這個 phase 的 task 引用的每個檔案: 這是稽核, 不是搜尋. <code>git status</code> 與 <code>git diff</code> 也顯示之前 phase 的修改. 變更的檔案不在 prompt 的清單, 也不在 Handoff 的 <code>Verified:</code> 行時, 它在稽核範圍: 沒有人回報它. 只有 <code>Verified:</code> 行提到的檔案已經和它的 phase 一起稽核過: 這個 phase 的 task 引用它時才讀.</li>
+    <li>Audit: 逐項回答這個 phase 的每個 task, 與 task 實現的每個 <code>### Dn:</code>: 程式碼做到了嗎? 答案是 done, partly done, done differently 或 missing, 附 <code>path:line</code>.</li>
+    <li>finding: 程式碼和文件矛盾, 或缺少這個 phase 的 task 要求的東西. 這次修改刪除, 跳過或弱化的測試也是 finding. 之後的 phase 還沒做的 task 不是 finding.</li>
+    <li>issue 的 "確認 root cause" task: <code>## Root Cause</code> 有原因與驗證方式, 而且它指出的程式碼位置顯示這個原因時, 才算 done. <code>## Root Cause</code> 還寫著 <code>Not verified yet</code> 是 finding.</li>
+    <li>Run: 只執行這些: 這個 phase 的每個 task 指名的檢查; 測試指令; <code>issue</code> 的 <code>## Symptom</code> Repro; <code>refactor</code> 的 <code>## Behavior Pin</code> (它仍然要是綠的). verifier 不加自己的檢查: 其餘的部分用閱讀判斷.</li>
+    <li>issue 的 Repro 依 phase 有兩種預期. 修正之前的 phase: 它要顯示 Actual, 也就是 bug 存在; 這個 phase 為了顯示 bug 加上的測試會失敗, 這不算 finding. 有修正的 phase 與它之後的每個 phase: 它要顯示 Expected.</li>
+    <li>測試指令來自文件; 文件沒有時, 來自專案的 README 或 agent 指示檔. 都沒有時, 在 <strong>Commands</strong> 說明: 這不算 finding.</li>
+    <li>每個指令照原文執行: 不加 <code>uv run</code>, 不用 <code>python -c</code> 取代. 唯一可以改的地方, 是會寫入檔案的檢查的新路徑.</li>
+    <li><code>pass</code> 的條件: 這個 phase 的 task 全部 done, 執行的每個指令都得到它應該有的結果 (修正之前的 Repro 要顯示 bug), 而且 <strong>Not run</strong> 是空的. 所以沒有 findings 的 <code>fail</code> 表示有檢查沒有執行.</li>
   </ul>
 </section>
 
@@ -1236,7 +1335,7 @@ flowchart TD
     <li>完整讀文件與它引用的每個檔案: 這是稽核, 不是搜尋.</li>
     <li>逐項回答 <code>## Goal</code>, <code>## Decisions</code> 的每個 <code>### Dn:</code>, 與每個已勾選的 task: 程式碼做到了嗎? 答案是 done, partly done, done differently 或 missing, 附 <code>path:line</code>.</li>
     <li>finding: 程式碼和文件矛盾, 或缺少文件要求的東西.</li>
-    <li>文件沒提到, 但不矛盾的細節, 放進 "沒要求的內容" 清單. 程式碼做了而文件沒要求的事, 也記下來.</li>
+    <li>文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字), 而且不矛盾時, 放進 "沒要求的內容" 清單. 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不放. <code>## Open</code> 已經有的項目也不放: Step 5 會把它寫進報告. 這與 <code>mreq-apply</code> 的 verifier 是同一條規則.</li>
     <li>不執行會執行專案程式碼的指令, 也不執行會寫檔案的指令.</li>
   </ul>
 
@@ -1257,7 +1356,7 @@ flowchart TD
   C1 --> T
   C3 --> T
   C4 --> T
-  A1 --> R["issue: Symptom 的 Repro<br>refactor: Behavior Pin<br>一定執行"]:::script
+  A1 --> R["issue: Symptom 的 Repro<br>(現在要顯示 Expected)<br>refactor: Behavior Pin<br>一定執行"]:::script
   T --> R
   R --> NX(["Step 4"])
     </script>
@@ -1267,9 +1366,10 @@ flowchart TD
     <li><code>mreq-apply</code> 只在 task 全部勾選而且相關測試通過時才設定 <code>done</code>. 所以 <code>done</code> 而且 Handoff 寫了驗證方式 (它執行的測試或指令) 時, 不重跑. Handoff 只寫完成, 沒寫怎麼驗證時, 不算.</li>
     <li>"工作就是跑相關測試" 的 task, 例: issue template 的 "Run the related tests". 只說明自己怎麼檢查的 task, 或未勾選的 task, 不算.</li>
     <li>指令照文件原樣執行. 不加 <code>uv run</code>, 不用 <code>python -c</code> 代替. 檢查需要 script 時, 直接 inline 執行.</li>
-    <li>檢查會寫入或修改 cache 以外的檔案 (資料檔, 資料庫) 時, 不碰專案的真實資料: 指向指令接受的新路徑 (例: <code>--file</code> 選項), 或交給使用者執行. 這個新路徑是唯一能對指令做的修改.</li>
+    <li>檢查會寫入或修改 cache 以外的檔案 (資料檔, 資料庫) 時, 不碰專案的真實資料: 指向指令接受的新路徑 (例: <code>--file</code> 選項), 或交給使用者執行. 這個新路徑是唯一能對指令做的修改. 新路徑在專案內, 不用 <code>/tmp</code> 或 <code>$TEMP</code>. 檢查後用一個指令刪除它寫的檔案.</li>
+    <li>需要專案現在沒有的狀態的檢查不能執行, 例: refactor 的 pin 的第一次執行, 或 issue 在修正之前的重現. 不執行它, 也不建立那個狀態的副本; 它歸到 Step 4 的 "現在不能執行的檢查".</li>
     <li>不加自己的檢查, 即使是為了確認 finding. Audit 的 <code>path:line</code> 就是證據.</li>
-    <li>這一步的指令被拒絕時, 不換方式重試, 也不停止; 它歸到 Step 4 的 "測試沒執行".</li>
+    <li>這一步的指令被拒絕時, 不換方式重試, 也不停止; 它歸到 Step 4 的 "測試沒執行". 刪除檢查留下的檔案不是檢查: 它被拒絕時, 只在報告列出那個檔案.</li>
   </ul>
 </section>
 
@@ -1285,7 +1385,7 @@ flowchart TD
   J1 -- 是 --> X4(["不刪除, 停止<br>有要修的項目時, 給出<br>/mreq-apply #lt;path#gt;<br>與要修的項目"]):::stop
   J1 -- 否 --> J2{"任一 Fix now<br>或 Fix the code?"}
   J2 -- 是 --> HA["mreq-apply<br>帶著要修的 failures<br>與 findings<br>不刪除文件"]:::skill
-  J2 -- "否: 全部是<br>Close anyway 或<br>Accept the code" --> G1["Step 5: 收集<br>會遺失的項目:<br>Open, follow-up,<br>Unconfirmed:"]:::doc
+  J2 -- "否: 全部是<br>Close anyway 或<br>Accept the code" --> G1["Step 5: 收集<br>會遺失的項目:<br>Open, follow-up,<br>Unconfirmed:, Not run:"]:::doc
   G1 --> G7["mreq.py delete<br>不檢查 git, 不詢問"]:::script
   G7 --> RP(["Step 6: 報告"]):::stop
     </script>
@@ -1298,12 +1398,13 @@ flowchart TD
     <tr><td>全部完成, 測試通過</td><td>不詢問</td><td></td><td>檢查結果</td></tr>
     <tr><td>檢查已由 mreq-apply 執行 (文件是 <code>done</code>, Handoff 寫了驗證方式, Step 3 跳過測試指令與 task 的檢查)</td><td>不詢問</td><td></td><td>沒重跑的檢查與 Handoff 寫的驗證方式. 不算通過</td></tr>
     <tr><td>測試指令已由 task 執行 (Step 3 跳過)</td><td>不詢問</td><td></td><td>沒重跑的指令與 task 編號. 不算通過</td></tr>
+    <tr><td>現在不能執行的檢查 (Step 3 略過了需要修改之前的程式碼的檢查)</td><td>不詢問</td><td></td><td>每個這種檢查與原因. 不算通過</td></tr>
     <tr><td>找不到測試指令 (文件, README, agent 指示檔都沒有)</td><td>不詢問</td><td></td><td>找不到測試指令, 沒有執行. 不算通過</td></tr>
     <tr><td>測試失敗</td><td>列出每個失敗, 問一次</td><td><code>Fix now (mreq-apply)</code> / <code>Close anyway</code> / <code>Stop</code></td><td>選了 Close anyway 的失敗測試</td></tr>
     <tr><td>測試沒執行 (Step 3 的指令被拒絕)</td><td>原樣給出每個沒執行的指令, 各附一條 allow rule, 問一次</td><td><code>Close anyway</code> / <code>Keep it</code></td><td>沒執行的指令. 不算通過</td></tr>
     <tr><td>finding (partly done, done differently, missing)</td><td>每個 finding 一題: 引用文件的那一行, 說明程式碼做了什麼</td><td><code>Accept the code</code> / <code>Fix the code</code></td><td>接受的 finding 列為 accepted departure</td></tr>
   </table>
-  <p>"不算通過" 而且不詢問的三種結果, 單獨出現時直接到 Step 5. 同時有其他結果時, 依其他結果處理.</p>
+  <p>"不算通過" 而且不詢問的四種結果, 單獨出現時直接到 Step 5. 同時有其他結果時, 依其他結果處理.</p>
   <p>Step 4 的問題一起問, 測試的問題排前面, 一次最多 4 題; 超過時, 等使用者回答後再問下一批. 使用者選了 <code>Stop</code> 或 <code>Keep it</code> 後, 不再問剩下的問題. 然後依序套用第一條符合的規則:</p>
   <ol>
     <li>任一 <code>Stop</code> 或 <code>Keep it</code>: 停止, 不刪除. 給出 <code>/mreq-apply &lt;path&gt;</code>, 附上沒有選 Close anyway 的失敗, 選了 Fix the code 的 finding, 與還沒問到的 finding. 都沒有時只停止.</li>
@@ -1314,7 +1415,7 @@ flowchart TD
   <h3>Step 5: 刪除</h3>
   <ul>
     <li>只在 Step 4 的每個問題都回答之後才刪除.</li>
-    <li>刪除前, 先收集 <code>## Open</code> 的項目, 與 <code>## Handoff</code> 裡還在的 follow-up, <code>Open:</code> 或 <code>Unconfirmed:</code> 行. 檔案刪除後沒有東西保留它們, 所以它們寫進報告.</li>
+    <li>刪除前, 先收集 <code>## Open</code> 的項目, 與 <code>## Handoff</code> 裡還在的 follow-up, <code>Open:</code>, <code>Unconfirmed:</code> 或 <code>Not run:</code> 行. 檔案刪除後沒有東西保留它們, 所以它們寫進報告. <code>Not run:</code> 行是 <code>mreq-apply</code> 的 orchestrate 模式寫的: 那個檢查沒有執行, 使用者用閱讀接受了 task. 報告列出每個檢查與原因.</li>
     <li>執行 <code>delete &lt;path&gt;</code>; 不用其他指令刪除. 不檢查 git, 刪除前也不詢問.</li>
   </ul>
 
@@ -1327,13 +1428,15 @@ flowchart TD
       <li>每個選了 Close anyway 的失敗測試.</li>
       <li>每個沒執行的指令.</li>
       <li>找不到測試指令, 而且沒有執行.</li>
+      <li>每個現在不能執行的檢查, 與原因.</li>
     </ul>
     <ul>
       <li>沒重跑的測試指令, 與執行它的 task.</li>
       <li>文件是 <code>done</code> 而沒重跑的測試指令與 task 檢查, 與 Handoff 寫的驗證方式.</li>
       <li>Step 5 收集的 follow-up.</li>
+      <li><code>## Handoff</code> 裡每個 <code>Not run:</code> 行指名的檢查與原因 (<code>mreq-apply</code> 沒有執行, 使用者用閱讀接受).</li>
       <li>檢查留下的每個檔案 (cache 除外).</li>
-      <li>程式碼做了, 但文件沒要求的事.</li>
+      <li>程式碼加上, 但文件沒要求的每個行為.</li>
     </ul>
   </div>
 
@@ -1806,6 +1909,7 @@ flowchart TD
     <tr><th>skill</th><th>被拒絕時另外做的事</th></tr>
     <tr><td>mreq-define (不寫文件的流程)</td><td>回覆前先補寫文件, 再給出 <code>/mreq-apply &lt;path&gt;</code>. 文件也寫不出來時, 把同樣的紀錄放在回覆裡</td></tr>
     <tr><td>mreq-apply</td><td>停止前, 先依 "停止與記錄" 留下紀錄. 證明 task 完成的指令被拒絕時, task 保持未勾選, 不設 <code>done</code></td></tr>
+    <tr><td>mreq-apply 的 implementer 與 verifier</td><td>subagent 不能問使用者, 所以它寫在回報裡. implementer 停止, 並寫在 <strong>Blocked</strong>. verifier 把檢查寫在 <strong>Not run</strong>, 原因是 <code>denied</code>. 兩種情況都由 orchestrator 給出指令或路徑與 allow rule, 然後停止. 刪除暫存檔被拒絕時不停止: 檔案寫在 <strong>Left behind</strong></td></tr>
     <tr><td>mreq-close (Step 3)</td><td>檢查的指令被拒絕時不停止: 繼續到 Step 4, 給出指令與 allow rule, 並問 <code>Close anyway</code> 或 <code>Keep it</code></td></tr>
     <tr><td>mreq-how, mreq-graph</td><td>頁面 build 之前被拒絕時, 只回覆被拒絕的路徑或指令與 allow rule, 然後停止</td></tr>
   </table>

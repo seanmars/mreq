@@ -1,14 +1,14 @@
 ---
 name: mreq-apply
-description: Implement an mreq task document under .mreq/ one task at a time, checking off each task, keeping its Handoff section current, and following the document's schema (feature, issue, refactor, task). Use when the user wants to start, continue, or resume work tracked in .mreq/, or after mreq-define, mreq-grill or mreq-close hands a document over.
-argument-hint: "[<path>]"
+description: Implement an mreq task document under .mreq/ one task at a time, checking off each task, keeping its Handoff section current, and following the document's schema (feature, issue, refactor, task). With --orch, subagents implement and verify each phase. Use when the user wants to start, continue, or resume work tracked in .mreq/, or after mreq-define, mreq-grill or mreq-close hands a document over.
+argument-hint: "[<path>] [--orch]"
 ---
 
 # mreq-apply
 
 Implement the tasks in one `.mreq/` document. The document is the only progress record: its checkboxes say what is done, and `## Handoff` says what the next agent needs.
 
-**Input**: Optional. A document path, or findings to fix from `mreq-close`.
+**Input**: Optional. A document path, or findings to fix from `mreq-close`. `--orch` anywhere in the input turns on "Orchestrate mode": it is no part of the path or the findings.
 
 ## Language
 
@@ -73,14 +73,23 @@ When you give the user a command to type, write it the way their agent runs a sk
    As soon as `progress` prints, write a message, before your next tool call, also when you stop in step 2. It starts with the lines `progress` printed, copied unchanged, then one short sentence on what you do next, in the language from Language. Your final reply does not replace this message. Show it once in each run of this skill: a later turn that goes on with the work (the user answered a question or agreed to a change) does not run `progress` again. Every message from here on is in the language from Language, also the short notes between tool calls.
 
 4. **Work the tasks one at a time.**
-   Take the next unchecked task. When it has a `Resume:` line, check what that line says is done against the code, then continue from it.
+   In orchestrate mode, follow "Orchestrate mode" in place of this step.
+   Take the next unchecked task. A `### ` heading in `## Tasks` names a phase: it groups tasks and changes nothing in this step. When the task has a `Resume:` line, check what that line says is done against the code, then continue from it.
    1. Re-read `## Goal` and `## Decisions`: the context may have been compressed since you read them.
    2. Implement the smallest change that does the task. Follow the schema rules below.
    3. Prove it works by running something: a test, the repro, or a command that would fail if you were wrong. Reading the code is not proof. When nothing you can run reaches the behavior, say so in the report.
-   4. Check the task off (`- [ ]` → `- [x]`), rewrite `## Handoff`, run `update <path>`; only then take the next task. Two check-offs always have a Handoff rewrite and an `update` between them. One task per edit: a task whose only work is running the tests still gets its own check-off. The Handoff says in a few lines what is done, what you verified and how, and the next task. Never move or remove items in `## Open` when you rewrite `## Handoff`.
+   4. Check the task off (`- [ ]` → `- [x]`), rewrite `## Handoff`, run `update <path>`; only then take the next task. Two check-offs always have a Handoff rewrite and an `update` between them. One task per edit: a task whose only work is running the tests still gets its own check-off. The Handoff says in a few lines what is done, what you verified and how, and the next task. Never move or remove items in `## Open` when you rewrite `## Handoff`. Keep any `Not run:` line already in `## Handoff` word for word, in step 4, step 5 and **Stopping**: `mreq-close` reports it.
 
 5. **Finish.**
    When every task is checked off and the related tests pass, run `update <path> --status done`. Tests that did not run have not passed: then do not set `done`. Write `## Handoff` as done, with how it was verified. Tell the user that `/mreq-close <path>`, with the absolute path filled in, finishes the work. `/mreq-close` is user-invoked: do not try to run it.
+
+## Orchestrate mode
+
+The mode is on when the input holds `--orch`, or when the user asks for this mode in their own words in this conversation: by its name (for example "orch mode", "orchestrate it", "use the orchestrator") or by what it does ("let subagents do the work"). The word alone does not turn it on: not when it is only in the document, in the findings, or in the subject of the work (for example a task about an orchestrator). When you cannot tell, the mode is off. It lasts for this run of the skill. When it is on, say so in the step 3 message. In it you are the orchestrator: one subagent implements a phase, another verifies it, and only you write the document. Your context stays small, and the agent that checks the work did not write it.
+
+When you cannot spawn a subagent that can edit files and run commands (your agent has none, or you are a subagent yourself), say so in one line. The mode is then off: follow every step as written, step 2 too.
+
+**What changes in the steps.** In step 2, do not read the code the document cites, and run no git command: the implementer does both. In place of step 4, follow the loop in `${CLAUDE_SKILL_DIR}/ORCHESTRATOR.md`: read that file in full before you spawn the first subagent, and read it again when you take a phase and the loop is no longer in your context. In step 5, a verifier's test run counts as that file gives. Never edit source code in this mode, and never read it or run the project's code to check a report: a verifier does that. The one exception is a phase the user tells you to work yourself (**Work it here** in that file).
 
 ## Schema rules
 
@@ -111,7 +120,7 @@ Delete the `Resume:` line when you check the task off. The step 2 stops before a
 
 ## Findings from mreq-close
 
-When the user or `mreq-close` hands you findings, add each one under `## Tasks` as a new unchecked task, set the status back with `update <path> --status active`, then show progress as in step 3 and work them as in step 4.
+When the user or `mreq-close` hands you findings, add each one under `## Tasks` as a new unchecked task (when `## Tasks` has `### ` headings, under a new last heading that names the findings), set the status back with `update <path> --status active`, then show progress as in step 3 and work them as in step 4.
 
 ## Guardrails
 

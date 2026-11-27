@@ -21,8 +21,11 @@
 <!-- One "### D1: <title>" per decision: the fix, why it fixes the cause and not the symptom, the alternative ruled out. -->
 
 ## Tasks
+### Reproduce
 - [ ] 1. Reproduce the bug with the Repro above
 - [ ] 2. Confirm the root cause
+
+### Fix
 - [ ] 3. Fix, and show the Repro now passes
 - [ ] 4. Run the related tests
 

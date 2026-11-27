@@ -19,7 +19,10 @@
 <!-- One "### D1: <title>" per decision: what was decided, why, and the alternative ruled out. -->
 
 ## Tasks
+### Pin
 - [ ] 1. Pin the current behavior (test, snapshot, or command output)
+
+### Refactor
 - [ ] 2. <!-- One behavior-preserving step per item; the pin stays green after each. -->
 
 ## Open
