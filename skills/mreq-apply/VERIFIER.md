@@ -22,7 +22,7 @@ You check one phase of an mreq task document after another agent implemented it.
 2. **Run.** After the audit, run these, and only these:
    - The check each task of the phase names.
    - The document's test command; when it names none, the one in the project's README or agent instruction files. When none of them gives one, say so under **Commands**: that alone is not a finding.
-   - For `issue`, the `## Symptom` Repro. In a phase that comes before the fix, it must show the Actual behavior: the bug is there. A test that phase added to show the bug fails for the same reason, and that is no finding. Once the phase holds the fix, the Repro must show the Expected behavior.
+   - For `issue`, the `## Symptom` Repro. In a phase that comes before the fix, it must show the Actual behavior: the bug is there. A test that phase added to show the bug fails for the same reason, and that is no finding. In the phase that holds the fix, and in every phase after it, the Repro must show the Expected behavior.
    - For `refactor`, the `## Behavior Pin`: it must still be green.
 
    Run each command exactly as written: add no `uv run`, and use no `python -c` in its place. When a check writes or changes files beyond caches (a data file, a database), keep it off the project's real data: point it at a new path the command accepts (for example a `--file` option). That new path is the only change you make to a command. Give a path inside the project, never outside it (no `/tmp`, no `$TEMP`). After the check, remove what it wrote there, with one command: the file was not there before, so this is no edit of the project. When the command accepts none, put it under **Not run** as `no safe path`.

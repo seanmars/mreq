@@ -83,12 +83,19 @@ class MreqTest(unittest.TestCase):
         self.assertEqual(lines[2:], ["Status: draft"])
 
     def test_progress_counts_the_tasks_under_phase_headings(self):
-        path = Path(self.new_document()["path"])
+        path = Path(self.new_document(schema="feature")["path"])
         text = path.read_text(encoding="utf-8")
-        text = text.replace("- [ ] 1. Reproduce", "### Phase 1: find it\n- [x] 1. Reproduce")
-        path.write_text(text.replace("- [ ] 3. Fix", "### Phase 2: fix it\n- [ ] 3. Fix"), encoding="utf-8")
+        tasks = (
+            "### Phase 1: find it\n"
+            "- [x] 1. First step\n"
+            "- [ ] 2. Second step\n\n"
+            "### Phase 2: fix it\n"
+            "- [ ] 3. Third step\n"
+            "- [ ] 4. Fourth step"
+        )
+        path.write_text(text.replace("- [ ] 1. <!-- One small, verifiable step per item; say how each is checked. -->", tasks), encoding="utf-8")
         lines = self.run_mreq("progress", str(path)).stdout.splitlines()
-        self.assertEqual(lines[1], "issue: 1/4 tasks done. Next: 2. Confirm the root cause")
+        self.assertEqual(lines[1], "feature: 1/4 tasks done. Next: 2. Second step")
 
     def test_progress_warns_about_a_status_it_does_not_know(self):
         path = Path(self.new_document()["path"])

@@ -8,7 +8,7 @@
   - 開啟方式: 輸入有 `--orch`, 或使用者在對話裡用自己的話要求這個模式 (例: "orch mode", "用 orchestrator", "交給 subagent 做"). 這些字只出現在文件, findings 或工作的主題時不開啟. 無法判斷時不開啟. 開啟時, 進度訊息會說明. 已知的限制: Claude Code (2.1.332) 目前不會顯示 `mreq-apply` 的進度訊息, 畫面只有一行摘要; 這在 orchestrate 模式之前就存在.
   - phase 是 `## Tasks` 裡一個 `### ` 標題底下的 task. 第一個標題之前的 task 自成一個 phase. 沒有標題時, 全部 task 是一個 phase.
   - 證明修改之前的程式碼的 task 永遠自成一個 phase: `refactor` 的 pin task (第一個 task), 與 `issue` 的重現 bug 和確認 root cause (前兩個 task). 文件把其他 task 放在同一個 phase, 或沒有標題時, orchestrator 把那個 phase 拆成兩個: 先這些 task, 再其他 task. verifier 在整個 phase 完成後才檢查, 所以它們與修改在同一個 phase 時, 它無法在修改前的程式碼上執行 pin 或 Repro.
-  - `issue`: implementer 完成 phase 之後, orchestrator 先把它回報的 **Root cause** 寫進 `## Root Cause`, 再派 verifier. verifier 對照程式碼檢查這個原因; `## Root Cause` 還寫著 `Not verified yet` 是 finding. Repro 在修正之前的 phase 要顯示 Actual (bug 存在), 在有修正的 phase 要顯示 Expected.
+  - `issue`: implementer 完成 phase 之後, orchestrator 先把它回報的 **Root cause** 寫進 `## Root Cause`, 再派 verifier. verifier 對照程式碼檢查這個原因; `## Root Cause` 還寫著 `Not verified yet` 是 finding. Repro 在修正之前的 phase 要顯示 Actual (bug 存在), 在有修正的 phase 與它之後的每個 phase 要顯示 Expected.
   - 只有 orchestrator 寫文件: 打勾, `## Handoff`, `## Root Cause`, `## Open` 與 `update`. implementer 與 verifier 不修改 `.mreq/` 的任何檔案.
   - 迴圈的規則寫在 `ORCHESTRATOR.md`. orchestrator 在派第一個 subagent 之前完整讀它; 取下一個 phase 時, 迴圈不在 context 裡的話, 再讀一次. 模式關閉時, `mreq-apply` 不讀這個檔案.
   - implementer 讀 `IMPLEMENTER.md`, verifier 讀 `VERIFIER.md`. verifier 只拿到文件路徑, phase 與 implementer 修改的檔案清單, 不拿到 implementer 的結論. 清單的每一行只有路徑與 `created`, `changed` 或 `deleted`. implementer 為了檢查修改後又還原的檔案不在清單裡, 寫在它的 **Commands**.
@@ -18,11 +18,13 @@
   - 檢查會寫入檔案時, verifier 把它指到專案內的新路徑, 檢查後刪除那個檔案. 刪除被拒絕時, 檔案寫在 **Left behind**: 它不進 **Not run**, 也不影響 verdict.
   - orchestrator 讀到一份回報後, 在處理它之前, 先把 implementer 的 **Follow-ups** (`- Follow-up: <what>`) 與兩份回報的 **Left behind** (`- Follow-up: remove <path>`) 寫進 `## Open`. 接下來是提問, 驗證失敗或停止時也會寫, 所以失敗的嘗試找到的 bug 不會遺失.
   - verifier 在 **Not asked for** 回報文件沒有提到, 但程式碼加上的行為 (接受的輸入, 輸出, 錯誤訊息的文字). 程式碼的寫法 (helper 函式, 名稱, 多一個測試案例) 不回報. `pass` 時, orchestrator 把每一項寫進 `## Open`, 格式是 `- Follow-up: <what>`, 並寫明文件沒有要求. `fail` 時不寫: 程式碼還會修改. `## Open` 已經有的項目不重複寫.
-  - `pass` 時, orchestrator 在 `## Handoff` 為這個 phase 加一行 `Verified: <phase>: <path> <created|changed|deleted>, ...`, 並保留之前 phase 的 `Verified:` 行. 整個執行不 commit, 所以後面的 verifier 會看到前面每個 phase 的修改. verifier 只稽核不在 prompt 的清單, 也不在 `Verified:` 行的變更檔案; 只有 `Verified:` 行提到的檔案, 在這個 phase 的 task 引用它時才讀. 這避免成本隨 phase 數的平方成長.
-  - subagent 不能問使用者. implementer 遇到問題時停止並回報, orchestrator 問使用者後再派發.
-  - orchestrator 不讀程式碼, 不執行專案的程式碼. 例外是使用者選 **Work it here** 的 phase: 這個 phase 離開迴圈, orchestrator 先讀文件引用的程式碼並執行 `git status` 與 `git diff`, 再依 Step 4 自己實作. 沒有 verifier 檢查這個 phase.
+  - `pass` 時, orchestrator 在 `## Handoff` 為這個 phase 加一行 `Verified: <phase>: <path> <created|changed|deleted>, ...`. 整個執行不 commit, 所以後面的 verifier 會看到前面每個 phase 的修改. verifier 只稽核不在 prompt 的清單, 也不在 `Verified:` 行的變更檔案; 只有 `Verified:` 行提到的檔案, 在這個 phase 的 task 引用它時才讀. 這避免成本隨 phase 數的平方成長.
+  - 使用者選 **Accept by reading** 時, orchestrator 在 `## Handoff` 為每個沒有執行的檢查加一行 `Not run: <phase>: <check>: <reason>`.
+  - 這個模式下每次改寫 `## Handoff`, 都原文保留 `Verified:` 與 `Not run:` 開頭的每一行: `pass` 之後, **Work it here**, 停止時, 與 Step 5. 一般模式改寫 `## Handoff` (Step 4, Step 5 與停止時) 也原文保留既有的 `Not run:` 行, 避免 `mreq-close` 帶 finding 交回 `mreq-apply` 或改用一般模式續跑時遺失. `mreq-close` 會跳過 `done` 文件的 task 檢查, 所以只有 Handoff 能說明某個檢查沒有執行過. `mreq-close` 在刪除文件前收集 `Not run:` 行, 並在報告列出每個檢查與原因.
+  - subagent 不能問使用者. implementer 遇到問題時停止並回報, orchestrator 問使用者後再派發; 使用者選 **Stop** 時停止. implementer 回報的是被拒絕的指令或 Edit 時, orchestrator 不問使用者, 也不再派 implementer: 它給出那個指令或路徑, 然後停止.
+  - orchestrator 不讀程式碼, 不執行專案的程式碼. 例外是使用者選 **Work it here** 的 phase: 這個 phase 離開迴圈, orchestrator 先讀文件引用的程式碼並執行 `git status` 與 `git diff`, 再依 Step 4 自己實作. 沒有 verifier 檢查這個 phase, 所以它沒有 `Verified:` 行. 它修改了之前的 `Verified:` 行提到的檔案時, orchestrator 從那一行移除這個檔案: 下一個 verifier 會略過這種行提到的檔案, 而沒有 verifier 稽核過檔案現在的內容.
   - verifier 執行過測試指令而且通過, 之後也沒有修改程式碼時, 這次執行就是 `done` 的依據, 不重跑. 之後 orchestrator 自己實作過一個 phase 時, 它依 Step 5 執行測試. 使用者選 **Accept by reading** 的 phase, 沒有執行的檢查是測試指令時, 不設 `done`; 沒有執行的只是某個 task 自己的檢查時, 可以設 `done`.
-  - agent 不能 spawn 可以寫入檔案的 subagent 時, 改用一般模式.
+  - agent 不能 spawn 可以寫入檔案的 subagent 時, 模式關閉: 每個 Step 照原本的寫法執行, 包含 Step 2 的讀程式碼與 `git status`, `git diff`.
 
 ### Changed
 

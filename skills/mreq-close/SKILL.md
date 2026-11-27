@@ -105,7 +105,7 @@ When you give the user a command to type, write it the way their agent runs a sk
 
 5. **Delete the document.**
    Do this only after every step 4 question is answered.
-   Before the delete, collect the items in `## Open`, and any follow-up, `Open:` or `Unconfirmed:` line still in `## Handoff`: nothing keeps them once the file is gone. They go in the report.
+   Before the delete, collect the items in `## Open`, and any follow-up, `Open:`, `Unconfirmed:` or `Not run:` line still in `## Handoff`: nothing keeps them once the file is gone. They go in the report.
    Run `delete <path>`; never delete with another command. Do not check git, and do not ask before the delete.
 
 6. **Report.**
@@ -119,6 +119,7 @@ When you give the user a command to type, write it the way their agent runs a sk
    - The test command not rerun, and the task that ran it.
    - The test command and task checks not rerun because the document is `done`, and the verification its Handoff gives.
    - The follow-ups from step 5.
+   - Each check a `Not run:` line of `## Handoff` names, with its reason: `mreq-apply` did not run it, and the user accepted the task by reading.
    - Every file a check left behind (other than caches).
    - Each behavior the code adds that the document never asked for.
 

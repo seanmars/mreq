@@ -255,7 +255,8 @@ class SkillTextTest(unittest.TestCase):
         verifier = brief_text("VERIFIER.md")
         self.assertIn("A `## Root Cause` that still says `Not verified yet` is a finding.", verifier)
         self.assertIn("In a phase that comes before the fix, it must show the Actual behavior", verifier)
-        self.assertIn("Once the phase holds the fix, the Repro must show the Expected behavior.", verifier)
+        # A phase of mreq-close findings comes after the fix phase and holds no fix itself.
+        self.assertIn("In the phase that holds the fix, and in every phase after it, the Repro must show the Expected behavior.", verifier)
         self.assertIn("(a Repro before the fix must show the bug)", section(verifier, "### Verdict"))
         self.assertIn("when `## Root Cause` already holds a verified cause, start from it", brief_text("IMPLEMENTER.md"))
 
@@ -340,10 +341,40 @@ class SkillTextTest(unittest.TestCase):
         # No phase is committed, so every verifier sees the changes of all the phases before it.
         loop = section(orchestrator_loop(), "## The loop")
         self.assertIn("`Verified: <phase>: <path> <created|changed|deleted>, ...`", loop)
-        self.assertIn("Keep the `Verified:` lines of the earlier phases", loop)
         verifier = brief_text("VERIFIER.md")
         self.assertIn("in neither the prompt's list nor a `Verified:` line of `## Handoff` is part of the audit", verifier)
         self.assertIn("read it only when a task of this phase cites it", verifier)
+
+    def test_every_handoff_rewrite_keeps_the_lines_a_later_reader_needs(self):
+        # A pass is not the only rewrite: a stop, a phase worked here and step 5 rewrite the Handoff too.
+        keeps = section(orchestrator_loop(), "## What a Handoff rewrite keeps")
+        self.assertIn("keeps each line that starts with `Verified:` or `Not run:`", keeps)
+        self.assertIn('after a `pass`, in "Work it here", at a stop, and in step 5', keeps)
+        loop = section(orchestrator_loop(), "## The loop")
+        self.assertIn('Keep the lines of the earlier phases as "What a Handoff rewrite keeps" gives.', loop)
+        # mreq-close skips the task checks of a done document, so only the Handoff can say a check never ran.
+        self.assertIn("`Not run: <phase>: <check>: <reason>`", loop)
+        # mreq-close hands findings back to mreq-apply without --orch, so normal mode must keep Not run: lines too.
+        self.assertIn("Keep any `Not run:` line already in `## Handoff` word for word, in step 4, step 5 and **Stopping**", skill_text("apply"))
+        close = skill_text("close")
+        self.assertIn("any follow-up, `Open:`, `Unconfirmed:` or `Not run:` line still in `## Handoff`", close)
+        self.assertIn("- Each check a `Not run:` line of `## Handoff` names, with its reason", close)
+        # A Verified: line says a verifier audited the files. No verifier checks a phase worked here.
+        here = section(orchestrator_loop(), "## Work it here")
+        self.assertIn("Add no `Verified:` line for this phase", here)
+        # A kept line would hide a file this phase changed after its audit: the next verifier skips a file such a line names.
+        self.assertIn("When you change a file that an earlier `Verified:` line names, take that file out of the line", here)
+        self.assertIn("a file you change there comes out of its `Verified:` line", keeps)
+
+    def test_a_denied_implementer_call_asks_nothing(self):
+        # A denied command or edit has no answer to send back: only an allow rule solves it.
+        loop = section(orchestrator_loop(), "## The loop")
+        self.assertIn("**Blocked** holds a denied command or edit: ask nothing, and spawn no other implementer.", loop)
+        self.assertIn("When the user picks **Stop**, stop. Otherwise send the answer to the same implementer", loop)
+
+    def test_without_subagents_the_mode_is_off(self):
+        # Step 4 alone would keep the mode's step 2: no code read and no git command before the work.
+        self.assertIn("The mode is then off: follow every step as written, step 2 too.", orchestrate_mode())
 
     def test_the_second_failed_verification_is_counted_in_one_run(self):
         # The document holds no counter, so a count across sessions would rest on how an agent reads the Handoff.
